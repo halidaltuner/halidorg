@@ -111,6 +111,9 @@
     {{template "callout" dict "kind" "note" "body" .Callout}}
     {{template "callout" dict "kind" "danger" "body" .Callout}}
   </div>
+
+  <h2>// rendered markdown (internal/render)</h2>
+  <article class="prose" lang="en">{{.Prose}}</article>
 </main>
 {{template "footer" .}}
 </body>

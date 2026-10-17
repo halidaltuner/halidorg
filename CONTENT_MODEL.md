@@ -17,7 +17,8 @@ Every content item with its own page has one row here. Type-specific fields live
 | visibility | TEXT | `public`, `unlisted`, `private` |
 | published_at | INTEGER | unix ts |
 | updated_at | INTEGER | |
-| current_revision_id | TEXT | FK revisions |
+| current_revision_id | TEXT | FK revisions; newest revision, what the editor shows |
+| published_revision_id | TEXT | FK revisions; what public pages render, moves only on publish (ADR-006); required when `published` |
 | cover_media_id | TEXT | FK media, nullable; falls back to Cover pattern / OG template |
 | tone | TEXT | nullable override of the section tone (`cyan`, `indigo`, `amber`, `green`, `orange`, `rose`, `violet`, `navy`) |
 | series_id | TEXT | nullable |

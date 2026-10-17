@@ -1,0 +1,52 @@
+<p>The admin for this site has one rule: a full page reload should never be necessary while editing.</p>
+<h2 id="why-not-an-spa">Why not an SPA<a class="h-anchor" href="#why-not-an-spa" aria-hidden="true" tabindex="-1">#</a></h2>
+<div class="sn-row">
+<p>An SPA would duplicate the validation, the routing and the templates. Every form still works without JavaScript<sup class="sn-ref"><a href="#sn-1" role="doc-noteref">1</a></sup>, which matters at 2am.</p>
+<aside class="sn" id="sn-1"><span class="sn-num">1</span> <p>Progressive enhancement here means the plain form posts and redirects; htmx only intercepts when present.</p>
+</aside>
+</div>
+<h2 id="autosave-meets-revisions">Autosave meets revisions<a class="h-anchor" href="#autosave-meets-revisions" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Autosave fires on <code>keyup changed delay:800ms</code>.</p>
+<figure class="code code-light">
+<div class="code-bar"><span class="code-file">internal/admin/revisions.go</span><span class="code-tools"><button type="button" class="code-btn" data-code-wrap hidden>wrap</button><button type="button" class="code-btn code-copy" data-code-copy hidden>copy</button></span></div>
+<pre class="chroma"><code class="language-go"><span class="c1">// coalesce autosaves</span><span class="w">
+</span><span class="kd">func</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="w"> </span><span class="o">*</span><span class="nx">Store</span><span class="p">)</span><span class="w"> </span><span class="nf">SaveDraft</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">)</span><span class="w"> </span><span class="kt">error</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span><span class="w">	</span><span class="k">return</span><span class="w"> </span><span class="kc">nil</span><span class="w">
+</span><span class="p">}</span><span class="w">
+</span></code></pre>
+</figure>
+<aside class="callout tip"><div class="callout-label">tip</div>
+<p>Explicit saves (⌘S) always create a new revision. Only autosaves coalesce.</p>
+</aside>
+<h3 id="neden-spa-degil-iste-cevap">Neden SPA değil? İşte cevap<a class="h-anchor" href="#neden-spa-degil-iste-cevap" aria-hidden="true" tabindex="-1">#</a></h3>
+<figure class="code code-dark" data-code-group id="cg1">
+<div class="code-bar"><div class="code-tabs" role="tablist"><button type="button" class="code-tab" role="tab" id="cg1-0-tab" aria-controls="cg1-0" aria-selected="true" data-lang="html">editor.html</button><button type="button" class="code-tab" role="tab" id="cg1-1-tab" aria-controls="cg1-1" aria-selected="false" data-lang="go">handler.go</button></div><span class="code-tools"><span class="code-lang">html</span><button type="button" class="code-btn code-copy" data-code-copy hidden>copy</button></span></div>
+<pre class="chroma code-panel" role="tabpanel" id="cg1-0" aria-labelledby="cg1-0-tab"><code class="language-html"><span class="line"><span class="ln">1</span><span class="cl"><span class="p">&lt;</span><span class="nt">span</span> <span class="na">id</span><span class="o">=</span><span class="s">&#34;status&#34;</span> <span class="na">hx-swap-oob</span><span class="o">=</span><span class="s">&#34;true&#34;</span><span class="p">&gt;</span>draft<span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span></code></pre>
+<pre class="chroma code-panel" role="tabpanel" id="cg1-1" aria-labelledby="cg1-1-tab"><code class="language-go"><span class="line"><span class="ln">1</span><span class="cl"><span class="kd">func</span><span class="w"> </span><span class="nf">save</span><span class="p">()</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre>
+</figure>
+<figure class="code code-term">
+<div class="term-bar" aria-hidden="true"><span class="term-dot r"></span><span class="term-dot a"></span><span class="term-dot g"></span><span class="term-title">terminal</span></div>
+<pre class="term"><code><span class="term-cmd"><span class="term-cwd">~/halid</span> <span class="term-ps">$</span> go test ./internal/admin/... -run Revision</span>
+<span class="term-out">ok  	halid/internal/admin	0.412s</span>
+<span class="term-cmd"><span class="term-cwd">/tmp</span> <span class="term-ps">$</span> ls</span></code></pre>
+</figure>
+<aside class="callout warning"><div class="callout-label">dikkat</div>
+<p>OOB targets must exist on every page.</p>
+</aside>
+<blockquote>
+<p>Just a plain quote.</p>
+</blockquote>
+<h2 id="why-not-an-spa-2">Why not an SPA<a class="h-anchor" href="#why-not-an-spa-2" aria-hidden="true" tabindex="-1">#</a></h2>
+<p>Duplicate heading gets a suffixed id.</p>
+<ul>
+<li>a list item with a note<sup class="fn-ref" id="fnref-2"><a href="#fn-2" role="doc-noteref">2</a></sup></li>
+</ul>
+<pre class="mermaid">graph TD; A--&gt;B
+</pre>
+<section class="footnotes" role="doc-endnotes"><ol>
+<li id="fn-2">
+<p>Stays in the end list. <a class="fn-back" href="#fnref-2" role="doc-backlink">↩</a></p>
+</li>
+</ol></section>

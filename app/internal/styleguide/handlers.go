@@ -4,19 +4,28 @@ package styleguide
 
 import (
 	"bytes"
+	_ "embed"
 	"html/template"
 	"log/slog"
 	"net/http"
 
 	"halid.org/engine/internal/i18n"
+	"halid.org/engine/internal/render"
 	"halid.org/engine/internal/ui"
 )
 
 // Handlers renders the styleguide.
 type Handlers struct {
-	env  string
-	page *template.Template
+	env   string
+	page  *template.Template
+	prose template.HTML
 }
+
+// sample.md exercises every renderer feature; it mirrors
+// internal/render/testdata/post.md.
+//
+//go:embed sample.md
+var sample []byte
 
 // New parses the styleguide template.
 func New() (*Handlers, error) {
@@ -24,7 +33,12 @@ func New() (*Handlers, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Handlers{env: ui.Env(), page: page}, nil
+	out, err := render.Markdown(sample, render.Options{Lang: "en"})
+	if err != nil {
+		return nil, err
+	}
+	// Renderer output for the admin's own fixture, not user input.
+	return &Handlers{env: ui.Env(), page: page, prose: template.HTML(out.HTML)}, nil
 }
 
 // Register adds GET /_styleguide.
@@ -53,6 +67,7 @@ type data struct {
 	Scale   []int
 	Space   []int
 	Callout template.HTML
+	Prose   template.HTML
 }
 
 func (h *Handlers) show(w http.ResponseWriter, r *http.Request) {
@@ -78,6 +93,7 @@ func (h *Handlers) show(w http.ResponseWriter, r *http.Request) {
 		Scale:   []int{11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 28, 36, 40, 48, 56},
 		Space:   []int{4, 8, 12, 16, 20, 24, 32, 40, 48, 56, 64, 72, 96},
 		Callout: template.HTML("Explicit saves always create a new revision."),
+		Prose:   h.prose,
 	})
 	if err != nil {
 		slog.Error("render styleguide", "err", err)
