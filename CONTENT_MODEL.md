@@ -36,7 +36,7 @@ Every content item with its own page has one row here. Type-specific fields live
 - `syndications(entry_id, network, url, posted_at)` POSSE
 - `job_runs(id, type, payload, status, attempt, max_attempts, error, started_at, finished_at)`
 - `admin_sessions(id, email, created_at, expires_at, last_reauth_at, ip, ua)` see ADR-005. Exception to ULID ids: `id` is the hex HMAC-SHA256 of the cookie token, never the token itself
-- `search_fts` FTS5 virtual table
+- `search_fts` FTS5 virtual table, in the separate `halidorg-search-{env}` database, not the main one (ADR-010)
 
 ## 2. Per-kind schemas
 

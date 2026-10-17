@@ -12,7 +12,8 @@ flowchart LR
     EW -->|miss / dynamic / admin| GO[Go app<br/>Cloudflare Container]
     EW --> R2[(R2<br/>media)]
     GO -->|binding bridge| EW
-    EW --> D1[(D1<br/>content + FTS)]
+    EW --> D1[(D1<br/>content)]
+    EW --> DS[(D1 search<br/>FTS5)]
     CRON[Cron Triggers] --> EW --> Q[Queues] --> GO
     GO --> GH[GitHub API]
     GO --> WM[Webmention / POSSE targets]
@@ -24,7 +25,8 @@ flowchart LR
 |---|---|
 | **Edge Worker** (thin, TypeScript) | Routing, KV page cache, static assets, R2 media, bridge to D1/R2/KV for the container (outbound interception of `bridge.internal`), cron fan-out |
 | **Go app** (Container) | Admin UI, Markdown rendering, public SSR on cache miss, htmx endpoints, importer, sync jobs, OG image generation |
-| **D1** | All content, relations, tags, i18n pairs, FTS5 search index, audit log |
+| **D1** | All content, relations, tags, i18n pairs, audit log |
+| **D1 search** | FTS5 index in its own database, derived from D1 and rebuildable (ADR-010) |
 | **KV** | Pre-rendered public HTML keyed by `lang:path`, feed XML, sitemap |
 | **R2** | Images, attachments, OG images, exports |
 | **Queues** | Async jobs: render, purge, GitHub sync, webmention send/receive, POSSE |
@@ -89,6 +91,13 @@ flowchart LR
 - 500px photo embeds and Credly links are the only third-party content. CSP `frame-src`/`img-src` allowlist covers 500px CDN and `decks.halid.org`.
 - Photo grid renders a local thumbnail (`image_url`) first and loads the 500px embed only in the lightbox, so the grid stays fast and works if 500px is down.
 
+### ADR-010: Search is D1 FTS5 in a separate database
+- **Status:** Accepted (2026-10-17). Evaluation: `docs/search-decision.md`.
+- **Decision:** an FTS5 index (`unicode61 remove_diacritics 2`) in its own D1 database, `halidorg-search-{env}`, binding `SEARCH`. The Worker queries it directly, so search needs no warm container. Rows are written on publish and the whole index can be rebuilt from the main database by a job.
+- **Why separate:** D1 cannot export a database that contains a virtual table, which would break the nightly export of the main database. The search database holds only derived data and is not backed up.
+- **Turkish:** Go folds `ı`, `İ` and `I` to `i` in both the indexed text and the query; SQLite leaves `ı` alone, so "ılık" and "ilik" would not match. No stemming: the palette searches by prefix (`küme*`).
+- **Why not Pagefind:** admin search must cover drafts and private entries, which a public static index cannot, and Pagefind re-indexes the whole site on every publish.
+
 ## 4. Repo layout
 
 ```
@@ -121,7 +130,7 @@ Dockerfile
 ## 6. Cross-cutting
 
 - **i18n:** `entries.lang` + `translation_group_id`. URL scheme `/tr/...` and `/en/...`, default by `Accept-Language`, `hreflang` tags.
-- **Search:** D1 FTS5 virtual table over title, summary, body text, tags (verify in spike). Pagefind as fallback.
+- **Search:** D1 FTS5 over title, summary, body text and tags, in a separate search database queried by the Worker (ADR-010).
 - **Feeds:** RSS + Atom + JSON Feed per kind, per tag, and a combined feed.
 - **Observability:** Workers Logs, structured JSON logs from Go, job outcomes in `job_runs` table, admin health page.
 - **Backups:** nightly D1 export + full Markdown/JSON export to R2.

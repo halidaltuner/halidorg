@@ -1,6 +1,6 @@
 # Search: D1 FTS5 or Pagefind
 
-Status: **proposed**, waiting for a decision (ROADMAP Phase 0). The command palette needs search from Phase 1: posts first, then every kind with prefixes (`n: s: l: f: pr: h:`), in Turkish and English.
+Status: **accepted** 2026-10-17, as ADR-010 in ARCHITECTURE.md (option A). The command palette needs search from Phase 1: posts first, then every kind with prefixes (`n: s: l: f: pr: h:`), in Turkish and English.
 
 ## What was tested (local D1, 2026-10-17)
 
