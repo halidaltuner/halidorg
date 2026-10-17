@@ -14,7 +14,6 @@ import (
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/public"
-	"halid.org/engine/internal/spike"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/web"
 )
@@ -86,7 +85,6 @@ func routes() (*http.ServeMux, error) {
 	adm.Register(mux)
 	// Two segments, not /static/: that pattern overlaps /{lang}/{$} and ServeMux panics.
 	mux.Handle("GET /static/{dir}/{file}", staticHandler())
-	spike.Register(mux, spike.FromEnv())
 	return mux, nil
 }
 

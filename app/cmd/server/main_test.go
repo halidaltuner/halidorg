@@ -7,7 +7,6 @@ import (
 )
 
 func TestRoutes(t *testing.T) {
-	t.Setenv("SPIKE_ENABLED", "1")
 	mux, err := routes()
 	if err != nil {
 		t.Fatal(err)

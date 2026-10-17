@@ -3,8 +3,8 @@
 const LANGS = new Set(["tr", "en"]);
 
 // Never served from or written to KV: admin and htmx fragments are per-user or
-// short-lived, healthz must reach the container, bridge/spike are internal.
-const BYPASS_PREFIXES = ["/admin", "/x", "/healthz", "/__bridge"];
+// short-lived, healthz must reach the container, /lang sets a cookie.
+const BYPASS_PREFIXES = ["/admin", "/x", "/healthz", "/lang"];
 
 /** KV key for a public page: `page:{lang}:{path}`, lang `-` when the path has none. */
 export function cacheKey(url: URL): string {

@@ -1,25 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { type BridgeEnv, handleBridge, sign, verifySignature } from "../src/bridge";
-
-const body = new TextEncoder().encode("hello").buffer as ArrayBuffer;
-
-describe("bridge signature", () => {
-	// Same vector as TestSignVector in app/internal/spike/spike_test.go.
-	it("matches the Go signer", async () => {
-		expect(await sign("test-secret", "1700000000", "PUT", "/kv/spike/x", body)).toBe(
-			"851cfb134e76d62584811f22cc34d0c64518d7d1e291d3e41f1fc0d2e535c9d7",
-		);
-	});
-
-	it("rejects stale timestamps and tampered paths", async () => {
-		const sig = await sign("s", "1000", "PUT", "/kv/spike/x", body);
-		const r = new Request("https://x/__bridge/kv/spike/x", { method: "PUT", headers: { "X-Bridge-Ts": "1000", "X-Bridge-Sig": sig } });
-		expect(await verifySignature(r, "/kv/spike/x", body, "s", 1030)).toBe(true);
-		expect(await verifySignature(r, "/kv/spike/x", body, "s", 1100)).toBe(false);
-		expect(await verifySignature(r, "/kv/spike/y", body, "s", 1030)).toBe(false);
-		expect(await verifySignature(r, "/kv/spike/x", body, "other", 1030)).toBe(false);
-	});
-});
+import { type BridgeEnv, handleBridge } from "../src/bridge";
 
 // Minimal in-memory stand-ins: only what handleBridge touches.
 function fakeEnv() {
@@ -62,14 +42,5 @@ describe("handleBridge", () => {
 		const got = await handleBridge(new Request("http://bridge.internal" + path), path, env);
 		expect(await got.text()).toBe("<html>");
 		expect(got.headers.get("X-KV-Metadata")).toBe('{"etag":"x"}');
-	});
-
-	it("keeps the public route limited to spike probes", async () => {
-		const { env } = fakeEnv();
-		const spikeOnly = { spikeOnly: true };
-		expect((await handleBridge(post({ sql: "DELETE FROM admin_sessions" }), "/d1/query", env, spikeOnly)).status).toBe(403);
-		expect((await handleBridge(post({ statements: [] }), "/d1/batch", env, spikeOnly)).status).toBe(404);
-		expect((await handleBridge(new Request("http://x/kv/page"), "/kv/page", env, spikeOnly)).status).toBe(403);
-		expect((await handleBridge(post({ sql: "SELECT 1" }), "/d1/query", env, spikeOnly)).status).toBe(200);
 	});
 });

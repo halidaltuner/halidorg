@@ -1,7 +1,7 @@
 // Edge Worker (ADR-001): serves public pages from KV, forwards everything else
 // to the Go container, and bridges the container to D1/KV/R2.
 import { Container, getContainer } from "@cloudflare/containers";
-import { handleBridge, verifySignature } from "./bridge";
+import { handleBridge } from "./bridge";
 import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, type PageMeta } from "./cache";
 
 // Required by outboundByHost: without it the container fails to start.
@@ -26,13 +26,6 @@ export class App extends Container<Env> {
 	constructor(ctx: DurableObjectState<{}>, env: Env) {
 		super(ctx, env);
 		this.envVars = {
-			SPIKE_ENABLED: env.SPIKE_ENABLED ?? "",
-			BRIDGE_PUBLIC_URL: env.BRIDGE_PUBLIC_URL ?? "",
-			BRIDGE_SECRET: env.BRIDGE_SECRET ?? "",
-			CF_ACCOUNT_ID: env.CF_ACCOUNT_ID ?? "",
-			CF_API_TOKEN: env.CF_API_TOKEN ?? "",
-			CF_D1_ID: env.CF_D1_ID ?? "",
-			CF_KV_NAMESPACE_ID: env.CF_KV_NAMESPACE_ID ?? "",
 			APP_ENV: env.APP_ENV,
 			PUBLIC_ORIGIN: env.PUBLIC_ORIGIN,
 			DEPLOY_SHA: env.DEPLOY_SHA ?? "",
@@ -46,9 +39,6 @@ export class App extends Container<Env> {
 export default {
 	async fetch(req, env, ctx): Promise<Response> {
 		const url = new URL(req.url);
-
-		if (url.pathname.startsWith("/__bridge/")) return publicBridge(req, url, env);
-
 		if (!isCacheableRequest(req)) return origin(req, env);
 
 		const key = cacheKey(url);
@@ -102,17 +92,4 @@ function page(req: Request, body: ArrayBuffer, meta: PageMeta, cache: "HIT" | "M
 		return new Response(null, { status: 304, headers });
 	}
 	return new Response(req.method === "HEAD" ? null : body, { headers });
-}
-
-// Method C of the spike: same bridge over the public route, HMAC-signed.
-async function publicBridge(req: Request, url: URL, env: Env): Promise<Response> {
-	if (env.SPIKE_ENABLED !== "1" || !env.BRIDGE_SECRET) return new Response("not found", { status: 404 });
-	const path = url.pathname.slice("/__bridge".length);
-	const body = await req.arrayBuffer();
-	if (!(await verifySignature(req, path, body, env.BRIDGE_SECRET))) {
-		return new Response("bad signature", { status: 401 });
-	}
-	const hasBody = req.method !== "GET" && req.method !== "HEAD";
-	const fwd = new Request(req.url, { method: req.method, headers: req.headers, body: hasBody ? body : null });
-	return handleBridge(fwd, path, env, { spikeOnly: true });
 }

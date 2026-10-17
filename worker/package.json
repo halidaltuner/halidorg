@@ -6,7 +6,7 @@
     "dev": "wrangler dev -c ../wrangler.jsonc",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "types": "wrangler types src/worker-configuration.d.ts -c ../wrangler.jsonc --no-strict-vars --env-file ../scripts/spike/.empty.env"
+    "types": "wrangler types src/worker-configuration.d.ts -c ../wrangler.jsonc --no-strict-vars --env-file ../scripts/types.empty.env"
   },
   "dependencies": {
     "@cloudflare/containers": "0.3.7"

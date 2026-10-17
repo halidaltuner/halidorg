@@ -10,7 +10,7 @@ The container reaches the stores through **method B, outbound interception**. It
 |---|---|---|
 | A, direct binding | bindings inside the container | Containers have no binding surface. |
 | **B, interception** | `bridge.internal`, handled in the Worker | Chosen: no public route, no secret, stays inside Cloudflare. |
-| C, public bridge | `/__bridge/*`, HMAC-signed | A route that runs arbitrary SQL would be reachable from the internet. Kept only for the spike probes, limited to `SELECT 1` and `spike/` keys. |
+| C, public bridge | `/__bridge/*`, HMAC-signed | A route that runs arbitrary SQL would be reachable from the internet. |
 | D, REST API | Cloudflare API with a token | Every call leaves Cloudflare, needs an account token in the container, and R2 needs SigV4. |
 
 ## Bridge protocol
@@ -26,7 +26,7 @@ Keys are path-escaped as one segment, so `page:en:/en/` survives. A missing key 
 
 ## Measured locally (`wrangler dev`, 2026-10-17)
 
-`GET /x/spike/bridge?method=B&n=20` through `wrangler dev` with the local container on an Apple Silicon laptop:
+The spike's probe endpoint, `GET /x/spike/bridge?method=B&n=20`, through `wrangler dev` with the local container on an Apple Silicon laptop:
 
 | Op | ok / fail | p50 ms | p95 ms |
 |---|---|---|---|
@@ -54,7 +54,7 @@ Also run through `wrangler dev`: `/en/` returns `X-Cache: MISS` then `HIT`; `/ad
 
 KV page cache, `GET /en/` six times: the first was `X-Cache: MISS` (`kv;dur=75, origin;dur=29`), the next five `HIT` with `kv;dur` 3 to 24 ms. Total time seen from Istanbul was 220 to 290 ms, most of it the network round trip.
 
-Cold start, unconfirmed: after 6.5 minutes idle (`sleepAfter` is 5m), the first `GET /admin/login` took 338 ms against 230 to 249 ms warm. That gap is too small for a container boot, so either the container had not slept or something else woke it in the window. Confirm from the container's `startup_ms` log line before relying on it.
+Cold start, not observed: the container does not go to sleep after `sleepAfter` (5m) of silence. Twice, after 6.5 minutes with no traffic, `wrangler containers list` still showed 1 live instance and a KV miss on `/en/` came back with `origin;dur=36` and `41`, a warm container. The earlier 338 ms first request (against 230 to 249 ms warm) was the same thing. Public pages are unaffected either way, since KV hits never reach the container.
 
 ## Two traps found on the way
 
@@ -68,4 +68,4 @@ Both were in the spike code, so method B had never actually run before this.
 - container cold start, confirmed from logs
 - monthly cost at expected traffic
 
-Once measured, add the numbers here and remove `internal/spike`, the `/__bridge` route and the method C and D code.
+The probe code (`internal/spike`, `/x/spike/bridge`, the public `/__bridge` route and the method C and D clients) was removed after these measurements; it is in git history before that commit.

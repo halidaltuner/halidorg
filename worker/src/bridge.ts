@@ -1,18 +1,11 @@
-// Store bridge for the container (ADR-001). The chosen path is method B:
-// outbound interception of http://bridge.internal, trusted because only the
-// container can produce it, so it gets the full surface. The public, HMAC-signed
-// /__bridge route (spike method C) stays limited to the spike probes.
+// Store bridge for the container (ADR-001): answers the container's calls to
+// http://bridge.internal with the Worker's bindings. Only reachable through
+// outbound interception, never from the internet, so it trusts every request.
 
 export interface BridgeEnv {
 	DB: D1Database;
 	PAGES: KVNamespace;
 	MEDIA: R2Bucket;
-	BRIDGE_SECRET?: string;
-}
-
-export interface BridgeOptions {
-	/** Restricts the surface to the spike probes. Set for anything reachable from outside. */
-	spikeOnly?: boolean;
 }
 
 interface Statement {
@@ -20,20 +13,15 @@ interface Statement {
 	params?: unknown[];
 }
 
-const SPIKE_SQL = new Set(["SELECT 1", "SELECT sqlite_version()"]);
-const SPIKE_PREFIX = "spike/";
-const MAX_SKEW_S = 60;
-
 /** Serves a bridge request whose path is already stripped to `/d1/...`, `/kv/...` or `/r2/...`. */
-export async function handleBridge(req: Request, path: string, env: BridgeEnv, opts: BridgeOptions = {}): Promise<Response> {
+export async function handleBridge(req: Request, path: string, env: BridgeEnv): Promise<Response> {
 	const [, store, ...rest] = path.split("/");
 	const key = decodeURIComponent(rest.join("/"));
 
 	try {
-		if (store === "d1") return await d1(req, rest[0], env, opts);
+		if (store === "d1") return await d1(req, rest[0], env);
 		if (store !== "kv" && store !== "r2") return text(404, "unknown store");
 		if (key === "") return text(400, "missing key");
-		if (opts.spikeOnly && !key.startsWith(SPIKE_PREFIX)) return text(403, `key must start with ${SPIKE_PREFIX}`);
 		return store === "kv" ? await kv(req, key, env) : await r2(req, key, env);
 	} catch (err) {
 		// D1 reports constraint and syntax errors as exceptions; the Go side needs the message.
@@ -41,14 +29,13 @@ export async function handleBridge(req: Request, path: string, env: BridgeEnv, o
 	}
 }
 
-async function d1(req: Request, op: string | undefined, env: BridgeEnv, opts: BridgeOptions): Promise<Response> {
+async function d1(req: Request, op: string | undefined, env: BridgeEnv): Promise<Response> {
 	if (req.method !== "POST") return text(405, "method not allowed");
 	if (op === "query") {
 		const st = await req.json<Statement>();
-		if (opts.spikeOnly && !SPIKE_SQL.has(st.sql)) return text(403, "sql not allowed");
 		return Response.json(result(await prepare(env, st).all()));
 	}
-	if (op === "batch" && !opts.spikeOnly) {
+	if (op === "batch") {
 		const { statements } = await req.json<{ statements: Statement[] }>();
 		const out = await env.DB.batch(statements.map((st) => prepare(env, st)));
 		return Response.json(out.map(result));
@@ -109,33 +96,6 @@ async function r2(req: Request, key: string, env: BridgeEnv): Promise<Response> 
 			return new Response(null, { status: 204 });
 	}
 	return text(405, "method not allowed");
-}
-
-/** Checks the HMAC on a public bridge request. Must match spike.Sign in the Go app. */
-export async function verifySignature(req: Request, path: string, body: ArrayBuffer, secret: string, nowS = Date.now() / 1000): Promise<boolean> {
-	const ts = req.headers.get("X-Bridge-Ts");
-	const sig = req.headers.get("X-Bridge-Sig");
-	if (!ts || !sig || Math.abs(nowS - Number(ts)) > MAX_SKEW_S) return false;
-	const expected = await sign(secret, ts, req.method, path, body);
-	return timingSafeEqual(expected, sig);
-}
-
-export async function sign(secret: string, ts: string, method: string, path: string, body: ArrayBuffer): Promise<string> {
-	const bodySum = hex(await crypto.subtle.digest("SHA-256", body));
-	const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-	const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${ts}\n${method}\n${path}\n${bodySum}`));
-	return hex(mac);
-}
-
-function hex(buf: ArrayBuffer): string {
-	return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-
-function timingSafeEqual(a: string, b: string): boolean {
-	if (a.length !== b.length) return false;
-	let diff = 0;
-	for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-	return diff === 0;
 }
 
 function text(status: number, msg: string): Response {

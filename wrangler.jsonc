@@ -37,10 +37,7 @@
 
   "vars": {
     "APP_ENV": "local",
-    "PUBLIC_ORIGIN": "http://localhost:8787",
-    // Phase 0 spike endpoints (/x/spike/*, /__bridge/*). Remove with internal/spike.
-    "SPIKE_ENABLED": "1",
-    "BRIDGE_PUBLIC_URL": "http://host.docker.internal:8787/__bridge"
+    "PUBLIC_ORIGIN": "http://localhost:8787"
   },
 
   "env": {
@@ -70,9 +67,7 @@
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
       "vars": {
         "APP_ENV": "staging",
-        "PUBLIC_ORIGIN": "https://staging.halid.org",
-        "SPIKE_ENABLED": "1",
-        "BRIDGE_PUBLIC_URL": "https://staging.halid.org/__bridge"
+        "PUBLIC_ORIGIN": "https://staging.halid.org"
       }
     },
 
@@ -105,9 +100,7 @@
       "vars": {
         "APP_ENV": "prod",
         // Admin login on prod needs this origin and its own OAuth client (Phase 3).
-        "PUBLIC_ORIGIN": "https://halid.org",
-        "SPIKE_ENABLED": "0",
-        "BRIDGE_PUBLIC_URL": ""
+        "PUBLIC_ORIGIN": "https://halid.org"
       }
     }
   }
