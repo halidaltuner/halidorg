@@ -103,7 +103,7 @@ The template's Workers Routes, KV and Account Settings rows come from Cloudflare
 
 ## 5. Cloudflare Access on staging
 
-Staging sits behind Access as a second layer in front of the app's own Google login (ADR-005). Set up in the Zero Trust dashboard (team `deepcontrol`, Free plan) on 2026-10-17:
+Staging sits behind Access as a second layer in front of the app's own Google login (ADR-005). Set up in the Zero Trust dashboard (team domain `halid-staging.cloudflareaccess.com`, Free plan) on 2026-10-17. The login page shows the organization name `halid.org` (Reusable components > Custom pages > Access login page).
 
 - Application `halidorg staging`, self-hosted, destination `staging.halid.org`, session 24 hours.
 - Policy `halid.org accounts only`: Allow, include "Emails ending in" `@halid.org`.
