@@ -2,6 +2,7 @@
 
 Prerequisite: Phase 3 exit check is all "done" (site is live).
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
+Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
 ## 4.1 Project schema (software + homelab)
 
@@ -42,11 +43,11 @@ Propose a plan first, then wait for my approval.
 ```
 Read CLAUDE.md and CONTENT_MODEL.md §4 (GitHub).
 Phase 4, step 4:
-1. Cron (every 6h) enqueues a GitHub sync job: repos, languages, releases, notable activity and 52 weeks of contribution counts via GraphQL. Token from Worker secrets.
+1. Cron (every 6h) enqueues a GitHub sync job, handled by the consumer Worker and forwarded to the container: repos, languages, releases, notable activity and 52 weeks of contribution counts via GraphQL. Token from Worker secrets.
 2. Tables gh_repos, gh_activity, gh_weekly, gh_languages; upsert, never delete repos that are linked to projects.
 3. Wire the Projects GitHub section: 52-week strip with 3 intensity buckets, language bar, pinned repos, releases.
 4. Admin GitHub screen (not designed): last sync, run now, pin/unpin, link repo to project.
-5. Handle rate limits and partial failures; log to job_runs.
+5. Handle rate limits and partial failures; log to job_runs. The GitHub token is a container env var: remember the DO restart caveat when rotating it.
 Propose a plan first, then wait for my approval.
 ```
 

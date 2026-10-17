@@ -2,6 +2,7 @@
 
 Prerequisite: Phase 1 exit check is all "done".
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
+Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
 ## 2.1 Schema for note, snippet, link, fav + categories
 
@@ -11,7 +12,8 @@ Phase 2, step 1:
 1. Migration: notes, snippets, snippet_files, links, favs, categories (with tone).
 2. internal/content/{note,snippet,link,fav}: model, repo, validate, tests. Reuse the entries + revisions machinery from Phase 1.
 3. Purge rules for each new kind in internal/jobs/purge.go (item, list, category, home stream, feeds, sitemap) with tests.
-4. Per-kind RSS/Atom/JSON feeds.
+4. Search: add index documents for note, snippet (filenames + code), link (title, domain, comment) and fav to the SEARCH DB job, with a kind column for prefix filters.
+5. Per-kind RSS/Atom/JSON feeds.
 Propose a plan first, then wait for my approval.
 ```
 
@@ -47,7 +49,7 @@ Phase 2, step 4:
 1. /admin/quick pixel-close at 390px: paste URL, fetch title/description/domain (server-side, with timeout and size limit), choose link/fav/note, comment, tr/en, draft or publish, success screen.
 2. Hit targets at least 44px; works without JS as a plain form.
 3. Bookmarklet that opens /admin/quick?url=...&title=... in a small window.
-4. URL fetch must block private IP ranges and non-http(s) schemes (SSRF guard), with tests.
+4. URL fetch must block private IP ranges and non-http(s) schemes (SSRF guard), with tests. If the fetch runs in the container, confirm it does not go through the bridge host.
 Propose a plan first, then wait for my approval.
 ```
 
@@ -58,7 +60,7 @@ Read CLAUDE.md and DESIGN.md §4 and §7.
 Phase 2, step 5:
 1. Admin categories and tags (not designed: dashboard density): create, rename TR/EN, tone picker limited to DESIGN.md tones, reorder, merge tags.
 2. Home stream: add note, snippet, link, fav rows with kind glyph tiles and kind chips (?kind=).
-3. Command palette: add prefixes n: s: l: f: backed by a small JSON index rebuilt on publish.
+3. Command palette: add prefixes n: s: l: f: as kind filters on the SEARCH DB FTS5 query served by the Worker (ADR-010). No separate JSON index.
 Propose a plan first, then wait for my approval.
 ```
 

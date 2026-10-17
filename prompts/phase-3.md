@@ -2,6 +2,7 @@
 
 Prerequisite: Phase 2 exit check is all "done". Have a fresh Ghost JSON export and the content/images folder ready.
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
+Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
 ## 3.1 Ghost importer (dry run)
 
@@ -24,7 +25,7 @@ Phase 3, step 2:
 1. Commit mode: write entries, revisions (origin = import), tags, media and redirects (301) in batches, idempotent on re-run (keyed by Ghost id).
 2. Admin Import screen (not designed): upload export + images zip, show the dry-run report, confirm, progress via job_runs.
 3. Admin Redirects screen (not designed): list, add, delete, test a path.
-4. Re-render all imported entries and warm KV.
+4. Re-render all imported entries, rebuild the SEARCH index for them, and warm KV.
 Propose a plan first, then wait for my approval.
 ```
 
@@ -34,7 +35,7 @@ Propose a plan first, then wait for my approval.
 Read CLAUDE.md and DESIGN.md §9.
 Phase 3, step 3:
 1. Find every placeholder from the prototypes in templates and seeds (names, bio, tagline, sample posts, counts) and move them to site_settings or real content. List what I still need to provide.
-2. Crawl staging: every internal link returns 200, every old Ghost URL from the import map returns 301 to a 200.
+2. Crawl staging with the Access service token: every internal link returns 200, every old Ghost URL from the import map returns 301 to a 200.
 3. Lighthouse on Home and one Post (mobile): report LCP, CLS, JS size against the Phase 7 budget.
 4. Check robots.txt and noindex on staging, index on prod.
 Do not deploy to prod. Propose a plan first, then wait for my approval.
@@ -45,9 +46,10 @@ Do not deploy to prod. Propose a plan first, then wait for my approval.
 ```
 Read CLAUDE.md and ARCHITECTURE.md §5.
 Phase 3, step 4: write docs/runbook-cutover.md, do not execute it.
-1. Steps: final Ghost export, prod import, prod Google OAuth client and redirect URIs, secrets, DNS switch for halid.org, cache warm-up, smoke tests, rollback plan (DNS back to Ghost).
+1. Steps: final Ghost export, prod import, prod Google OAuth client and redirect URIs (with auth_time enabled), secrets, enable prod Google login, add the halid.org route to the prod Worker (today prod only runs on halidorg-prod.halid-09d.workers.dev), DNS switch, cache warm-up, smoke tests, rollback plan (DNS back to Ghost).
 2. Mark which steps I run manually and which commands Claude Code can run.
-3. Nightly D1 export to R2 enabled before cutover.
+3. Nightly D1 export to R2 enabled before cutover (main DB only; the SEARCH DB is rebuildable and excluded).
+4. Note the DO restart caveat: secrets set right before cutover may need a container restart to take effect.
 Propose a plan first, then wait for my approval.
 ```
 
