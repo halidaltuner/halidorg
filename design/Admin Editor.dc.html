@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}textarea:focus-visible,input:focus-visible{outline-offset:0}</style>
+</helmet>
+<div style="height:100vh;display:flex;flex-direction:column;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px">
+  <div style="height:52px;flex:none;border-bottom:1px solid #DCE1E8;background:#FFFFFF;display:flex;align-items:center;gap:12px;padding:0 16px">
+    <a href="Admin Dashboard.dc.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578;text-decoration:none">← posts</a>
+    <span style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">{{ title }}</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid {{ statusColor }};color:{{ statusColor }}">{{ status }}</span>
+    <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ saveLabel }}</span>
+    <span style="margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:12px;padding:3px 8px;border-radius:4px;background:#FEF3E2;color:#B45309;border:1px solid #B45309">staging</span>
+    <button onClick="{{ save }}" style="font:inherit;padding:6px 12px;border-radius:4px;border:1px solid #DCE1E8;background:#FFFFFF;cursor:pointer;display:flex;gap:8px;align-items:center">save<span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">⌘S</span></button>
+    <button onClick="{{ publish }}" style="font:inherit;padding:6px 12px;border-radius:4px;border:1px solid #0E7490;background:#0E7490;color:#FFFFFF;cursor:pointer;display:flex;gap:8px;align-items:center">publish<span style="font-family:'JetBrains Mono',monospace;font-size:11px;opacity:.8">⌘⇧P</span></button>
+  </div>
+  <div style="flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 280px">
+    <div style="display:flex;flex-direction:column;border-right:1px solid #DCE1E8;background:#FFFFFF;min-height:0">
+      <div style="padding:8px 16px;border-bottom:1px solid #DCE1E8;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578;display:flex;justify-content:space-between"><span>markdown · en</span><span>{{ words }} words</span></div>
+      <textarea value="{{ md }}" onChange="{{ onMd }}" spellcheck="false" style="flex:1;resize:none;border:0;outline:none;padding:16px 20px;font-family:'JetBrains Mono',monospace;font-size:14px;line-height:1.7;color:#0E1525;background:#FFFFFF"></textarea>
+    </div>
+    <div style="overflow:auto;padding:32px 40px;border-right:1px solid #DCE1E8">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578;margin-bottom:16px">preview</div>
+      <div style="max-width:60ch;display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{ blocks }}" as="b" hint-placeholder-count="6">
+          <sc-if value="{{ b.h1 }}" hint-placeholder-val="{{ false }}"><h1 style="margin:0;font-size:32px;line-height:1.15;font-weight:600;letter-spacing:-0.02em">{{ b.text }}</h1></sc-if>
+          <sc-if value="{{ b.h2 }}" hint-placeholder-val="{{ false }}"><h2 style="margin:10px 0 0;font-size:22px;font-weight:600">{{ b.text }}</h2></sc-if>
+          <sc-if value="{{ b.p }}" hint-placeholder-val="{{ true }}"><p style="margin:0;font-size:16px;line-height:1.7;text-wrap:pretty">{{ b.text }}</p></sc-if>
+          <sc-if value="{{ b.li }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;font-size:16px;line-height:1.6"><span style="color:#5A6578">–</span><span>{{ b.text }}</span></div></sc-if>
+          <sc-if value="{{ b.code }}" hint-placeholder-val="{{ false }}"><pre style="margin:0;padding:12px 14px;background:#EEF1F5;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.6;overflow:auto">{{ b.text }}</pre></sc-if>
+        </sc-for>
+      </div>
+    </div>
+    <aside style="overflow:auto;background:#FFFFFF;display:flex;flex-direction:column">
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid #DCE1E8">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">kind</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap"><span style="padding:3px 8px;border-radius:4px;background:#0E1525;color:#FFFFFF;font-size:12px">post</span><span style="padding:3px 8px;border-radius:4px;border:1px solid #DCE1E8;font-size:12px;color:#5A6578">note</span><span style="padding:3px 8px;border-radius:4px;border:1px solid #DCE1E8;font-size:12px;color:#5A6578">snippet</span></div>
+        <label style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">series</label>
+        <div style="padding:6px 8px;border:1px solid #DCE1E8;border-radius:4px;background:#EEF1F5">building kromatik · 2/4</div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #DCE1E8">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">tags</label>
+        <div style="display:flex;gap:4px;flex-wrap:wrap">
+          <sc-for list="{{ tags }}" as="t" hint-placeholder-count="3"><button onClick="{{ t.remove }}" style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:999px;border:0;background:#EEF1F5;cursor:pointer;color:#0E1525">#{{ t.name }} ×</button></sc-for>
+        </div>
+        <input value="{{ tagDraft }}" onChange="{{ onTag }}" onKeyDown="{{ tagKey }}" placeholder="add tag ↵" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 8px;border:1px solid #DCE1E8;border-radius:4px;background:#EEF1F5;color:#0E1525"></input>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid #DCE1E8">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">cover</label>
+        <div style="aspect-ratio:1200/630;border-radius:4px;border:1px dashed #DCE1E8;background:repeating-linear-gradient(135deg,#EEF1F5 0 8px,#F7F8FA 8px 16px);display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">drop cover · uses OG template if empty</div>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid #DCE1E8">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">seo description · {{ seoLen }}/160</label>
+        <textarea value="{{ seo }}" onChange="{{ onSeo }}" rows="3" style="font:inherit;font-size:13px;line-height:1.5;padding:6px 8px;border:1px solid #DCE1E8;border-radius:4px;background:#EEF1F5;resize:vertical;color:#0E1525"></textarea>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid #DCE1E8">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">translation</label>
+        <div style="display:flex;justify-content:space-between;align-items:center"><span>tr</span><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#B45309">missing</span></div>
+        <a href="#" style="font-size:13px;text-decoration:none">create tr draft from this →</a>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:6px;border-bottom:1px solid #DCE1E8">
+        <label style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">revisions · {{ revCount }}</label>
+        <sc-for list="{{ revs }}" as="r" hint-placeholder-count="3"><div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:12px"><span>{{ r.at }}</span><span style="color:#5A6578">{{ r.kind }}</span></div></sc-for>
+      </div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:8px">
+        <sc-if value="{{ notConfirming }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ askDelete }}" style="font:inherit;font-size:13px;padding:6px 10px;border-radius:4px;border:1px solid #E11D48;background:#FFFFFF;color:#E11D48;cursor:pointer;align-self:flex-start">delete entry</button>
+        </sc-if>
+        <sc-if value="{{ confirming }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #E11D48;border-radius:4px">
+            <span style="font-size:13px;line-height:1.5">3 entries link here. Type <code style="font-family:'JetBrains Mono',monospace;color:#E11D48">htmx-first-admin</code> to delete.</span>
+            <input value="{{ confirmText }}" onChange="{{ onConfirm }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:6px 8px;border:1px solid #DCE1E8;border-radius:4px"></input>
+            <div style="display:flex;gap:6px">
+              <button disabled="{{ deleteDisabled }}" onClick="{{ doDelete }}" style="font:inherit;font-size:12px;padding:4px 10px;border-radius:4px;border:0;background:#E11D48;color:#FFFFFF;cursor:pointer;opacity:{{ deleteOpacity }}">delete</button>
+              <button onClick="{{ cancelDelete }}" style="font:inherit;font-size:12px;padding:4px 10px;border-radius:4px;border:1px solid #DCE1E8;background:#FFFFFF;cursor:pointer">cancel</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const MD = `# Notes on an htmx-first admin
+
+The admin for this site has one rule: a full page reload should never be necessary while editing.
+
+## Why not an SPA
+
+An SPA would duplicate the validation, routing and templates that already live on the server.
+
+- every form posts and returns a fragment
+- every form still works without JavaScript
+
+## Autosave meets revisions
+
+\`\`\`
+hx-trigger="keyup changed delay:800ms"
+\`\`\`
+
+The first version wrote a revision on every save.`;
+function parse(md) {
+  const out = []; let code = null;
+  md.split('\n').forEach(l => {
+    if (l.startsWith('```')) { if (code) { out.push({ code:true, text:code.join('\n') }); code = null; } else code = []; return; }
+    if (code) { code.push(l); return; }
+    if (!l.trim()) return;
+    if (l.startsWith('# ')) out.push({ h1:true, text:l.slice(2) });
+    else if (l.startsWith('## ')) out.push({ h2:true, text:l.slice(3) });
+    else if (/^[-*] /.test(l)) out.push({ li:true, text:l.slice(2) });
+    else out.push({ p:true, text:l.replace(/`/g,'') });
+  });
+  if (code) out.push({ code:true, text:code.join('\n') });
+  return out;
+}
+const now = () => new Date().toTimeString().slice(0,5);
+class Component extends DCLogic {
+  state = { md:MD, status:'draft', saved:'saved 14:02', tags:['htmx','go','admin'], tagDraft:'', seo:'How the kromatik admin avoids full reloads with htmx fragments, and how autosave stopped flooding revisions.', revs:[['14:02','autosave'],['13:40','save'],['yesterday','save']], confirming:false, confirmText:'' };
+  componentDidMount() {
+    this.onK = e => {
+      if (!(e.metaKey || e.ctrlKey)) return;
+      if (e.shiftKey && e.key.toLowerCase() === 'p') { e.preventDefault(); this.publish(); }
+      else if (e.key.toLowerCase() === 's') { e.preventDefault(); this.save(); }
+    };
+    window.addEventListener('keydown', this.onK);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onK); clearTimeout(this.t); }
+  save = () => this.setState(s => ({ saved:'saved ' + now(), revs:[[now(),'save'], ...s.revs] }));
+  publish = () => this.setState(s => ({ status:'published', saved:'published ' + now(), revs:[[now(),'publish'], ...s.revs] }));
+  renderVals() {
+    const s = this.state;
+    const title = (s.md.match(/^# (.+)$/m) || [,'untitled'])[1];
+    return {
+      title, md:s.md, blocks: parse(s.md), words: s.md.split(/\s+/).filter(Boolean).length,
+      status:s.status, statusColor: s.status==='published' ? '#15803D' : '#4F46E5', saveLabel:s.saved,
+      save:this.save, publish:this.publish,
+      onMd: e => { const v = e.target.value; this.setState({ md:v, saved:'editing…' }); clearTimeout(this.t);
+        this.t = setTimeout(() => this.setState(st => ({ saved:'autosaved ' + now(), revs: st.revs[0][1]==='autosave' ? [[now(),'autosave'], ...st.revs.slice(1)] : [[now(),'autosave'], ...st.revs] })), 800); },
+      tags: s.tags.map(t => ({ name:t, remove: () => this.setState(st => ({ tags: st.tags.filter(x => x !== t) })) })),
+      tagDraft:s.tagDraft, onTag: e => this.setState({ tagDraft:e.target.value }),
+      tagKey: e => { if (e.key === 'Enter' && s.tagDraft.trim()) this.setState(st => ({ tags:[...st.tags, st.tagDraft.trim().replace(/^#/,'')], tagDraft:'' })); },
+      seo:s.seo, seoLen:s.seo.length, onSeo: e => this.setState({ seo:e.target.value }),
+      revs: s.revs.slice(0,5).map(([at,kind]) => ({ at, kind })), revCount: s.revs.length + 31,
+      confirming:s.confirming, notConfirming:!s.confirming, confirmText:s.confirmText,
+      askDelete: () => this.setState({ confirming:true }), cancelDelete: () => this.setState({ confirming:false, confirmText:'' }),
+      onConfirm: e => this.setState({ confirmText:e.target.value }),
+      deleteDisabled: s.confirmText !== 'htmx-first-admin', deleteOpacity: s.confirmText === 'htmx-first-admin' ? 1 : 0.4,
+      doDelete: () => { location.href = 'Admin Dashboard.dc.html'; }
+    };
+  }
+}
+</script>
+</body>
+</html>

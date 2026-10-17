@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="{{ navActive }}" hint-size="100%,66px"></dc-import>
+  <section style="background:{{ tint }};border-bottom:1px solid #DCE1E8">
+    <div style="max-width:1200px;margin:0 auto;padding:40px 24px 48px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:40px;align-items:center">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <a href="{{ backHref }}" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:{{ ink }};text-decoration:none">← {{ backLabel }}</a>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:3px 8px;border-radius:4px;background:#FFFFFF;color:{{ ink }};border:1px solid {{ ink }}">{{ p.status }}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{{ ink }}">{{ p.kind }}</span>
+        </div>
+        <h1 style="margin:0;font-size:48px;line-height:1.08;font-weight:600;letter-spacing:-0.025em;text-wrap:balance">{{ p.name }}</h1>
+        <p style="margin:0;font-size:20px;line-height:1.6;color:#0E1525;max-width:46ch;text-wrap:pretty">{{ p.tagline }}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <sc-for list="{{ p.links }}" as="l" hint-placeholder-count="2">
+            <a href="#" style="padding:9px 14px;border-radius:4px;background:{{ l.bg }};color:{{ l.fg }};border:1px solid {{ ink }};text-decoration:none;font-size:15px;font-weight:500">{{ l.label }}</a>
+          </sc-for>
+        </div>
+      </div>
+      <div style="position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;box-shadow:0 16px 40px rgba(14,21,37,.14)">
+        <dc-import name="Cover" style="position:absolute;inset:0" slot="{{ coverSlot }}" tone="{{ p.tone }}" label="{{ coverLabel }}" hint-size="100%,100%"></dc-import>
+      </div>
+    </div>
+  </section>
+
+  <div style="max-width:1200px;margin:0 auto;padding:0 24px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:#DCE1E8;border:1px solid #DCE1E8;border-radius:8px;overflow:hidden;margin-top:-28px;position:relative">
+      <sc-for list="{{ p.facts }}" as="f" hint-placeholder-count="4">
+        <div style="background:#FFFFFF;padding:16px 20px;display:flex;flex-direction:column;gap:4px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ f.k }}</span>
+          <span style="font-size:20px;font-weight:600">{{ f.v }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <div style="margin-top:56px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;align-items:start">
+      <article style="grid-column:span 2;min-width:0;display:flex;flex-direction:column;gap:20px;font-size:18px;line-height:1.7">
+        <sc-for list="{{ p.sections }}" as="s" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:12px;max-width:68ch">
+            <h2 style="margin:0;font-size:28px;line-height:1.3;font-weight:600;letter-spacing:-0.01em">{{ s.h }}</h2>
+            <p style="margin:0;text-wrap:pretty">{{ s.p }}</p>
+          </div>
+        </sc-for>
+        <div style="display:grid;grid-template-columns:2fr 1fr;grid-template-rows:180px 180px;gap:12px;margin-top:12px">
+          <div style="position:relative;grid-row:span 2;border-radius:8px;overflow:hidden"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ g1 }}" tone="{{ p.tone }}" label="gallery 1" hint-size="100%,100%"></dc-import></div>
+          <div style="position:relative;border-radius:8px;overflow:hidden"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ g2 }}" tone="navy" label="gallery 2" hint-size="100%,100%"></dc-import></div>
+          <div style="position:relative;border-radius:8px;overflow:hidden"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ g3 }}" tone="violet" label="gallery 3" hint-size="100%,100%"></dc-import></div>
+        </div>
+      </article>
+
+      <aside style="display:flex;flex-direction:column;gap:24px;position:sticky;top:24px">
+        <section style="background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;overflow:hidden">
+          <h3 style="margin:0;padding:12px 16px;border-bottom:1px solid #DCE1E8;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;background:{{ tint }};color:{{ ink }}">{{ listTitle }}</h3>
+          <sc-for list="{{ p.list }}" as="r" hint-placeholder-count="5">
+            <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:9px 16px;border-top:1px solid #EEF1F5;font-size:14px">
+              <span>{{ r.a }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ r.b }}</span>
+            </div>
+          </sc-for>
+        </section>
+        <section style="display:flex;flex-direction:column">
+          <h3 style="margin:0 0 12px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#5A6578">build log</h3>
+          <sc-for list="{{ p.log }}" as="e" hint-placeholder-count="4">
+            <div style="display:grid;grid-template-columns:14px minmax(0,1fr);gap:12px;padding-bottom:16px">
+              <span style="width:10px;height:10px;margin-top:5px;border-radius:50%;background:{{ ink }};box-shadow:0 0 0 3px {{ tint }}"></span>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ e.d }}</span>
+                <span style="font-size:15px;line-height:1.5">{{ e.t }}</span>
+              </div>
+            </div>
+          </sc-for>
+        </section>
+      </aside>
+    </div>
+  </div>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const TONES = { green:['#D9F0E0','#166534'], cyan:['#D7F1F7','#0E7490'], amber:['#FCEBCF','#92400E'], orange:['#FDE3D3','#9A3412'], violet:['#EBE2FD','#6D28D9'], rose:['#FCE1E7','#BE123C'] };
+const L = (repo, demo) => [{ label:repo, primary:true }, { label:demo }];
+const P = {
+  site: { type:'software', name:'halid.org', status:'active', kind:'go · postgres · htmx', tone:'green', tagline:'This site: a bilingual engineering notebook with a htmx admin, tech radar and webmentions.', links:L('github →','changelog'),
+    facts:[['started','2025-11'],['commits','1,482'],['stars','42'],['deploys','318']],
+    sections:[{ h:'Why', p:'Ghost was fine until I wanted snippets, a radar and bilingual pairing as first-class content. A small Go server with Postgres turned out simpler than bending a CMS.' },{ h:'How it works', p:'Every entry is a row with a kind, a language and an optional translation pair. Pages render server-side; the admin uses htmx fragments for every interaction, so a full reload is never needed while editing.' }],
+    listTitle:'stack', list:[['Go 1.23','server'],['Postgres 16','storage + search'],['htmx 2','admin'],['CodeMirror 6','editor'],['Docker Compose','deploy']],
+    log:[['2026-10-09','Webmentions moderation queue'],['2026-09-28','Ghost import with redirects'],['2026-08-14','Tech radar editions'],['2025-11-02','First commit']] },
+  radargen: { type:'software', name:'radargen', status:'maintained', kind:'go · svg · cli', tone:'cyan', tagline:'Generate a tech radar SVG and edition diffs from a single YAML file.', links:L('github →','docs'),
+    facts:[['version','v0.4.0'],['stars','318'],['downloads','4.1k'],['contributors','9']],
+    sections:[{ h:'Why', p:'Existing radar tools want a spreadsheet and a JS runtime. I wanted a static SVG I could commit and diff.' },{ h:'Edition diffs', p:'Each run compares against the previous edition and marks blips as new or moved, with an arrow pointing toward the ring they came from.' }],
+    listTitle:'stack', list:[['Go','cli'],['text/template','svg output'],['yaml.v3','input'],['GitHub Actions','release']],
+    log:[['2026-10-11','v0.4.0 edition diffs'],['2026-08-30','v0.3.1 keyboard nav'],['2026-05-12','v0.2 quadrant labels'],['2026-02-01','v0.1']] },
+  ghost2md: { type:'software', name:'ghost2md', status:'paused', kind:'go · cli', tone:'amber', tagline:'Convert a Ghost JSON export into Markdown files with front matter and a redirect map.', links:L('github →','readme'),
+    facts:[['version','v0.3'],['stars','87'],['posts migrated','140'],['last commit','3mo']],
+    sections:[{ h:'What it does', p:'Reads the Ghost export, converts mobiledoc and lexical to Markdown, rewrites image paths and emits a redirects file so no old URL breaks.' }],
+    listTitle:'stack', list:[['Go','cli'],['goldmark','markdown'],['lexical parser','input']],
+    log:[['2026-07-02','Lexical support'],['2026-03-18','Redirect map output'],['2026-02-10','v0.1']] },
+  rack: { type:'homelab', name:'3-node Proxmox cluster in a 10" rack', status:'running', kind:'homelab · rack', tone:'orange', tagline:'Three mini PCs, a 2.5GbE switch and a UPS in a desk-sized rack. Hosts this site’s staging, backups and home automation.', links:[{ label:'build log', primary:true },{ label:'grafana snapshot' }],
+    facts:[['power','38 W idle'],['nodes','3'],['ram','96 GB'],['cost','₺41.2k']],
+    sections:[{ h:'Goal', p:'Replace a noisy tower with something quiet enough for the living room that can still lose a node without losing services.' },{ h:'Build', p:'3D-printed brackets hold three N100 mini PCs. Ceph was overkill, so storage is ZFS on each node with replication every 15 minutes.' },{ h:'Lessons', p:'Cable management took longer than the software. Label both ends of every cable before it goes in.' }],
+    listTitle:'parts', list:[['3× N100 mini PC, 32GB','₺27.0k'],['2.5GbE 8-port switch','₺4.8k'],['10" rack, 9U','₺3.6k'],['UPS 650VA','₺3.9k'],['PLA brackets, cables','₺1.9k']],
+    log:[['2026-10-14','Added 2.5GbE switch'],['2026-09-02','UPS + graceful shutdown via NUT'],['2026-07-20','Third node joined'],['2026-06-11','Rack assembled']] },
+  eink: { type:'homelab', name:'e-ink status board', status:'done', kind:'diy · esp32', tone:'violet', tagline:'A 7.5" e-ink panel on the hallway wall showing weather, transit and homelab health.', links:[{ label:'firmware', primary:true },{ label:'stl files' }],
+    facts:[['battery','~3 months'],['refresh','15 min'],['panel','7.5" 3-color'],['cost','₺2.9k']],
+    sections:[{ h:'Goal', p:'Glanceable info without another glowing screen.' },{ h:'Build', p:'An ESP32 wakes every 15 minutes, fetches a pre-rendered PNG from the cluster and goes back to deep sleep.' }],
+    listTitle:'parts', list:[['ESP32-S3 board','₺450'],['7.5" e-ink panel','₺1.8k'],['LiPo 3000mAh','₺320'],['Oak frame (DIY)','₺330']],
+    log:[['2026-05-04','Wall mounted'],['2026-04-21','Deep sleep tuned'],['2026-04-02','First render']] }
+};
+class Component extends DCLogic {
+  renderVals() {
+    const id = new URLSearchParams(location.search).get('id') || 'site';
+    const raw = P[id] || P.site;
+    const [tint, ink] = TONES[raw.tone];
+    const hw = raw.type === 'homelab';
+    const p = { ...raw,
+      facts: raw.facts.map(([k,v]) => ({ k, v })),
+      list: raw.list.map(([a,b]) => ({ a, b })),
+      log: raw.log.map(([d,t]) => ({ d, t })),
+      links: raw.links.map(l => ({ label:l.label, bg: l.primary ? ink : '#FFFFFF', fg: l.primary ? '#FFFFFF' : ink })) };
+    return { p, tint, ink, navActive: hw ? 'homelab' : 'projects', backHref: hw ? 'Homelab.dc.html' : 'Projects.dc.html', backLabel: hw ? 'homelab & diy' : 'projects',
+      listTitle: raw.listTitle, coverSlot:'pd-' + id + '-cover', coverLabel: hw ? 'build photo' : 'project screenshot', g1:'pd-' + id + '-g1', g2:'pd-' + id + '-g2', g3:'pd-' + id + '-g3' };
+  }
+}
+</script>
+</body>
+</html>

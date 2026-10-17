@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#EEF1F5}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;justify-content:center;padding:32px 16px;box-sizing:border-box;background:#EEF1F5;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#0E1525">
+  <div style="width:100%;max-width:390px;min-height:760px;background:#F7F8FA;border:1px solid #DCE1E8;border-radius:8px;box-shadow:0 8px 32px rgba(14,21,37,.08);display:flex;flex-direction:column;overflow:hidden">
+    <div style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;border-bottom:1px solid #DCE1E8;background:#FFFFFF">
+      <a href="Admin Dashboard.dc.html" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5A6578;text-decoration:none;padding:12px 0">← admin</a>
+      <span style="font-weight:600;font-size:16px">quick capture</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 6px;border-radius:4px;color:#B45309;border:1px solid #B45309">staging</span>
+    </div>
+
+    <sc-if value="{{ done }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:12px;padding:24px;text-align:center">
+        <span style="width:12px;height:12px;border-radius:50%;background:#15803D"></span>
+        <div style="font-size:18px;font-weight:600">saved as {{ kind }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5A6578">{{ savedMeta }}</div>
+        <button onClick="{{ reset }}" style="margin-top:12px;height:48px;padding:0 20px;border-radius:4px;border:1px solid #DCE1E8;background:#FFFFFF;font:inherit;font-size:16px;cursor:pointer">capture another</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ editing }}" hint-placeholder-val="{{ true }}">
+      <div style="flex:1;display:flex;flex-direction:column;gap:20px;padding:20px 16px">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <label style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">url</label>
+          <div style="display:flex;gap:8px">
+            <input value="{{ url }}" onChange="{{ onUrl }}" inputmode="url" placeholder="paste a link" style="flex:1;min-width:0;height:48px;padding:0 12px;border:1px solid #DCE1E8;border-radius:4px;background:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:14px;color:#0E1525"></input>
+            <button onClick="{{ fetchMeta }}" style="height:48px;padding:0 14px;border-radius:4px;border:1px solid #0E1525;background:#0E1525;color:#FFFFFF;font:inherit;font-size:15px;cursor:pointer">{{ fetchLabel }}</button>
+          </div>
+        </div>
+
+        <sc-if value="{{ fetched }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">title</label>
+              <input value="{{ title }}" onChange="{{ onTitle }}" style="height:48px;padding:0 12px;border:1px solid #DCE1E8;border-radius:4px;background:#FFFFFF;font:inherit;font-size:16px;color:#0E1525"></input>
+              <div style="font-size:14px;line-height:1.5;color:#5A6578">{{ desc }}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ domain }}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">save as</label>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+                <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="3">
+                  <button onClick="{{ k.pick }}" style="height:48px;border-radius:4px;font:inherit;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;border:1px solid {{ k.border }};background:{{ k.bg }};color:#0E1525">
+                    <span style="width:8px;height:8px;border-radius:50%;background:{{ k.dot }}"></span>{{ k.label }}
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <label style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ commentLabel }}</label>
+              <textarea value="{{ comment }}" onChange="{{ onComment }}" rows="4" placeholder="why it matters…" style="padding:10px 12px;border:1px solid #DCE1E8;border-radius:4px;background:#FFFFFF;font:inherit;font-size:16px;line-height:1.5;resize:vertical;color:#0E1525"></textarea>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">lang</span>
+              <sc-for list="{{ langs }}" as="l" hint-placeholder-count="2">
+                <button onClick="{{ l.pick }}" style="min-width:48px;height:44px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:14px;cursor:pointer;border:1px solid {{ l.border }};background:{{ l.bg }};color:{{ l.color }}">{{ l.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:16px;border-top:1px solid #DCE1E8;background:#FFFFFF;display:flex;gap:8px">
+        <button onClick="{{ saveDraft }}" style="flex:1;height:52px;border-radius:4px;border:1px solid #DCE1E8;background:#FFFFFF;font:inherit;font-size:16px;cursor:pointer;opacity:{{ btnOpacity }}">draft</button>
+        <button onClick="{{ savePub }}" style="flex:2;height:52px;border-radius:4px;border:0;background:#0E7490;color:#FFFFFF;font:inherit;font-size:16px;font-weight:500;cursor:pointer;opacity:{{ btnOpacity }}">publish</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;440px&quot;,&quot;height&quot;:&quot;840px&quot;}}">
+const KINDS = [['link','#5A6578'],['fav','#E11D48'],['note','#4F46E5']];
+class Component extends DCLogic {
+  state = { url:'https://hypermedia.systems/hypermedia-a-reintroduction/', fetched:false, loading:false, title:'', desc:'', kind:'link', comment:'', lang:'en', done:false, pub:false };
+  componentWillUnmount() { clearTimeout(this.t); }
+  fetchMeta = () => {
+    this.setState({ loading:true });
+    this.t = setTimeout(() => this.setState({ loading:false, fetched:true, title:'Hypermedia: A Reintroduction', desc:'Chapter 1 of Hypermedia Systems: what hypermedia is and why HTML deserves another look.' }), 700);
+  };
+  finish(pub) { if (this.state.fetched) this.setState({ done:true, pub }); }
+  renderVals() {
+    const s = this.state;
+    let domain = ''; try { domain = new URL(s.url).hostname; } catch (e) {}
+    return {
+      ...s, domain, editing: !s.done,
+      fetchLabel: s.loading ? '…' : 'fetch',
+      onUrl: e => this.setState({ url:e.target.value, fetched:false }),
+      onTitle: e => this.setState({ title:e.target.value }),
+      onComment: e => this.setState({ comment:e.target.value }),
+      fetchMeta: this.fetchMeta,
+      kinds: KINDS.map(([k,c]) => ({ label:k, dot:c, pick: () => this.setState({ kind:k }), bg: k===s.kind?'#EEF1F5':'#FFFFFF', border: k===s.kind?'#0E1525':'#DCE1E8' })),
+      langs: ['en','tr'].map(l => ({ label:l, pick: () => this.setState({ lang:l }), bg: l===s.lang?'#0E1525':'#FFFFFF', color: l===s.lang?'#FFFFFF':'#5A6578', border: l===s.lang?'#0E1525':'#DCE1E8' })),
+      commentLabel: s.kind === 'note' ? 'note' : 'my comment',
+      btnOpacity: s.fetched ? 1 : 0.4,
+      saveDraft: () => this.finish(false), savePub: () => this.finish(true),
+      savedMeta: (s.pub ? 'published' : 'draft') + ' · ' + s.lang + ' · ' + domain,
+      reset: () => this.setState({ done:false, fetched:false, url:'', title:'', desc:'', comment:'' })
+    };
+  }
+}
+</script>
+</body>
+</html>

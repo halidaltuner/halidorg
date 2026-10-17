@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="presentations" hint-size="100%,66px"></dc-import>
+  <section style="background:#0B1220;color:#E6EBF2">
+    <div style="max-width:1200px;margin:0 auto;padding:32px 24px 40px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center">
+        <a href="Presentations.dc.html" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#FB7185;text-decoration:none">← presentations</a>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8D98AB">GoTurkiye 2026 · 2026-09-21 · Istanbul · en</span>
+      </div>
+      <h1 style="margin:0;font-size:40px;line-height:1.1;font-weight:600;letter-spacing:-0.02em">htmx in production</h1>
+      <div style="position:relative;aspect-ratio:16/9;border-radius:8px;overflow:hidden;border:1px solid #24304A;background:#111A2E">
+        <dc-import name="Cover" style="position:absolute;inset:0" slot="deck-embed" tone="rose" label="html deck embed · iframe src=decks/htmx-in-production.html" hint-size="100%,100%"></dc-import>
+        <div style="position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(11,18,32,.88);font-family:'JetBrains Mono',monospace;font-size:13px;color:#E6EBF2">
+          <button onClick="{{ prev }}" style="width:32px;height:32px;border:1px solid #24304A;border-radius:4px;background:transparent;color:#E6EBF2;cursor:pointer">←</button>
+          <button onClick="{{ next }}" style="width:32px;height:32px;border:1px solid #24304A;border-radius:4px;background:transparent;color:#E6EBF2;cursor:pointer">→</button>
+          <span>{{ slide }} / 38</span>
+          <div style="flex:1;height:3px;background:#24304A;border-radius:2px;overflow:hidden"><div style="height:100%;width:{{ pct }};background:#FB7185"></div></div>
+          <a href="#" style="color:#22D3EE;text-decoration:none">fullscreen ↗</a>
+        </div>
+      </div>
+    </div>
+  </section>
+  <main style="max-width:1200px;margin:0 auto;padding:48px 24px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:start">
+    <article style="grid-column:span 2;min-width:0;display:flex;flex-direction:column;gap:20px;font-size:18px;line-height:1.7;max-width:68ch">
+      <h2 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-0.01em">Abstract</h2>
+      <p style="margin:0;text-wrap:pretty">A year ago I replaced a React admin with server-rendered fragments and htmx. This talk walks through what got simpler, what got harder, and the three patterns that carried the whole thing: out-of-band swaps, coalesced autosave and typed confirmations.</p>
+      <h2 style="margin:16px 0 0;font-size:28px;font-weight:600;letter-spacing:-0.01em">Outline</h2>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ outline }}" as="o" hint-placeholder-count="5">
+          <button onClick="{{ o.go }}" style="display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-radius:8px;border:1px solid #DCE1E8;background:#FFFFFF;cursor:pointer;text-align:left;font-family:inherit;font-size:16px;color:#0E1525" style-hover="border-color:#BE123C">
+            <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#BE123C">{{ o.n }}</span><span>{{ o.t }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">slide {{ o.s }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </article>
+    <aside style="display:flex;flex-direction:column;gap:16px">
+      <div style="background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px">
+        <a href="#" style="padding:10px 14px;border-radius:4px;background:#BE123C;color:#FFFFFF;text-decoration:none;font-weight:500;text-align:center">open deck ↗</a>
+        <a href="#" style="padding:10px 14px;border-radius:4px;border:1px solid #DCE1E8;color:#0E1525;text-decoration:none;text-align:center">download .html</a>
+        <a href="#" style="padding:10px 14px;border-radius:4px;border:1px solid #DCE1E8;color:#0E1525;text-decoration:none;text-align:center">watch recording · 32 min</a>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h3 style="margin:0;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#5A6578">related</h3>
+        <a href="Post.dc.html" style="font-size:15px;text-decoration:none">¶ Notes on an htmx-first admin</a>
+        <a href="Snippets.dc.html" style="font-size:15px;text-decoration:none">{} htmx: confirm with typed name</a>
+        <a href="Project Detail.dc.html?id=site" style="font-size:15px;text-decoration:none">◆ halid.org</a>
+      </div>
+    </aside>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const OUT = [['Why leave the SPA',3],['Fragments everywhere',9],['Out-of-band swaps',16],['Autosave without 900 revisions',24],['Typed confirmations',31]];
+class Component extends DCLogic {
+  state = { s:1 };
+  renderVals() {
+    const s = this.state.s;
+    return { slide:s, pct: (s / 38 * 100).toFixed(1) + '%',
+      prev: () => this.setState({ s: Math.max(1, s - 1) }), next: () => this.setState({ s: Math.min(38, s + 1) }),
+      outline: OUT.map(([t,n],i) => ({ n: String(i+1).padStart(2,'0'), t, s:n, go: () => { this.setState({ s:n }); window.scrollTo({ top:0, behavior:'smooth' }); } })) };
+  }
+}
+</script>
+</body>
+</html>

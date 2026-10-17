@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="photos" hint-size="100%,66px"></dc-import>
+  <section style="background:#EBE2FD;border-bottom:1px solid #D9C9FA">
+    <div style="max-width:1200px;margin:0 auto;padding:56px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#6D28D9">◐ {{ t.eyebrow }}</span>
+        <h1 style="margin:0;font-size:48px;line-height:1.08;font-weight:600;letter-spacing:-0.025em">{{ t.title }}</h1>
+        <p style="margin:0;font-size:18px;line-height:1.7;max-width:52ch">{{ t.sub }}</p>
+      </div>
+      <a href="#" style="padding:10px 16px;border-radius:4px;background:#6D28D9;color:#FFFFFF;text-decoration:none;font-weight:500">{{ t.profile }} ↗</a>
+    </div>
+  </section>
+  <main style="max-width:1200px;margin:0 auto;padding:40px 24px 0;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.pick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:999px;cursor:pointer;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }}">{{ c.label }} · {{ c.n }}</button>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));grid-auto-rows:120px;grid-auto-flow:dense;gap:12px">
+      <sc-for list="{{ photos }}" as="p" hint-placeholder-count="9">
+        <figure style="margin:0;position:relative;border-radius:8px;overflow:hidden;grid-row:span {{ p.rows }};grid-column:span {{ p.cols }}">
+          <dc-import name="Cover" style="position:absolute;inset:0" slot="{{ p.slot }}" tone="{{ p.tone }}" label="500px embed" hint-size="100%,100%"></dc-import>
+          <button onClick="{{ p.open }}" aria-label="open photo" style="position:absolute;left:8px;bottom:8px;border:0;border-radius:4px;padding:6px 10px;background:rgba(11,18,32,.82);color:#E6EBF2;font-family:'JetBrains Mono',monospace;font-size:11px;cursor:pointer">{{ p.title }} ↗</button>
+        </figure>
+      </sc-for>
+    </div>
+    <p style="margin:0;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ t.note }}</p>
+  </main>
+
+  <sc-if value="{{ hasOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ close }}" style="position:fixed;inset:0;z-index:100;background:rgba(11,18,32,.92);display:grid;place-items:center;padding:24px">
+      <div onClick="{{ stop }}" style="width:100%;max-width:1100px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;background:#111A2E;border:1px solid #24304A;border-radius:8px;overflow:hidden;color:#E6EBF2">
+        <div style="position:relative;grid-column:span 2;aspect-ratio:3/2;min-width:0"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ cur.slot }}" tone="{{ cur.tone }}" label="500px embed · large" hint-size="100%,100%"></dc-import></div>
+        <div style="padding:24px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#A78BFA">{{ cur.album }}</span><button onClick="{{ close }}" style="border:0;background:none;color:#8D98AB;font-family:'JetBrains Mono',monospace;cursor:pointer">esc ✕</button></div>
+          <h2 style="margin:0;font-size:24px;font-weight:600">{{ cur.title }}</h2>
+          <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 16px;font-family:'JetBrains Mono',monospace;font-size:12px">
+            <span style="color:#8D98AB">camera</span><span>{{ cur.cam }}</span>
+            <span style="color:#8D98AB">lens</span><span>{{ cur.lens }}</span>
+            <span style="color:#8D98AB">exposure</span><span>{{ cur.exp }}</span>
+            <span style="color:#8D98AB">place</span><span>{{ cur.place }}</span>
+          </div>
+          <a href="#" style="margin-top:auto;padding:10px 14px;border-radius:4px;background:#6D28D9;color:#FFFFFF;text-decoration:none;text-align:center">view on 500px ↗</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const PH = [
+  ['Galata at blue hour','istanbul','violet',3,1,'X-T5','23mm f/1.4','1/30 · f/2 · ISO 800','Karaköy'],
+  ['Ferry wake','istanbul','cyan',2,1,'X-T5','56mm f/1.2','1/1000 · f/4 · ISO 160','Kadıköy'],
+  ['Kaçkar ridge','mountains','green',2,1,'X-T5','16mm f/2.8','1/250 · f/8 · ISO 160','Rize'],
+  ['Solder smoke','workbench','amber',2,1,'X100V','23mm f/2','1/60 · f/2 · ISO 1600','home'],
+  ['Balat stairs','istanbul','rose',3,1,'X100V','23mm f/2','1/500 · f/5.6 · ISO 200','Balat'],
+  ['Fog over Uludağ','mountains','navy',2,2,'X-T5','70-300mm','1/320 · f/8 · ISO 320','Bursa'],
+  ['Rack cable art','workbench','orange',2,1,'X100V','23mm f/2','1/30 · f/2.8 · ISO 1250','home'],
+  ['Simit vendor','street','amber',2,1,'X100V','23mm f/2','1/250 · f/4 · ISO 400','Eminönü'],
+  ['Rain on Istiklal','street','indigo',3,1,'X-T5','33mm f/1.4','1/125 · f/1.4 · ISO 1600','Beyoğlu']
+];
+const T = {
+  en:{ eyebrow:'photos', title:'Streets, mountains and the workbench.', sub:'Embedded from my 500px profile. Click a frame for camera details.', profile:'500px profile', all:'all', note:'each tile hosts a 500px embed; replace the placeholder with the embed code per photo.' },
+  tr:{ eyebrow:'fotoğraflar', title:'Sokaklar, dağlar ve tezgah.', sub:'500px profilimden gömülü. Kamera detayları için bir kareye tıklayın.', profile:'500px profili', all:'hepsi', note:'her kutu bir 500px embed taşır; yer tutucuyu fotoğrafın embed koduyla değiştirin.' }
+};
+class Component extends DCLogic {
+  state = { album:'', open:-1, lang: localStorage.getItem('kromatik-lang') || 'en' };
+  componentDidMount() {
+    this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL);
+    this.onK = e => { if (e.key === 'Escape') this.setState({ open:-1 }); }; window.addEventListener('keydown', this.onK);
+  }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); window.removeEventListener('keydown', this.onK); }
+  renderVals() {
+    const { album, open, lang } = this.state; const t = T[lang];
+    const all = PH.map(([title,al,tone,rows,cols,cam,lens,exp,place],i) => ({ title, album:al, tone, rows, cols, cam, lens, exp, place, slot:'photo-' + i, open: () => this.setState({ open:i }) }));
+    const albums = ['', 'istanbul','street','mountains','workbench'];
+    return { t,
+      chips: albums.map(a => { const on = a === album; return { label: a || t.all, n: a ? all.filter(p => p.album === a).length : all.length, pick: () => this.setState({ album:a }), bg: on ? '#6D28D9' : '#FFFFFF', color: on ? '#FFFFFF' : '#5A6578', border: on ? '#6D28D9' : '#DCE1E8' }; }),
+      photos: all.filter(p => !album || p.album === album),
+      hasOpen: open >= 0, cur: all[open] || all[0],
+      close: () => this.setState({ open:-1 }), stop: e => e.stopPropagation()
+    };
+  }
+}
+</script>
+</body>
+</html>

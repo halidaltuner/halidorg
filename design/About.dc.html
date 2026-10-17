@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="about" hint-size="100%,66px"></dc-import>
+  <section style="background:#0B1220;color:#E6EBF2;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(#17223A 1px,transparent 1px),linear-gradient(90deg,#17223A 1px,transparent 1px);background-size:48px 48px;opacity:.6"></div>
+    <div style="position:relative;max-width:1200px;margin:0 auto;padding:64px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center">
+      <div style="grid-column:span 2;display:flex;flex-direction:column;gap:20px;min-width:0">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#22D3EE">// {{ t.eyebrow }}</span>
+        <h1 style="margin:0;font-size:56px;line-height:1.05;font-weight:600;letter-spacing:-0.03em">{{ t.hi }} <span style="font-family:'JetBrains Mono',monospace;text-shadow:-2px 0 rgba(251,113,133,.8),2px 0 rgba(34,211,238,.8)">Halid</span>.</h1>
+        <p style="margin:0;font-size:20px;line-height:1.65;color:#C9D1DE;max-width:56ch;text-wrap:pretty">{{ t.bio }}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <a href="#" style="padding:10px 16px;border-radius:4px;background:#22D3EE;color:#0B1220;text-decoration:none;font-weight:600">{{ t.contact }}</a>
+          <a href="#" style="padding:10px 16px;border-radius:4px;border:1px solid #24304A;color:#E6EBF2;text-decoration:none">cv.pdf</a>
+          <a href="#" style="padding:10px 16px;border-radius:4px;border:1px solid #24304A;color:#E6EBF2;text-decoration:none">github</a>
+          <a href="#" style="padding:10px 16px;border-radius:4px;border:1px solid #24304A;color:#E6EBF2;text-decoration:none">linkedin</a>
+        </div>
+      </div>
+      <div style="position:relative;aspect-ratio:4/5;max-width:340px;width:100%;justify-self:center">
+        <div style="position:absolute;inset:0;transform:translate(10px,10px);border-radius:8px;border:2px solid #FB7185"></div>
+        <div style="position:absolute;inset:0;transform:translate(-10px,-10px);border-radius:8px;border:2px solid #22D3EE"></div>
+        <div style="position:absolute;inset:0;border-radius:8px;overflow:hidden;background:#17223A;color:#8D98AB"><image-slot id="about-portrait" shape="rect" placeholder="portrait" style="position:absolute;inset:0;width:100%;height:100%"></image-slot></div>
+      </div>
+    </div>
+  </section>
+
+  <main style="max-width:1200px;margin:0 auto;padding:64px 24px 0;display:flex;flex-direction:column;gap:72px">
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+      <sc-for list="{{ skills }}" as="g" hint-placeholder-count="4">
+        <div style="padding:20px;border-radius:8px;background:{{ g.bg }};display:flex;flex-direction:column;gap:12px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:{{ g.fg }}">{{ g.h }}</span>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <sc-for list="{{ g.items }}" as="i" hint-placeholder-count="4"><span style="font-size:14px;padding:4px 10px;border-radius:999px;background:#FFFFFF;color:#0E1525">{{ i }}</span></sc-for>
+          </div>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:start">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h2 style="margin:0 0 12px;font-size:28px;font-weight:600;letter-spacing:-0.01em">{{ t.exp }}</h2>
+        <sc-for list="{{ jobs }}" as="j" hint-placeholder-count="4">
+          <div style="display:grid;grid-template-columns:16px minmax(0,1fr);gap:16px">
+            <div style="display:flex;flex-direction:column;align-items:center"><span style="width:12px;height:12px;border-radius:50%;margin-top:6px;background:{{ j.c }}"></span><span style="flex:1;width:2px;background:#DCE1E8;margin-top:4px"></span></div>
+            <div style="display:flex;flex-direction:column;gap:4px;padding-bottom:24px">
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ j.when }}</span>
+              <span style="font-size:18px;font-weight:600">{{ j.role }} <span style="font-weight:400;color:#5A6578">· {{ j.org }}</span></span>
+              <span style="font-size:15px;line-height:1.6;color:#5A6578">{{ j.note }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <a href="Certificates.dc.html" style="display:flex;flex-direction:column;gap:14px;padding:24px;border-radius:8px;background:#D7F1F7;color:#0E1525;text-decoration:none" style-hover="background:#C4E9F2">
+          <div style="display:flex;justify-content:space-between"><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#0E7490">✓ certificates</span><span style="color:#0E7490">→</span></div>
+          <div style="display:flex;gap:8px">
+            <sc-for list="{{ badges }}" as="b" hint-placeholder-count="5"><span style="width:52px;height:52px;background:{{ b }};clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)"></span></sc-for>
+          </div>
+          <span style="font-size:15px">CKA, AWS SA Associate, Terraform and 5 more</span>
+        </a>
+        <a href="Presentations.dc.html" style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-radius:8px;background:#FCE1E7;color:#0E1525;text-decoration:none"><span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#BE123C">▶ talks</span><br><span style="font-size:15px">12 talks at 7 events</span></span><span style="color:#BE123C">→</span></a>
+        <a href="Homelab.dc.html" style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-radius:8px;background:#FDE3D3;color:#0E1525;text-decoration:none"><span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#9A3412">⌁ homelab</span><br><span style="font-size:15px">9 hardware builds</span></span><span style="color:#9A3412">→</span></a>
+        <a href="Now.dc.html" style="display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-radius:8px;background:#E4E3FC;color:#0E1525;text-decoration:none"><span><span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#4338CA">● now</span><br><span style="font-size:15px">what I’m doing this month</span></span><span style="color:#4338CA">→</span></a>
+      </div>
+    </section>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const T = {
+  en:{ eyebrow:'about', hi:'Hi, I’m', bio:'Backend and platform engineer in Istanbul. I build web systems with Go and Postgres, run a small homelab, and write here in Turkish and English about what I learn along the way.', contact:'say hello', exp:'Experience' },
+  tr:{ eyebrow:'hakkımda', hi:'Merhaba, ben', bio:'İstanbul’da backend ve platform mühendisiyim. Go ve Postgres ile web sistemleri kuruyor, küçük bir homelab işletiyor ve öğrendiklerimi burada Türkçe ve İngilizce yazıyorum.', contact:'merhaba de', exp:'Deneyim' }
+};
+class Component extends DCLogic {
+  state = { lang: localStorage.getItem('kromatik-lang') || 'en' };
+  componentDidMount() { this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL); }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); }
+  renderVals() {
+    return { t: T[this.state.lang],
+      skills: [['languages','#D7F1F7','#0E7490',['Go','SQL','TypeScript','Python','Bash']],['platform','#D9F0E0','#166534',['Kubernetes','Terraform','AWS','Docker','NixOS']],['data','#E4E3FC','#4338CA',['Postgres','Redis','NATS','ClickHouse']],['hardware','#FDE3D3','#9A3412',['Proxmox','ESP32','KiCad','3D printing']]].map(([h,bg,fg,items]) => ({ h, bg, fg, items })),
+      jobs: [['2023 — now','Senior Platform Engineer','Fintech scale-up','Internal developer platform, Kubernetes, cost dashboards.','#0891B2'],['2020 — 2023','Backend Engineer','E-commerce marketplace','Search and checkout services in Go; Postgres FTS for Turkish.','#4F46E5'],['2018 — 2020','Software Engineer','Agency','Web apps for local clients; first homelab.','#15803D'],['2014 — 2018','B.Sc. Computer Engineering','University','Thesis on distributed caching.','#C2410C']].map(([when,role,org,note,c]) => ({ when, role, org, note, c })),
+      badges: ['#0E7490','#92400E','#6D28D9','#166534','#4338CA']
+    };
+  }
+}
+</script>
+</body>
+</html>

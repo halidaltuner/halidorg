@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="presentations" hint-size="100%,66px"></dc-import>
+  <section style="background:#FCE1E7;border-bottom:1px solid #F5C3CF">
+    <div style="max-width:1200px;margin:0 auto;padding:56px 24px;display:flex;flex-direction:column;gap:14px">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#BE123C">▶ {{ t.eyebrow }}</span>
+      <h1 style="margin:0;font-size:48px;line-height:1.08;font-weight:600;letter-spacing:-0.025em">{{ t.title }}</h1>
+      <p style="margin:0;font-size:18px;line-height:1.7;max-width:56ch">{{ t.sub }}</p>
+    </div>
+  </section>
+  <main style="max-width:1200px;margin:0 auto;padding:48px 24px 0;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="4">
+        <button onClick="{{ c.pick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:999px;cursor:pointer;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px">
+      <sc-for list="{{ talks }}" as="p" hint-placeholder-count="6">
+        <a href="Presentation Detail.dc.html" style="display:flex;flex-direction:column;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;overflow:hidden;text-decoration:none;color:#0E1525;box-shadow:0 1px 3px rgba(14,21,37,.06);transition:box-shadow 150ms ease-out,transform 150ms ease-out" style-hover="box-shadow:0 10px 28px rgba(14,21,37,.10);transform:translateY(-2px)">
+          <div style="aspect-ratio:16/9;position:relative">
+            <dc-import name="Cover" style="position:absolute;inset:0" slot="{{ p.slot }}" tone="{{ p.tone }}" label="title slide" hint-size="100%,100%"></dc-import>
+            <span style="position:absolute;right:12px;bottom:12px;font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 8px;border-radius:4px;background:#0B1220;color:#E6EBF2;pointer-events:none">{{ p.slides }} slides · html</span>
+          </div>
+          <div style="padding:18px 22px 22px;display:flex;flex-direction:column;gap:8px;flex:1">
+            <div style="display:flex;justify-content:space-between;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px"><span style="color:#BE123C">{{ p.event }}</span><span style="color:#5A6578">{{ p.lang }}</span></div>
+            <h2 style="margin:0;font-size:20px;line-height:1.35;font-weight:600;text-wrap:pretty">{{ p.title }}</h2>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#5A6578">{{ p.desc }}</p>
+            <div style="margin-top:auto;padding-top:10px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ p.date }} · {{ p.city }}</div>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const TALKS = [
+  ['htmx in production','GoTurkiye 2026','talk','en','2026-09-21','Istanbul','What a year of hypermedia-driven admin UI taught me.',38,'rose'],
+  ['Postgres full-text search for Turkish','PGDay TR','talk','tr','2026-06-12','Ankara','Dictionaries, unaccent and the dotless i.',42,'indigo'],
+  ['A homelab you can live with','DevFest Istanbul','lightning','en','2026-04-05','Istanbul','Quiet, cheap, recoverable: picking hardware for a 10" rack.',14,'orange'],
+  ['Shipping a tech radar as a static SVG','internal guild','workshop','en','2026-02-18','remote','Hands-on: from YAML to a diffable radar in an hour.',27,'cyan'],
+  ['Go context, cancellation and you','Go Meetup IST','talk','tr','2025-11-08','Istanbul','Graceful shutdown patterns that survive Kubernetes.',31,'green'],
+  ['Writing in two languages','IndieWeb Camp','lightning','en','2025-09-13','Berlin','Translation pairs, hreflang and the not-translated-yet page.',9,'violet']
+];
+const T = {
+  en:{ eyebrow:'presentations', title:'Talks, workshops and lightning sessions.', sub:'Every deck is a self-contained HTML file. Open one to present it in the browser or read along with notes.', all:'all' },
+  tr:{ eyebrow:'sunumlar', title:'Konuşmalar, atölyeler ve kısa oturumlar.', sub:'Her sunum tek bir HTML dosyası. Tarayıcıda sunmak ya da notlarla okumak için açın.', all:'hepsi' }
+};
+class Component extends DCLogic {
+  state = { type:'', lang: localStorage.getItem('kromatik-lang') || 'en' };
+  componentDidMount() { this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL); }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); }
+  renderVals() {
+    const { type, lang } = this.state; const t = T[lang];
+    return { t,
+      chips: ['', 'talk','workshop','lightning'].map(k => { const on = k === type; return { label: k || t.all, pick: () => this.setState({ type:k }), bg: on ? '#BE123C' : '#FFFFFF', color: on ? '#FFFFFF' : '#5A6578', border: on ? '#BE123C' : '#DCE1E8' }; }),
+      talks: TALKS.filter(x => !type || x[2] === type).map(([title,event,k,l,date,city,desc,slides,tone],i) => ({ title, event, lang:l, date, city, desc, slides, tone, slot:'talk-' + i }))
+    };
+  }
+}
+</script>
+</body>
+</html>

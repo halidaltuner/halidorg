@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="homelab" hint-size="100%,66px"></dc-import>
+  <section style="background:#FDE3D3;border-bottom:1px solid #F4C9AE">
+    <div style="max-width:1200px;margin:0 auto;padding:56px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:40px;align-items:center">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#9A3412">⌁ {{ t.eyebrow }}</span>
+        <h1 style="margin:0;font-size:48px;line-height:1.08;font-weight:600;letter-spacing:-0.025em">{{ t.title }}</h1>
+        <p style="margin:0;font-size:18px;line-height:1.7;max-width:50ch;text-wrap:pretty">{{ t.sub }}</p>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px;max-width:480px">
+          <sc-for list="{{ stats }}" as="s" hint-placeholder-count="4">
+            <div style="background:#FFFFFF;border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px">
+              <span style="font-size:20px;font-weight:600;color:#9A3412">{{ s.v }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">{{ s.k }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+      <a href="Project Detail.dc.html?id=rack" style="display:block;position:relative;aspect-ratio:4/3;border-radius:8px;overflow:hidden;box-shadow:0 16px 40px rgba(154,52,18,.18);text-decoration:none">
+        <dc-import name="Cover" style="position:absolute;inset:0" slot="homelab-hero" tone="orange" label="rack photo" hint-size="100%,100%"></dc-import>
+        <div style="position:absolute;left:12px;right:12px;bottom:12px;background:#FFFFFF;border-radius:4px;padding:12px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center;pointer-events:none;color:#0E1525">
+          <span style="font-weight:600">{{ t.featured }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#9A3412">→</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <main style="max-width:1200px;margin:0 auto;padding:48px 24px 0;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="6">
+        <button onClick="{{ c.pick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:999px;cursor:pointer;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+      <sc-for list="{{ builds }}" as="b" hint-placeholder-count="6">
+        <a href="{{ b.href }}" style="display:flex;flex-direction:column;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;overflow:hidden;text-decoration:none;color:#0E1525;box-shadow:0 1px 3px rgba(14,21,37,.06);transition:box-shadow 150ms ease-out,transform 150ms ease-out" style-hover="box-shadow:0 10px 28px rgba(14,21,37,.10);transform:translateY(-2px)">
+          <div style="position:relative;aspect-ratio:4/3"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ b.slot }}" tone="{{ b.tone }}" label="build photo" hint-size="100%,100%"></dc-import></div>
+          <div style="padding:16px 20px 20px;display:flex;flex-direction:column;gap:8px;flex:1">
+            <div style="display:flex;justify-content:space-between;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px"><span style="color:{{ b.ink }}">{{ b.cat }}</span><span style="color:#5A6578">{{ b.status }}</span></div>
+            <h2 style="margin:0;font-size:19px;line-height:1.35;font-weight:600;text-wrap:pretty">{{ b.name }}</h2>
+            <p style="margin:0;font-size:14px;line-height:1.6;color:#5A6578">{{ b.desc }}</p>
+            <div style="margin-top:auto;padding-top:10px;display:flex;gap:12px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578"><span>{{ b.cost }}</span><span>{{ b.time }}</span></div>
+          </div>
+        </a>
+      </sc-for>
+    </div>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const CAT = { homelab:['orange','#9A3412'], electronics:['violet','#6D28D9'], '3d print':['cyan','#0E7490'], woodwork:['amber','#92400E'], network:['green','#166534'] };
+const B = [
+  ['rack','3-node Proxmox cluster in a 10" rack','homelab','running','Quiet desk rack hosting staging, backups and home automation.','₺41.2k','6 weekends'],
+  ['eink','e-ink status board','electronics','done','Weather, transit and lab health on the hallway wall.','₺2.9k','3 weekends'],
+  ['rack','2.5GbE home network rewire','network','done','Cat6a through the walls, one patch panel, no more Wi-Fi backhaul.','₺6.4k','2 weekends'],
+  ['rack','Printed SSD caddies','3d print','done','Tool-less 2.5" caddies for the mini PCs.','₺120','1 evening'],
+  ['eink','Oak monitor riser with cable tray','woodwork','done','Hides the dock, the hub and a power strip.','₺900','2 weekends'],
+  ['eink','Zigbee CO₂ sensors','electronics','in progress','Cheap sensors per room, reporting to Home Assistant.','₺1.4k','ongoing']
+];
+const T = {
+  en:{ eyebrow:'homelab & diy', title:'Things built with hands, solder and too many cables.', sub:'Write-ups of hardware projects: what I wanted, what I bought, what broke, and what I would do differently.', featured:'Featured: the 10" rack cluster', all:'all' },
+  tr:{ eyebrow:'homelab & diy', title:'Elle, lehimle ve fazla kabloyla yapılanlar.', sub:'Donanım projelerinin hikayeleri: ne istedim, ne aldım, ne bozuldu ve neyi farklı yapardım.', featured:'Öne çıkan: 10" rack cluster', all:'hepsi' }
+};
+class Component extends DCLogic {
+  state = { cat:'', lang: localStorage.getItem('kromatik-lang') || 'en' };
+  componentDidMount() { this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL); }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); }
+  renderVals() {
+    const { cat, lang } = this.state; const t = T[lang];
+    return {
+      t,
+      stats: [['builds','9'],['nodes','3'],['idle','38W'],['uptime','99.2%']].map(([k,v]) => ({ k, v })),
+      chips: ['', ...Object.keys(CAT)].map(k => { const on = k === cat; const ink = k ? CAT[k][1] : '#0E1525';
+        return { label: k || t.all, pick: () => this.setState({ cat:k }), bg: on ? ink : '#FFFFFF', color: on ? '#FFFFFF' : '#5A6578', border: on ? ink : '#DCE1E8' }; }),
+      builds: B.filter(b => !cat || b[2] === cat).map(([id,name,c,status,desc,cost,time],i) => ({ name, cat:c, status, desc, cost, time, href:'Project Detail.dc.html?id=' + id, slot:'hl-' + i, tone:CAT[c][0], ink:CAT[c][1] }))
+    };
+  }
+}
+</script>
+</body>
+</html>

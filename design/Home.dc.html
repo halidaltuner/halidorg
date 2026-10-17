@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="posts" hint-size="100%,66px"></dc-import>
+
+  <section style="background:#0B1220;color:#E6EBF2;position:relative;overflow:hidden">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(#17223A 1px,transparent 1px),linear-gradient(90deg,#17223A 1px,transparent 1px);background-size:48px 48px;opacity:.6"></div>
+    <div style="position:relative;max-width:1200px;margin:0 auto;padding:72px 24px;display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:48px;align-items:center">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#22D3EE">// {{ t.eyebrow }}</span>
+        <h1 style="margin:0;font-size:48px;line-height:1.08;font-weight:600;letter-spacing:-0.025em;text-wrap:balance">{{ t.title1 }} <span style="color:#22D3EE">{{ t.title2 }}</span> {{ t.title3 }} <span style="color:#FB7185">{{ t.title4 }}</span>.</h1>
+        <p style="margin:0;font-size:18px;line-height:1.7;color:#8D98AB;max-width:52ch;text-wrap:pretty">{{ t.sub }}</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+          <a href="About.dc.html" style="white-space:nowrap;padding:10px 16px;border-radius:4px;background:#22D3EE;color:#0B1220;text-decoration:none;font-weight:600;font-size:15px">{{ t.about }}</a>
+          <a href="Projects.dc.html" style="white-space:nowrap;padding:10px 16px;border-radius:4px;border:1px solid #24304A;color:#E6EBF2;text-decoration:none;font-size:15px">{{ t.projects }} →</a>
+        </div>
+      </div>
+      <a href="Post.dc.html" style="display:flex;flex-direction:column;background:#111A2E;border:1px solid #24304A;border-radius:8px;overflow:hidden;text-decoration:none;color:#E6EBF2" style-hover="border-color:#22D3EE">
+        <div style="position:relative;aspect-ratio:16/9"><dc-import name="Cover" style="position:absolute;inset:0" slot="home-featured" tone="cyan" label="featured post cover" hint-size="100%,100%"></dc-import></div>
+        <div style="padding:20px 24px;display:flex;flex-direction:column;gap:8px">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#22D3EE">{{ t.featured }} · 2026-10-16 · 12 min</span>
+          <span style="font-size:22px;font-weight:600;line-height:1.3">{{ featured }}</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <main style="max-width:1200px;margin:0 auto;padding:0 24px">
+    <section style="margin-top:-1px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;padding-top:32px">
+      <sc-for list="{{ tiles }}" as="x" hint-placeholder-count="6">
+        <a href="{{ x.href }}" style="display:flex;flex-direction:column;gap:10px;padding:16px;border-radius:8px;text-decoration:none;background:{{ x.bg }};color:{{ x.fg }};transition:transform 150ms ease-out" style-hover="transform:translateY(-2px)">
+          <span style="font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700">{{ x.glyph }}</span>
+          <span style="font-size:16px;font-weight:600">{{ x.label }}</span>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;opacity:.8">{{ x.count }}</span>
+        </a>
+      </sc-for>
+    </section>
+
+    <section style="margin-top:64px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px">
+        <h2 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-0.01em">{{ t.latest }}</h2>
+        <a href="Post.dc.html" style="font-family:'JetBrains Mono',monospace;font-size:13px;text-decoration:none">{{ t.all }} →</a>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px">
+        <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+          <a href="Post.dc.html" style="display:flex;flex-direction:column;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(14,21,37,.06);text-decoration:none;color:#0E1525;transition:box-shadow 150ms ease-out,transform 150ms ease-out" style-hover="box-shadow:0 10px 28px rgba(14,21,37,.10);transform:translateY(-2px)">
+            <div style="position:relative;aspect-ratio:16/9"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ c.slot }}" tone="{{ c.tone }}" label="post cover" hint-size="100%,100%"></dc-import></div>
+            <div style="padding:20px 24px 24px;display:flex;flex-direction:column;gap:10px;flex:1">
+              <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <sc-for list="{{ c.tags }}" as="tg" hint-placeholder-count="2"><span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:999px;background:{{ c.tint }};color:{{ c.ink }}">#{{ tg }}</span></sc-for>
+              </div>
+              <h3 style="margin:0;font-size:22px;line-height:1.3;font-weight:600;letter-spacing:-0.01em;text-wrap:pretty">{{ c.title }}</h3>
+              <p style="margin:0;font-size:16px;line-height:1.6;color:#5A6578;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">{{ c.summary }}</p>
+              <div style="margin-top:auto;padding-top:8px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5A6578;display:flex;gap:12px"><span>{{ c.date }}</span><span>{{ c.read }}</span></div>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="margin-top:64px;display:grid;grid-template-columns:minmax(0,1fr);gap:20px;max-width:860px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:28px;font-weight:600;letter-spacing:-0.01em">{{ t.stream }}</h2>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <sc-for list="{{ chips }}" as="k" hint-placeholder-count="7">
+            <button onClick="{{ k.pick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer;border:1px solid {{ k.border }};background:{{ k.bg }};color:{{ k.color }}">{{ k.label }}</button>
+          </sc-for>
+        </div>
+      </div>
+      <div style="background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;padding:8px 20px">
+        <sc-for list="{{ days }}" as="d" hint-placeholder-count="3">
+          <div style="display:grid;grid-template-columns:110px minmax(0,1fr);gap:16px;border-top:1px solid #EEF1F5;padding:8px 0">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#5A6578;padding-top:8px">{{ d.day }}</div>
+            <div style="display:flex;flex-direction:column">
+              <sc-for list="{{ d.items }}" as="it" hint-placeholder-count="2">
+                <a href="{{ it.href }}" style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 0;text-decoration:none;color:#0E1525" style-hover="color:#0E7490">
+                  <span style="width:28px;height:28px;border-radius:4px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;background:{{ it.tint }};color:{{ it.color }}">{{ it.glyph }}</span>
+                  <span style="font-size:16px;line-height:1.5;text-wrap:pretty">{{ it.title }}</span>
+                  <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ it.meta }}</span>
+                </a>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const K = { post:['¶','#0E7490','#D7F1F7'], note:['~','#4338CA','#E4E3FC'], snippet:['{}','#92400E','#FCEBCF'], link:['↗','#5A6578','#EEF1F5'], fav:['*','#BE123C','#FCE1E7'], project:['◆','#166534','#D9F0E0'], homelab:['⌁','#9A3412','#FDE3D3'] };
+const HREF = { post:'Post.dc.html', note:'Home.dc.html?kind=note', snippet:'Snippets.dc.html', link:'Links.dc.html', fav:'Favs.dc.html', project:'Projects.dc.html', homelab:'Homelab.dc.html' };
+const STREAM = [
+  ['2026-10-16','post','Notes on an htmx-first admin','12 min'],['2026-10-16','link','Hypermedia Systems','hypermedia.systems'],['2026-10-16','note','webmentions arrive faster than comments ever did','09:12'],
+  ['2026-10-14','homelab','10" rack: added a 2.5GbE switch','build log'],['2026-10-14','snippet','sql: tsvector trigger for tr + en','sql'],['2026-10-14','fav','Designing Data-Intensive Applications','book'],
+  ['2026-10-11','project','radargen v0.4 — edition diffs','release'],['2026-10-11','link','The Grug Brained Developer','grugbrain.dev'],
+  ['2026-10-09','post','Bilingual full-text search in Postgres','9 min'],['2026-10-09','snippet','go: graceful shutdown with context','go']
+];
+const TONE = { cyan:['#D7F1F7','#0E7490'], indigo:['#E4E3FC','#4338CA'], orange:['#FDE3D3','#9A3412'] };
+const CARDS = {
+  en: [
+    { title:'Notes on an htmx-first admin', summary:'Partial swaps for every form, no SPA, and what broke when autosave met revision history.', date:'2026-10-16', tags:['htmx','go'], read:'12 min', tone:'cyan', slot:'home-c1' },
+    { title:'Bilingual full-text search in Postgres', summary:'One tsvector per language, a trigger that keeps them in sync, and ranking that respects Turkish suffixes.', date:'2026-10-09', tags:['postgres','i18n'], read:'9 min', tone:'indigo', slot:'home-c2' },
+    { title:'Leaving Ghost: a migration log', summary:'Exporting 140 posts, rewriting image paths, keeping every old URL alive with redirects.', date:'2026-09-28', tags:['meta'], read:'7 min', tone:'orange', slot:'home-c3' }
+  ],
+  tr: [
+    { title:'htmx öncelikli bir admin üzerine notlar', summary:'Her form için kısmi güncelleme, SPA yok; otomatik kaydetme revizyon geçmişiyle buluşunca ne bozuldu.', date:'2026-10-16', tags:['htmx','go'], read:'12 dk', tone:'cyan', slot:'home-c1' },
+    { title:'Postgres ile iki dilli tam metin arama', summary:'Dil başına bir tsvector, bunları senkron tutan bir trigger ve Türkçe eklere saygılı sıralama.', date:'2026-10-09', tags:['postgres','i18n'], read:'9 dk', tone:'indigo', slot:'home-c2' },
+    { title:'Ghost’tan ayrılmak: göç günlüğü', summary:'140 yazıyı dışa aktarmak, görsel yollarını yeniden yazmak, her eski URL’yi yönlendirmeyle yaşatmak.', date:'2026-09-28', tags:['meta'], read:'7 dk', tone:'orange', slot:'home-c3' }
+  ]
+};
+const TILES = [
+  ['projects','projeler','◆','6 active','Projects.dc.html','#D9F0E0','#166534'],['homelab','homelab & diy','⌁','9 builds','Homelab.dc.html','#FDE3D3','#9A3412'],
+  ['presentations','sunumlar','▶','12 talks','Presentations.dc.html','#FCE1E7','#BE123C'],['photos','fotoğraflar','◐','500px','Photos.dc.html','#EBE2FD','#6D28D9'],
+  ['certificates','sertifikalar','✓','14 badges','Certificates.dc.html','#D7F1F7','#0E7490'],['radar','radar','◎','2026-10','Radar.dc.html','#E4E3FC','#4338CA']
+];
+const T = {
+  en:{ eyebrow:'engineering notebook', title1:'Building for the', title2:'web', title3:'and tinkering in the', title4:'homelab', sub:'Posts, notes, snippets and build logs from Istanbul. Published in Turkish and English when there is time to translate.', about:'about me', projects:'projects', featured:'featured', latest:'Latest posts', all:'all posts', stream:'Stream', allk:'all' },
+  tr:{ eyebrow:'mühendislik defteri', title1:'Web için', title2:'üretiyor', title3:'ve', title4:'homelab’de kurcalıyorum', sub:'İstanbul’dan yazılar, notlar, snippetler ve yapım günlükleri. Çeviriye vakit olduğunda Türkçe ve İngilizce.', about:'hakkımda', projects:'projeler', featured:'öne çıkan', latest:'Son yazılar', all:'tüm yazılar', stream:'Akış', allk:'hepsi' }
+};
+class Component extends DCLogic {
+  state = { lang: localStorage.getItem('kromatik-lang') || 'en', kind: new URLSearchParams(location.search).get('kind') || '' };
+  componentDidMount() { this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL); }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); }
+  renderVals() {
+    const { lang, kind } = this.state;
+    const t = T[lang];
+    const days = [];
+    STREAM.filter(r => !kind || r[1] === kind).forEach(([day,k,title,meta]) => {
+      let g = days.find(d => d.day === day); if (!g) days.push(g = { day, items:[] });
+      g.items.push({ title, meta, glyph:K[k][0], color:K[k][1], tint:K[k][2], href:HREF[k] });
+    });
+    return {
+      t, days, featured: CARDS[lang][0].title,
+      cards: CARDS[lang].map(c => ({ ...c, tint:TONE[c.tone][0], ink:TONE[c.tone][1] })),
+      tiles: TILES.map(([en,tr,glyph,count,href,bg,fg]) => ({ label: lang==='tr'?tr:en, glyph, count, href, bg, fg })),
+      chips: ['', 'post','note','snippet','link','homelab','project'].map(k => {
+        const on = k === kind, c = k ? K[k] : null;
+        return { label: k || t.allk, pick: () => this.setState({ kind:k }), bg: on ? (c ? c[2] : '#0E1525') : '#FFFFFF', color: on ? (c ? c[1] : '#FFFFFF') : '#5A6578', border: on ? (c ? c[1] : '#0E1525') : '#DCE1E8' };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

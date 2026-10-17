@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="links" hint-size="100%,66px"></dc-import>
+  <main style="max-width:820px;margin:0 auto;padding:64px 24px 0;display:flex;flex-direction:column;gap:48px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <h1 style="margin:0;font-size:36px;line-height:1.2;font-weight:600;letter-spacing:-0.02em">links</h1>
+        <p style="margin:0;font-size:16px;color:#5A6578">Things worth reading, with a line on why.</p>
+      </div>
+      <div style="display:flex;gap:6px">
+        <sc-for list="{{ chips }}" as="c" hint-placeholder-count="3">
+          <button onClick="{{ c.pick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:4px 10px;border-radius:999px;cursor:pointer;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }}">{{ c.label }}</button>
+        </sc-for>
+      </div>
+    </div>
+    <sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+      <section style="display:flex;flex-direction:column">
+        <h2 style="margin:0 0 8px;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500;color:#5A6578">{{ g.name }} · {{ g.count }}</h2>
+        <sc-for list="{{ g.items }}" as="l" hint-placeholder-count="2">
+          <div style="display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:12px;padding:16px 0;border-top:1px solid #DCE1E8;align-items:start">
+            <span style="width:16px;height:16px;margin-top:4px;border-radius:4px;background:#EEF1F5;border:1px solid #DCE1E8;font-family:'JetBrains Mono',monospace;font-size:10px;line-height:16px;text-align:center;color:#5A6578">{{ l.initial }}</span>
+            <div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+              <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap">
+                <a href="#" style="font-size:17px;font-weight:500;text-decoration:none;color:#0E1525" style-hover="color:#0E7490">{{ l.title }}</a>
+                <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ l.domain }}</span>
+              </div>
+              <p style="margin:0;font-size:15px;line-height:1.6;color:#5A6578;text-wrap:pretty">{{ l.note }}</p>
+            </div>
+            <button onClick="{{ l.toggle }}" title="toggle read status" style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:3px 8px;border-radius:999px;cursor:pointer;border:1px solid {{ l.chipBorder }};background:#FFFFFF;color:{{ l.chipColor }}">{{ l.status }}</button>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const LINKS = [
+  ['architecture','The Grug Brained Developer','grugbrain.dev','Complexity is the enemy. Rereading this once a year is cheaper than a refactor.',true],
+  ['architecture','Hypermedia Systems','hypermedia.systems','The book behind the admin. Chapter 5 on fragments is the useful one.',true],
+  ['architecture','Choose Boring Technology','mcfunley.com','Innovation tokens are still the clearest framing I know.',false],
+  ['postgres','Postgres full-text search is good enough','rachbelaid.com','Ranking, weights and dictionaries in one sitting.',true],
+  ['postgres','Turkish collation pitfalls','postgresql.org','The dotless i problem, explained in the docs, finally.',false],
+  ['design','Practical typography','practicaltypography.com','Line length and measure, without the mysticism.',false]
+];
+class Component extends DCLogic {
+  state = { filter:'all', read: LINKS.map(l => l[4]) };
+  renderVals() {
+    const { filter, read } = this.state;
+    const groups = [];
+    LINKS.forEach(([cat,title,domain,note], i) => {
+      if (filter === 'read' && !read[i]) return;
+      if (filter === 'unread' && read[i]) return;
+      let g = groups.find(x => x.name === cat); if (!g) groups.push(g = { name:cat, items:[] });
+      g.items.push({ title, domain, note, initial: domain[0], status: read[i] ? 'read' : 'unread',
+        chipColor: read[i] ? '#15803D' : '#5A6578', chipBorder: read[i] ? '#15803D' : '#DCE1E8',
+        toggle: () => this.setState(s => { const r = s.read.slice(); r[i] = !r[i]; return { read:r }; }) });
+    });
+    groups.forEach(g => g.count = g.items.length);
+    return {
+      groups,
+      chips: ['all','unread','read'].map(k => ({ label:k, pick: () => this.setState({ filter:k }), bg: k===filter?'#0E1525':'#FFFFFF', color: k===filter?'#FFFFFF':'#5A6578', border: k===filter?'#0E1525':'#DCE1E8' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

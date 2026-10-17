@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><script src="./image-slot.js"></script></helmet>
+<div style="position:relative;width:100%;height:100%;overflow:hidden;border-radius:{{ radius }};background:{{ bg }};color:{{ fg }}">
+  <div style="position:absolute;inset:0;background-image:repeating-linear-gradient(135deg,{{ stripe }} 0 10px,transparent 10px 20px);opacity:.7"></div>
+  <div style="position:absolute;right:-8%;top:-30%;width:55%;aspect-ratio:1;border-radius:50%;border:2px solid {{ fg }};opacity:.14"></div>
+  <div style="position:absolute;right:-6%;top:-28%;width:55%;aspect-ratio:1;border-radius:50%;border:2px solid #E11D48;opacity:.12"></div>
+  <image-slot id="{{ slot }}" shape="rect" placeholder="{{ label }}" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;480px&quot;,&quot;height&quot;:&quot;270px&quot;},&quot;slot&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;cover&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;label&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;cover image&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;tone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;cyan&quot;,&quot;indigo&quot;,&quot;amber&quot;,&quot;green&quot;,&quot;orange&quot;,&quot;rose&quot;,&quot;violet&quot;,&quot;navy&quot;],&quot;default&quot;:&quot;cyan&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;radius&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;0px&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const TONES = {
+  cyan:['#D7F1F7','#0E7490','#C4E9F2'], indigo:['#E4E3FC','#4338CA','#D5D3FA'], amber:['#FCEBCF','#92400E','#F8DDB0'],
+  green:['#D9F0E0','#166534','#C5E7CF'], orange:['#FDE3D3','#9A3412','#FAD0B6'], rose:['#FCE1E7','#BE123C','#F9CCD6'],
+  violet:['#EBE2FD','#6D28D9','#DDCFFB'], navy:['#DCE3EF','#0E1525','#CBD5E6']
+};
+class Component extends DCLogic {
+  renderVals() {
+    const t = TONES[this.props.tone] || TONES.cyan;
+    return { bg:t[0], fg:t[1], stripe:t[2], slot: this.props.slot ?? 'cover', label: this.props.label ?? 'cover image', radius: this.props.radius ?? '0px' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="now" hint-size="100%,66px"></dc-import>
+  <section style="background:#0B1220;color:#E6EBF2">
+    <div style="max-width:1100px;margin:0 auto;padding:56px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#22D3EE;display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 4px rgba(74,222,128,.2)"></span>{{ t.eyebrow }}</span>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:48px;font-weight:500;letter-spacing:-0.03em;line-height:1.1">{{ t.updated }}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8D98AB">2026-10-13 · istanbul · 18°C</div>
+      </div>
+      <a href="#" style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#22D3EE;text-decoration:none">{{ t.archive }} →</a>
+    </div>
+  </section>
+  <main lang="{{ lang }}" style="max-width:1100px;margin:0 auto;padding:56px 24px 0;display:flex;flex-direction:column;gap:64px">
+
+    <section style="display:flex;flex-direction:column;gap:20px">
+      <h2 style="margin:0;display:flex;align-items:center;gap:10px;font-size:28px;font-weight:600"><span style="width:32px;height:32px;border-radius:4px;display:grid;place-items:center;background:#D9F0E0;color:#166534;font-family:'JetBrains Mono',monospace;font-size:15px">◆</span>{{ t.hBuild }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px">
+        <sc-for list="{{ building }}" as="b" hint-placeholder-count="2">
+          <a href="{{ b.href }}" style="display:grid;grid-template-columns:140px minmax(0,1fr);background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;overflow:hidden;text-decoration:none;color:#0E1525">
+            <div style="position:relative;min-height:140px"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ b.slot }}" tone="{{ b.tone }}" label="wip shot" hint-size="100%,100%"></dc-import></div>
+            <div style="padding:16px 18px;display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:17px;font-weight:600;line-height:1.35">{{ b.title }}</span>
+              <span style="font-size:14px;line-height:1.5;color:#5A6578">{{ b.note }}</span>
+              <div style="margin-top:auto;display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578"><span>{{ b.stage }}</span><span>{{ b.pct }}</span></div>
+                <div style="height:6px;border-radius:3px;background:#EEF1F5;overflow:hidden"><div style="height:100%;width:{{ b.pct }};background:{{ b.ink }}"></div></div>
+              </div>
+            </div>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px">
+      <h2 style="margin:0;display:flex;align-items:center;gap:10px;font-size:28px;font-weight:600"><span style="width:32px;height:32px;border-radius:4px;display:grid;place-items:center;background:#FCEBCF;color:#92400E;font-family:'JetBrains Mono',monospace;font-size:15px">≡</span>{{ t.hRead }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:20px">
+        <sc-for list="{{ reading }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="position:relative;aspect-ratio:2/3;border-radius:4px;overflow:hidden;box-shadow:4px 6px 0 {{ r.ink }}"><dc-import name="Cover" style="position:absolute;inset:0" slot="{{ r.slot }}" tone="{{ r.tone }}" label="book cover" hint-size="100%,100%"></dc-import></div>
+            <span style="font-size:15px;font-weight:600;line-height:1.35">{{ r.title }}</span>
+            <span style="font-size:13px;color:#5A6578">{{ r.by }}</span>
+            <div style="display:flex;align-items:center;gap:8px"><div style="flex:1;height:4px;border-radius:2px;background:#EEF1F5;overflow:hidden"><div style="height:100%;width:{{ r.pct }};background:{{ r.ink }}"></div></div><span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">{{ r.pct }}</span></div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:flex;flex-direction:column;gap:20px">
+      <h2 style="margin:0;display:flex;align-items:center;gap:10px;font-size:28px;font-weight:600"><span style="width:32px;height:32px;border-radius:4px;display:grid;place-items:center;background:#E4E3FC;color:#4338CA;font-family:'JetBrains Mono',monospace;font-size:15px">↗</span>{{ t.hLearn }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
+        <sc-for list="{{ learning }}" as="l" hint-placeholder-count="3">
+          <div style="padding:20px;border-radius:8px;background:{{ l.tint }};display:flex;flex-direction:column;gap:12px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:18px;font-weight:600">{{ l.title }}</span><span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{{ l.ink }}">{{ l.level }}</span></div>
+            <span style="font-size:14px;line-height:1.5">{{ l.note }}</span>
+            <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px">
+              <sc-for list="{{ l.cells }}" as="c" hint-placeholder-count="10"><span style="height:10px;border-radius:2px;background:{{ c }}"></span></sc-for>
+            </div>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{{ l.ink }}">{{ l.hours }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:20px 24px;border-radius:8px;border:1px dashed #E11D48;background:#FFFFFF">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#E11D48">✕ {{ t.notdoing }}</span>
+      <span style="font-size:16px">{{ t.notdoingText }}</span>
+    </section>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const C = {
+  en:{ eyebrow:'now', updated:'updated 4 days ago', archive:'11 earlier versions', hBuild:'Building', hRead:'Reading', hLearn:'Learning', notdoing:'not doing', notdoingText:'New side projects until radargen v0.5 ships.',
+    building:[['Admin editor on CodeMirror 6','Live htmx preview next to the Markdown pane.','in progress','65%','green','#15803D','Project Detail.dc.html?id=site'],['radargen v0.5','Animated edition diffs and a print layout.','design','30%','cyan','#0E7490','Project Detail.dc.html?id=radargen']],
+    learning:[['Zig','Porting a small CLI to learn comptime.','beginner',3,'26h logged'],['Turkish morphology','Better stemming for search.','intermediate',6,'41h logged'],['KiCad','First custom PCB for the e-ink board.','beginner',2,'12h logged']] },
+  tr:{ eyebrow:'şimdi', updated:'4 gün önce güncellendi', archive:'11 eski sürüm', hBuild:'Yapıyorum', hRead:'Okuyorum', hLearn:'Öğreniyorum', notdoing:'yapmıyorum', notdoingText:'radargen v0.5 çıkana kadar yeni yan proje.',
+    building:[['CodeMirror 6 ile admin editörü','Markdown panelinin yanında canlı htmx önizleme.','devam ediyor','65%','green','#15803D','Project Detail.dc.html?id=site'],['radargen v0.5','Animasyonlu sürüm farkları ve baskı düzeni.','tasarım','30%','cyan','#0E7490','Project Detail.dc.html?id=radargen']],
+    learning:[['Zig','comptime öğrenmek için küçük bir CLI taşıyorum.','başlangıç',3,'26 saat'],['Türkçe morfoloji','Arama için daha iyi kök bulma.','orta',6,'41 saat'],['KiCad','e-ink kartı için ilk özel PCB.','başlangıç',2,'12 saat']] }
+};
+const READ = [['Designing Data-Intensive Applications','Martin Kleppmann','72%','amber','#92400E'],['A Philosophy of Software Design','John Ousterhout','40%','indigo','#4338CA'],['The Art of Electronics','Horowitz & Hill','12%','orange','#9A3412'],['Kürk Mantolu Madonna','Sabahattin Ali','88%','rose','#BE123C']];
+const LT = [['#E4E3FC','#4338CA'],['#FCE1E7','#BE123C'],['#FDE3D3','#9A3412']];
+class Component extends DCLogic {
+  state = { lang: localStorage.getItem('kromatik-lang') || 'en' };
+  componentDidMount() { this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL); }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); }
+  renderVals() {
+    const lang = this.state.lang, c = C[lang];
+    return { lang, t:c,
+      building: c.building.map(([title,note,stage,pct,tone,ink,href],i) => ({ title, note, stage, pct, tone, ink, href, slot:'now-b' + i })),
+      reading: READ.map(([title,by,pct,tone,ink],i) => ({ title, by, pct, tone, ink, slot:'now-r' + i })),
+      learning: c.learning.map(([title,note,level,n,hours],i) => ({ title, note, level, hours, tint:LT[i][0], ink:LT[i][1], cells: Array.from({ length:10 }, (_,k) => k < n ? LT[i][1] : '#FFFFFF') }))
+    };
+  }
+}
+</script>
+</body>
+</html>

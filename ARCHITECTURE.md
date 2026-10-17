@@ -1,0 +1,126 @@
+# Architecture
+
+## 1. Topology
+
+```mermaid
+flowchart LR
+    U[Visitor] --> EW[Edge Worker<br/>router + cache]
+    A[Admin] --> EW
+    GO -->|OIDC hd=halid.org| G[Google]
+    EW -->|decks.halid.org| R2
+    EW -->|cache hit| KV[(KV<br/>rendered pages)]
+    EW -->|miss / dynamic / admin| GO[Go app<br/>Cloudflare Container]
+    EW --> R2[(R2<br/>media)]
+    GO -->|binding bridge| EW
+    EW --> D1[(D1<br/>content + FTS)]
+    CRON[Cron Triggers] --> EW --> Q[Queues] --> GO
+    GO --> GH[GitHub API]
+    GO --> WM[Webmention / POSSE targets]
+```
+
+### Components
+
+| Component | Responsibility |
+|---|---|
+| **Edge Worker** (thin, TypeScript) | Routing, KV page cache, static assets, R2 media, signed bridge to D1/R2/KV for the container, cron fan-out |
+| **Go app** (Container) | Admin UI, Markdown rendering, public SSR on cache miss, htmx endpoints, importer, sync jobs, OG image generation |
+| **D1** | All content, relations, tags, i18n pairs, FTS5 search index, audit log |
+| **KV** | Pre-rendered public HTML keyed by `lang:path`, feed XML, sitemap |
+| **R2** | Images, attachments, OG images, exports |
+| **Queues** | Async jobs: render, purge, GitHub sync, webmention send/receive, POSSE |
+
+## 2. Request paths
+
+**Public read (hot path)**
+1. Worker looks up `kv:page:{lang}:{path}`.
+2. Hit: return HTML with `Cache-Control` + ETag. No container involved.
+3. Miss: forward to Go app, which renders, writes to KV, returns.
+
+**Interactive fragments** (search, filters, radar, stream pagination): htmx requests to `/x/*`, served by the Go app, short edge cache where safe.
+
+**Admin write**
+1. Save in admin → Go app writes D1 (draft or published revision).
+2. On publish: render HTML, enqueue `render` + `purge` jobs for affected pages (item page, list pages, tag pages, feeds, stream, sitemap).
+3. Jobs rewrite KV entries. Public site never waits on a cold container for published content.
+
+## 3. Key decisions (ADRs)
+
+### ADR-001: Go runs in Cloudflare Containers, not Go/WASM in Workers
+- **Status:** Accepted (2026-10-17)
+- **Decision:** Go app in a Container; thin TypeScript edge Worker in front; published pages rendered on publish and served from KV.
+- **Why:** goldmark + chroma (syntax highlighting) + `html/template` + image libs exceed comfortable WASM size limits; `syumai/workers` is experimental and its D1 support is alpha.
+- **Trade-off:** container cold start. Mitigated by render-on-publish into KV so public reads skip the container.
+- **Phase 0 spike must verify:** container access to D1/R2/KV (direct binding vs Worker bridge), cold start numbers, monthly cost at expected traffic.
+- **Fallback:** if Containers prove awkward, move the public renderer into the Worker and keep Go only for admin.
+
+### ADR-002: D1 is the source of truth, Markdown is the authoring format
+- Store `body_md` and rendered `body_html` per revision. Re-render all on renderer upgrades via a job.
+
+### ADR-003: Separate schema per content type
+- A shared `entries` table (id, kind, slug, lang, status, timestamps) plus one table per kind for type-specific fields. Gives one place for routing, tags, search, stream, i18n, while keeping type fields strict.
+
+### ADR-004: Server-rendered HTML + htmx
+- No SPA. Progressive enhancement. JS islands only where needed (Tech Radar, Mermaid, search-as-you-type).
+
+### ADR-005: Google SSO (OIDC) restricted to @halid.org for admin auth
+- **Status:** Accepted (2026-10-17), supersedes the earlier Cloudflare Access proposal. Driven by the Admin Login design.
+- **Flow:** `/admin/login` → Google OIDC (authorization code + PKCE, `hd=halid.org` as a hint) → `/admin/auth/callback`.
+- **Server-side checks:** verify ID token signature and `aud`/`iss`, then require `hd == "halid.org"` **and** email domain `@halid.org` **and** `email_verified`. `hd` alone is never trusted. Optional allowlist of exact emails in `site_settings`.
+- **Session:** opaque ID in a `Secure; HttpOnly; SameSite=Lax` cookie, row in `admin_sessions`, 12h lifetime.
+- **Re-auth:** publish and delete require `last_reauth_at` within 10 minutes; otherwise redirect to Google with `prompt=login` / `max_age`.
+- **Errors:** non-halid account shows the rose-rule banner from the design. No password form anywhere.
+- **Defense in depth:** staging also sits behind Cloudflare Access; prod admin may add it later without code changes.
+- **Secrets:** Google client ID/secret via `wrangler secret`.
+
+### ADR-006: Revisions, not overwrites
+- Every manual save creates a revision; consecutive autosaves (800ms debounce) coalesce into one. Published pointer moves on publish. Enables diff and rollback in admin.
+
+### ADR-007: Presentation decks on an isolated origin
+- Decks are self-contained HTML uploaded to R2 and served from `decks.halid.org`, never from `halid.org`.
+- Embedded with `<iframe sandbox="allow-scripts allow-same-origin">` on the deck origin only; the main site keeps a strict CSP.
+- Slide control from the outline uses `postMessage` with origin checks; decks without the listener still render, only the outline jump is lost.
+
+### ADR-008: Light-only theme, prototypes are the visual source of truth
+- No dark theme or toggle. Dark appears only as designed bands.
+- `/design` holds the Claude Design handoff. DESIGN.md summarizes it; prototypes win on conflict.
+
+### ADR-009: Third-party embeds behind a CSP allowlist
+- 500px photo embeds and Credly links are the only third-party content. CSP `frame-src`/`img-src` allowlist covers 500px CDN and `decks.halid.org`.
+- Photo grid renders a local thumbnail (`image_url`) first and loads the 500px embed only in the lightbox, so the grid stays fast and works if 500px is down.
+
+## 4. Repo layout
+
+```
+/worker            edge worker (router, cache, bridge, cron)
+/app               Go application
+  /cmd/server
+  /internal/content   per-kind repositories + validation
+  /internal/render    markdown, highlight, mermaid, OG images
+  /internal/admin     handlers + templates
+  /internal/public    handlers + templates
+  /internal/jobs      render, purge, github, webmention, posse
+  /internal/importer  Ghost and others
+  /web/templates      partials/ (header, footer, cover, palette), public/, admin/, <kind>/
+  /web/static         css/tokens.css, css/app.css, fonts/ (self-hosted woff2), js/ islands
+/design            Claude Design handoff (.dc.html prototypes + README), reference only
+/migrations        D1 SQL migrations
+/docs              this folder
+wrangler.jsonc
+Dockerfile
+```
+
+## 5. Environments
+
+| Env | Domain | Data |
+|---|---|---|
+| local | `localhost` via `wrangler dev` + local container | local D1 |
+| staging | `staging.halid.org` (Cloudflare Access + Google SSO) | separate D1/R2/KV |
+| prod | `halid.org` | prod D1/R2/KV, daily D1 export to R2 |
+
+## 6. Cross-cutting
+
+- **i18n:** `entries.lang` + `translation_group_id`. URL scheme `/tr/...` and `/en/...`, default by `Accept-Language`, `hreflang` tags.
+- **Search:** D1 FTS5 virtual table over title, summary, body text, tags (verify in spike). Pagefind as fallback.
+- **Feeds:** RSS + Atom + JSON Feed per kind, per tag, and a combined feed.
+- **Observability:** Workers Logs, structured JSON logs from Go, job outcomes in `job_runs` table, admin health page.
+- **Backups:** nightly D1 export + full Markdown/JSON export to R2.

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}@media (prefers-reduced-motion:reduce){*{transition:none!important}}</style>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="snippets" hint-size="100%,66px"></dc-import>
+  <main style="max-width:1100px;margin:0 auto;padding:64px 24px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:48px;align-items:start">
+    <aside style="display:flex;flex-direction:column;gap:16px;max-width:320px">
+      <h1 style="margin:0;font-size:36px;line-height:1.2;font-weight:600;letter-spacing:-0.02em">snippets</h1>
+      <p style="margin:0;font-size:16px;line-height:1.6;color:#5A6578">Small pieces of code I keep rewriting. Copy freely.</p>
+      <div style="display:flex;flex-direction:column;gap:2px;margin-top:8px">
+        <sc-for list="{{ list }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.pick }}" style="text-align:left;border:0;cursor:pointer;padding:10px 12px;border-radius:4px;background:{{ s.bg }};display:flex;flex-direction:column;gap:2px;font-family:inherit">
+            <span style="font-size:15px;color:#0E1525">{{ s.title }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ s.meta }}</span>
+          </button>
+        </sc-for>
+      </div>
+    </aside>
+
+    <section style="grid-column:span 2;min-width:0;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5A6578">
+        <span style="width:8px;height:8px;border-radius:50%;background:#B45309"></span><span>snippet · {{ cur.date }} · {{ cur.tags }}</span>
+      </div>
+      <h2 style="margin:0;font-size:28px;line-height:1.3;font-weight:600;letter-spacing:-0.01em">{{ cur.title }}</h2>
+      <p style="margin:0;font-size:16px;line-height:1.6;color:#5A6578;max-width:68ch">{{ cur.desc }}</p>
+      <div style="border:1px solid #DCE1E8;border-radius:4px;overflow:hidden;background:#EEF1F5">
+        <div style="display:flex;align-items:stretch;justify-content:space-between;background:#FFFFFF;border-bottom:1px solid #DCE1E8;font-family:'JetBrains Mono',monospace;font-size:13px;flex-wrap:wrap">
+          <div style="display:flex">
+            <sc-for list="{{ tabs }}" as="f" hint-placeholder-count="2">
+              <button onClick="{{ f.pick }}" style="border:0;border-right:1px solid #DCE1E8;border-bottom:2px solid {{ f.rule }};padding:10px 14px;cursor:pointer;font:inherit;background:{{ f.bg }};color:{{ f.color }}">{{ f.name }}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:0 12px;color:#5A6578">
+            <span style="font-size:11px;padding:2px 6px;border:1px solid #DCE1E8;border-radius:4px">{{ file.lang }}</span>
+            <button onClick="{{ toggleLines }}" style="border:0;background:none;font:inherit;cursor:pointer;color:{{ linesColor }}">#</button>
+            <a href="#" style="text-decoration:none;color:#5A6578">raw</a>
+            <button onClick="{{ copy }}" style="border:0;background:none;font:inherit;cursor:pointer;color:#0E7490">{{ copyLabel }}</button>
+          </div>
+        </div>
+        <div style="padding:16px 0;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:15px;line-height:1.6">
+          <sc-for list="{{ lines }}" as="l" hint-placeholder-count="8">
+            <div style="display:flex;white-space:pre;padding-right:16px">
+              <sc-if value="{{ showLines }}" hint-placeholder-val="{{ true }}"><span style="width:44px;flex:none;text-align:right;padding-right:16px;color:#5A6578;user-select:none">{{ l.n }}</span></sc-if>
+              <span style="padding-left:16px;color:{{ l.color }}">{{ l.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const SN = [
+  { title:'go: graceful shutdown with context', date:'2026-10-09', tags:'#go', desc:'Stop accepting connections on SIGTERM, give in-flight requests 10 seconds, then exit.',
+    files:[{ name:'main.go', lang:'go', code:`ctx, stop := signal.NotifyContext(context.Background(),
+    syscall.SIGINT, syscall.SIGTERM)
+defer stop()
+
+go func() { _ = srv.ListenAndServe() }()
+<-ctx.Done()
+
+shutdownCtx, cancel := context.WithTimeout(
+    context.Background(), 10*time.Second)
+defer cancel()
+_ = srv.Shutdown(shutdownCtx)` }] },
+  { title:'sql: tsvector trigger for tr + en', date:'2026-10-14', tags:'#postgres #i18n', desc:'Keep a per-language search vector in sync on insert and update.',
+    files:[{ name:'search.sql', lang:'sql', code:`CREATE FUNCTION entries_tsv() RETURNS trigger AS $$
+BEGIN
+  NEW.tsv := to_tsvector(
+    CASE NEW.lang WHEN 'tr' THEN 'turkish'
+                  ELSE 'english' END::regconfig,
+    coalesce(NEW.title,'') || ' ' || coalesce(NEW.body,''));
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;` }, { name:'migrate.sql', lang:'sql', code:`CREATE TRIGGER entries_tsv_t
+  BEFORE INSERT OR UPDATE ON entries
+  FOR EACH ROW EXECUTE FUNCTION entries_tsv();
+
+CREATE INDEX entries_tsv_idx ON entries USING gin(tsv);` }] },
+  { title:'sh: prune docker images older than 7d', date:'2026-09-30', tags:'#docker', desc:'Run from cron on the build box.',
+    files:[{ name:'prune.sh', lang:'sh', code:`#!/usr/bin/env sh
+set -eu
+docker image prune -af --filter "until=168h"
+docker builder prune -f --filter "until=168h"` }] },
+  { title:'htmx: confirm with typed name', date:'2026-09-21', tags:'#htmx', desc:'Require typing the entry slug before a destructive delete.',
+    files:[{ name:'delete.html', lang:'html', code:`<form hx-delete="/admin/entries/{{.ID}}"
+      hx-confirm="Delete {{.Slug}}?">
+  <input name="confirm" pattern="{{.Slug}}" required>
+  <button>delete</button>
+</form>` }] }
+];
+class Component extends DCLogic {
+  state = { i:0, f:0, lines:true, copied:false };
+  renderVals() {
+    const { i, f, lines, copied } = this.state;
+    const cur = SN[i], file = cur.files[f] || cur.files[0];
+    return {
+      cur, file, showLines: lines, linesColor: lines ? '#0E1525' : '#5A6578',
+      list: SN.map((s,j) => ({ title:s.title, meta:s.date + ' · ' + s.files.map(x=>x.lang)[0], bg: j===i?'#EEF1F5':'transparent', pick: () => this.setState({ i:j, f:0 }) })),
+      tabs: cur.files.map((x,j) => ({ name:x.name, pick: () => this.setState({ f:j }), bg: j===f?'#EEF1F5':'#FFFFFF', color: j===f?'#0E1525':'#5A6578', rule: j===f?'#B45309':'transparent' })),
+      lines: file.code.split('\n').map((t,n) => ({ n:n+1, text:t || ' ', color: /^\s*(\/\/|--|#)/.test(t) ? '#5A6578' : '#0E1525' })),
+      toggleLines: () => this.setState({ lines:!lines }),
+      copyLabel: copied ? 'copied' : 'copy',
+      copy: () => { navigator.clipboard && navigator.clipboard.writeText(file.code).catch(()=>{}); this.setState({ copied:true }); setTimeout(() => this.setState({ copied:false }), 1400); }
+    };
+  }
+}
+</script>
+</body>
+</html>

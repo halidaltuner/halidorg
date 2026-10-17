@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#0B1220}a{color:#22D3EE}a:hover{color:#67E8F9}:focus-visible{outline:2px solid #22D3EE;outline-offset:2px}input:focus{border-color:#22D3EE!important;outline:none}</style>
+</helmet>
+<div style="min-height:100vh;display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));background:#0B1220;color:#E6EBF2;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <section style="position:relative;overflow:hidden;padding:48px;display:flex;flex-direction:column;justify-content:space-between;gap:48px;border-right:1px solid #24304A">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(#17223A 1px,transparent 1px),linear-gradient(90deg,#17223A 1px,transparent 1px);background-size:48px 48px;opacity:.7"></div>
+    <div style="position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;border:2px solid #22D3EE;opacity:.25"></div>
+    <div style="position:absolute;right:-108px;bottom:-128px;width:420px;height:420px;border-radius:50%;border:2px solid #FB7185;opacity:.25"></div>
+    <a href="Home.dc.html" style="position:relative;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:32px;letter-spacing:-0.03em;color:#E6EBF2;text-decoration:none;text-shadow:-2px 0 rgba(251,113,133,.8),2px 0 rgba(34,211,238,.8)">halid<span style="color:#FB7185;text-shadow:none">.</span></a>
+    <div style="position:relative;display:flex;flex-direction:column;gap:16px;max-width:420px">
+      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#22D3EE">// admin</span>
+      <h1 style="margin:0;font-size:40px;line-height:1.1;font-weight:600;letter-spacing:-0.02em">Write, publish, tinker.</h1>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.9;color:#8D98AB;background:#111A2E;border:1px solid #24304A;border-radius:8px;padding:14px 16px">
+        <div><span style="color:#4ADE80">●</span> 4 drafts · 2 scheduled</div>
+        <div><span style="color:#FBBF24">●</span> 3 webmentions waiting</div>
+        <div><span style="color:#FB7185">●</span> 2 failed jobs</div>
+      </div>
+    </div>
+    <span style="position:relative;font-family:'JetBrains Mono',monospace;font-size:12px;color:#8D98AB">deploy a3f91c2 · staging</span>
+  </section>
+
+  <section style="display:grid;place-items:center;padding:48px 24px;background:#111A2E;position:relative">
+    <div style="width:100%;max-width:380px;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0;font-size:24px;font-weight:600">Sign in</h2>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:11px;padding:2px 8px;border-radius:4px;color:#FBBF24;border:1px solid #FBBF24">staging</span>
+      </div>
+      <p style="margin:0;font-size:15px;line-height:1.6;color:#8D98AB">Admin access is limited to Google Workspace accounts on <span style="font-family:'JetBrains Mono',monospace;color:#22D3EE">@halid.org</span>.</p>
+      <sc-if value="{{ error }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:12px 14px;border-left:3px solid #FB7185;background:#17223A;font-size:14px;line-height:1.55"><span style="font-family:'JetBrains Mono',monospace;color:#FB7185">{{ errorEmail }}</span> is not allowed. Sign in with an @halid.org account.</div>
+      </sc-if>
+      <button type="button" onClick="{{ openChooser }}" style="height:52px;display:flex;align-items:center;justify-content:center;gap:12px;border:0;border-radius:4px;background:#FFFFFF;color:#0E1525;font:inherit;font-size:16px;font-weight:500;cursor:pointer">
+        <span style="width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:14px;color:#FFFFFF;background:conic-gradient(#EA4335 0 25%,#FBBC05 0 50%,#34A853 0 75%,#4285F4 0)">G</span>
+        <span>{{ cta }}</span>
+      </button>
+      <div style="display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid #24304A;border-radius:8px;font-family:'JetBrains Mono',monospace;font-size:12px;color:#8D98AB;line-height:1.6">
+        <span><span style="color:#4ADE80">✓</span> hd=halid.org enforced server-side</span>
+        <span><span style="color:#4ADE80">✓</span> session 12h · re-auth for publish &amp; delete</span>
+        <span><span style="color:#4ADE80">✓</span> 2-step verification via Google</span>
+      </div>
+      <a href="Home.dc.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#8D98AB;text-decoration:none;text-align:center">← back to halid.org</a>
+    </div>
+
+    <sc-if value="{{ chooser }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ closeChooser }}" style="position:fixed;inset:0;z-index:50;background:rgba(11,18,32,.7);display:grid;place-items:center;padding:24px">
+        <div onClick="{{ stop }}" style="width:100%;max-width:400px;background:#FFFFFF;color:#0E1525;border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)">
+          <div style="padding:24px 24px 12px;display:flex;flex-direction:column;gap:6px;text-align:center">
+            <span style="font-size:20px;font-weight:500">Choose an account</span>
+            <span style="font-size:14px;color:#5A6578">to continue to <span style="color:#0E7490">admin.halid.org</span></span>
+          </div>
+          <sc-for list="{{ accounts }}" as="ac" hint-placeholder-count="2">
+            <button onClick="{{ ac.pick }}" style="width:100%;display:flex;align-items:center;gap:14px;padding:14px 24px;border:0;border-top:1px solid #EEF1F5;background:#FFFFFF;cursor:pointer;text-align:left;font:inherit" style-hover="background:#F7F8FA">
+              <span style="width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:600;color:#FFFFFF;background:{{ ac.c }}">{{ ac.i }}</span>
+              <span style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span style="font-size:15px">{{ ac.name }}</span><span style="font-size:13px;color:#5A6578">{{ ac.email }}</span></span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:{{ ac.tagC }}">{{ ac.tag }}</span>
+            </button>
+          </sc-for>
+          <div style="padding:14px 24px;border-top:1px solid #EEF1F5;font-size:14px;color:#5A6578">Use another account</div>
+        </div>
+      </div>
+    </sc-if>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { chooser:false, loading:false, error:false, errorEmail:'' };
+  renderVals() {
+    const s = this.state;
+    const ACC = [['Halid','me@halid.org','H','#0891B2'],['Halid (personal)','halid.dev@gmail.com','H','#E11D48']];
+    return { ...s,
+      cta: s.loading ? 'signing in…' : 'Continue with Google',
+      openChooser: () => this.setState({ chooser:true }),
+      closeChooser: () => this.setState({ chooser:false }), stop: e => e.stopPropagation(),
+      accounts: ACC.map(([name,email,i,c]) => { const ok = email.endsWith('@halid.org');
+        return { name, email, i, c, tag: ok ? 'allowed' : 'blocked', tagC: ok ? '#15803D' : '#E11D48',
+          pick: () => ok ? (this.setState({ chooser:false, loading:true, error:false }), setTimeout(() => { location.href = 'Admin Dashboard.dc.html'; }, 700))
+                         : this.setState({ chooser:false, error:true, errorEmail:email }) }; })
+    };
+  }
+}
+</script>
+</body>
+</html>

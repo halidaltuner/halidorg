@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<header style="background:#FFFFFF;border-bottom:1px solid #DCE1E8;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#0E1525;position:relative;z-index:20">
+  <div style="height:3px;background:linear-gradient(90deg,#E11D48 0 33%,#0891B2 33% 66%,#4F46E5 66%)"></div>
+  <div style="max-width:1200px;margin:0 auto;padding:12px 24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+    <a href="Home.dc.html" aria-label="halid home" style="font-family:'JetBrains Mono',monospace;font-weight:700;font-size:24px;letter-spacing:-0.03em;color:#0E1525;text-decoration:none;text-shadow:-1.5px 0 rgba(225,29,72,.7),1.5px 0 rgba(8,145,178,.7);transition:text-shadow 160ms ease-out" style-hover="text-shadow:-2.5px 0 rgba(225,29,72,.8),2.5px 0 rgba(8,145,178,.8)">halid<span style="color:#E11D48;text-shadow:none">.</span></a>
+    <nav style="display:flex;gap:0;flex-wrap:wrap;flex:1;min-width:0;align-items:center">
+      <sc-for list="{{ nav }}" as="n" hint-placeholder-count="8">
+        <a href="{{ n.href }}" style="font-size:14px;padding:6px 7px;white-space:nowrap;border-radius:4px;text-decoration:none;color:{{ n.color }};background:{{ n.bg }};box-shadow:inset 0 -2px 0 {{ n.rule }};transition:color 120ms ease-out" style-hover="color:#0E1525;background:#F7F8FA">{{ n.label }}</a>
+      </sc-for>
+      <div style="position:relative">
+        <button onClick="{{ toggleMore }}" style="font-family:inherit;font-size:14px;padding:6px 7px;white-space:nowrap;border:0;border-radius:4px;background:{{ moreBg }};color:#5A6578;cursor:pointer">{{ t.more }} ▾</button>
+        <sc-if value="{{ moreOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="position:absolute;top:calc(100% + 6px);left:0;min-width:200px;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;box-shadow:0 12px 32px rgba(14,21,37,.12);padding:6px;display:flex;flex-direction:column">
+            <sc-for list="{{ more }}" as="m" hint-placeholder-count="5">
+              <a href="{{ m.href }}" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:4px;text-decoration:none;color:#0E1525;font-size:15px" style-hover="background:#F7F8FA">
+                <span style="width:8px;height:8px;border-radius:2px;background:{{ m.c }}"></span>{{ m.label }}
+              </a>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+    </nav>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onClick="{{ openPalette }}" style="display:flex;align-items:center;gap:12px;font-family:inherit;font-size:14px;color:#5A6578;background:#F7F8FA;border:1px solid #DCE1E8;border-radius:4px;padding:6px 8px 6px 12px;cursor:pointer">
+        <span style="white-space:nowrap">{{ t.search }}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:4px;padding:1px 6px">⌘K</span>
+      </button>
+      <div style="display:flex;border:1px solid #DCE1E8;border-radius:4px;overflow:hidden;font-family:'JetBrains Mono',monospace;font-size:13px">
+        <button onClick="{{ setTr }}" style="border:0;padding:6px 9px;cursor:pointer;font-family:inherit;font-size:inherit;background:{{ trBg }};color:{{ trColor }}">tr</button>
+        <button onClick="{{ setEn }}" style="border:0;padding:6px 9px;cursor:pointer;font-family:inherit;font-size:inherit;background:{{ enBg }};color:{{ enColor }}">en</button>
+      </div>
+    </div>
+  </div>
+  <sc-if value="{{ open }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closePalette }}" style="position:fixed;inset:0;background:rgba(14,21,37,.32);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;z-index:100">
+      <div onClick="{{ stop }}" role="dialog" aria-label="command palette" style="width:100%;max-width:620px;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;box-shadow:0 12px 40px rgba(14,21,37,.18);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border-bottom:1px solid #DCE1E8">
+          <span style="font-family:'JetBrains Mono',monospace;color:#E11D48;font-size:15px;font-weight:700">&gt;</span>
+          <input ref="{{ inputRef }}" value="{{ q }}" onChange="{{ onQ }}" onKeyDown="{{ onKey }}" placeholder="{{ t.placeholder }}" style="flex:1;border:0;outline:none;font-family:'JetBrains Mono',monospace;font-size:15px;color:#0E1525;background:transparent"></input>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">esc</span>
+        </div>
+        <div style="max-height:360px;overflow:auto;padding:6px">
+          <sc-for list="{{ results }}" as="r" hint-placeholder-count="0">
+            <a href="{{ r.href }}" onMouseEnter="{{ r.hover }}" style="display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:4px;text-decoration:none;color:#0E1525;background:{{ r.bg }}">
+              <span style="width:8px;height:8px;border-radius:50%;background:{{ r.dot }};flex:none"></span>
+              <span style="flex:1;font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ r.title }}</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">{{ r.kind }}</span>
+            </a>
+          </sc-for>
+          <sc-if value="{{ empty }}" hint-placeholder-val="{{ false }}">
+            <div style="padding:16px 10px;font-family:'JetBrains Mono',monospace;font-size:13px;color:#5A6578">{{ t.empty }}</div>
+          </sc-if>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid #DCE1E8;background:#F7F8FA;font-family:'JetBrains Mono',monospace;font-size:12px;color:#5A6578">
+          <span>p: posts</span><span>n: notes</span><span>s: snippets</span><span>l: links</span><span>pr: projects</span><span>h: homelab</span><span>↑↓ ↵</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</header>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;1200px&quot;,&quot;height&quot;:&quot;80px&quot;},&quot;active&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;posts&quot;,&quot;projects&quot;,&quot;homelab&quot;,&quot;presentations&quot;,&quot;photos&quot;,&quot;radar&quot;,&quot;now&quot;,&quot;about&quot;,&quot;&quot;],&quot;default&quot;:&quot;posts&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const KC = { post:'#0891B2', note:'#4F46E5', snippet:'#B45309', link:'#5A6578', fav:'#E11D48', project:'#15803D', homelab:'#C2410C', talk:'#BE123C', page:'#0E1525' };
+const ITEMS = [
+  ['post','Notes on an htmx-first admin','Post.dc.html'],['post','Bilingual full-text search in Postgres','Post.dc.html'],['post','Leaving Ghost: a migration log','Post.dc.html'],
+  ['note','chroma themes are just CSS variables','Home.dc.html?kind=note'],
+  ['snippet','go: graceful shutdown with context','Snippets.dc.html'],['snippet','sql: tsvector trigger for tr + en','Snippets.dc.html'],
+  ['link','The Grug Brained Developer','Links.dc.html'],['link','Hypermedia Systems','Links.dc.html'],
+  ['project','halid.org — this site','Project Detail.dc.html?id=site'],['project','radargen — tech radar from YAML','Project Detail.dc.html?id=radargen'],
+  ['homelab','3-node Proxmox cluster in a 10" rack','Project Detail.dc.html?id=rack'],['homelab','e-ink status board','Project Detail.dc.html?id=eink'],
+  ['talk','htmx in production','Presentation Detail.dc.html'],
+  ['page','photos','Photos.dc.html'],['page','certificates','Certificates.dc.html'],['page','about','About.dc.html'],['page','radar','Radar.dc.html'],['page','now','Now.dc.html'],['page','favs','Favs.dc.html'],
+  ['page','admin: login','Admin Login.dc.html'],['page','admin: dashboard','Admin Dashboard.dc.html'],['page','admin: editor','Admin Editor.dc.html'],['page','admin: quick capture','Quick Capture.dc.html']
+].map(([kind,title,href]) => ({ kind, title, href }));
+const PFX = { p:'post', n:'note', s:'snippet', l:'link', f:'fav', pr:'project', h:'homelab' };
+const NAV = [
+  ['posts','yazılar','Home.dc.html','#0891B2'],['projects','projeler','Projects.dc.html','#15803D'],['homelab','homelab','Homelab.dc.html','#C2410C'],
+  ['presentations','sunumlar','Presentations.dc.html','#BE123C'],['photos','fotoğraflar','Photos.dc.html','#6D28D9'],['radar','radar','Radar.dc.html','#4F46E5'],
+  ['now','şimdi','Now.dc.html','#0891B2'],['about','hakkımda','About.dc.html','#0E1525']
+];
+const MORE = [['notes','notlar','Home.dc.html?kind=note','#4F46E5'],['snippets','snippetler','Snippets.dc.html','#B45309'],['links','bağlantılar','Links.dc.html','#5A6578'],['favs','favoriler','Favs.dc.html','#E11D48'],['certificates','sertifikalar','Certificates.dc.html','#0E7490']];
+const T = { en:{search:'search',placeholder:'search everything… (s: snippets)',empty:'no matches',more:'more'}, tr:{search:'ara',placeholder:'her şeyde ara… (s: snippetler)',empty:'sonuç yok',more:'diğer'} };
+function fuzzy(q, s) { q = q.toLowerCase(); s = s.toLowerCase(); let i = 0; for (const c of s) if (c === q[i]) i++; return i === q.length; }
+class Component extends DCLogic {
+  state = { open:false, more:false, q:'', sel:0, lang: localStorage.getItem('kromatik-lang') || 'en' };
+  inputRef = React.createRef();
+  componentDidMount() {
+    this.onDoc = e => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); this.state.open ? this.close() : this.openP(); }
+      else if (e.key === 'Escape') this.setState({ open:false, more:false });
+    };
+    this.onClick = () => this.state.more && this.setState({ more:false });
+    window.addEventListener('keydown', this.onDoc);
+    document.addEventListener('click', this.onClick);
+    this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL);
+  }
+  componentWillUnmount() { window.removeEventListener('keydown', this.onDoc); document.removeEventListener('click', this.onClick); window.removeEventListener('kromatik-lang', this.onL); }
+  openP = () => { this.setState({ open:true, q:'', sel:0 }, () => setTimeout(() => this.inputRef.current && this.inputRef.current.focus(), 0)); };
+  close = () => this.setState({ open:false });
+  setLang(l) { localStorage.setItem('kromatik-lang', l); this.setState({ lang:l }); window.dispatchEvent(new CustomEvent('kromatik-lang', { detail:l })); }
+  filtered() {
+    let q = this.state.q.trim(), kind = null;
+    const m = q.match(/^(pr|p|n|s|l|f|h):\s*(.*)$/);
+    if (m) { kind = PFX[m[1]]; q = m[2]; }
+    return ITEMS.filter(it => (!kind || it.kind === kind) && (!q || fuzzy(q, it.title)));
+  }
+  renderVals() {
+    const { lang, sel, open, q, more } = this.state;
+    const active = this.props.active;
+    const list = this.filtered();
+    const s = Math.min(sel, Math.max(0, list.length - 1));
+    return {
+      t: T[lang], open, q, moreOpen: more, moreBg: more ? '#F7F8FA' : 'transparent',
+      toggleMore: e => { e.stopPropagation(); this.setState({ more:!more }); },
+      nav: NAV.map(([en,tr,href,c]) => ({ label: lang==='tr'?tr:en, href, color: active===en?'#0E1525':'#5A6578', bg:'transparent', rule: active===en?c:'transparent' })),
+      more: MORE.map(([en,tr,href,c]) => ({ label: lang==='tr'?tr:en, href, c })),
+      trBg: lang==='tr'?'#0E1525':'#FFFFFF', trColor: lang==='tr'?'#FFFFFF':'#5A6578',
+      enBg: lang==='en'?'#0E1525':'#FFFFFF', enColor: lang==='en'?'#FFFFFF':'#5A6578',
+      setTr: () => this.setLang('tr'), setEn: () => this.setLang('en'),
+      openPalette: this.openP, closePalette: this.close, stop: e => e.stopPropagation(),
+      inputRef: this.inputRef,
+      onQ: e => this.setState({ q:e.target.value, sel:0 }),
+      onKey: e => {
+        if (e.key === 'ArrowDown') { e.preventDefault(); this.setState({ sel: Math.min(s+1, list.length-1) }); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); this.setState({ sel: Math.max(s-1, 0) }); }
+        else if (e.key === 'Enter' && list[s]) location.href = list[s].href;
+      },
+      results: list.map((r,i) => ({ ...r, dot: KC[r.kind], bg: i===s?'#EEF1F5':'transparent', hover: () => this.setState({ sel:i }) })),
+      empty: list.length === 0
+    };
+  }
+}
+</script>
+</body>
+</html>

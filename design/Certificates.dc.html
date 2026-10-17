@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#F7F8FA}a{color:#0E7490}a:hover{color:#0891B2}:focus-visible{outline:2px solid #0891B2;outline-offset:2px}</style>
+<script src="./image-slot.js"></script>
+</helmet>
+<div style="min-height:100vh;background:#F7F8FA;color:#0E1525;font-family:'IBM Plex Sans',system-ui,sans-serif">
+  <dc-import name="Header" active="" hint-size="100%,66px"></dc-import>
+  <section style="background:#D7F1F7;border-bottom:1px solid #B9E3EE">
+    <div style="max-width:1200px;margin:0 auto;padding:56px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#0E7490">✓ {{ t.eyebrow }}</span>
+        <h1 style="margin:0;font-size:48px;line-height:1.08;font-weight:600;letter-spacing:-0.025em">{{ t.title }}</h1>
+        <p style="margin:0;font-size:18px;line-height:1.7;max-width:52ch">{{ t.sub }}</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <sc-for list="{{ stats }}" as="s" hint-placeholder-count="3">
+          <div style="background:#FFFFFF;border-radius:8px;padding:12px 16px;display:flex;flex-direction:column;gap:2px;min-width:90px">
+            <span style="font-size:24px;font-weight:600;color:{{ s.c }}">{{ s.v }}</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">{{ s.k }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </section>
+  <main style="max-width:1200px;margin:0 auto;padding:40px 24px 0;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+        <button onClick="{{ c.pick }}" style="font-family:'JetBrains Mono',monospace;font-size:12px;padding:5px 12px;border-radius:999px;cursor:pointer;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.color }}">{{ c.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px">
+      <sc-for list="{{ certs }}" as="c" hint-placeholder-count="8">
+        <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;padding:24px 20px 20px;background:#FFFFFF;border:1px solid #DCE1E8;border-radius:8px;border-top:4px solid {{ c.ink }};opacity:{{ c.op }}">
+          <div style="width:112px;height:112px;position:relative;background:{{ c.tint }};clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);color:{{ c.ink }}">
+            <image-slot id="{{ c.slot }}" mask="polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)" placeholder="badge" style="position:absolute;inset:0;width:100%;height:100%"></image-slot>
+          </div>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:{{ c.ink }}">{{ c.issuer }}</span>
+          <h2 style="margin:0;font-size:17px;line-height:1.35;font-weight:600;text-wrap:balance">{{ c.name }}</h2>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center">
+            <sc-for list="{{ c.skills }}" as="s" hint-placeholder-count="2"><span style="font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 7px;border-radius:999px;background:#EEF1F5;color:#5A6578">{{ s }}</span></sc-for>
+          </div>
+          <div style="margin-top:auto;padding-top:10px;width:100%;border-top:1px solid #EEF1F5;display:flex;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;color:#5A6578">
+            <span>{{ c.date }}</span><span style="color:{{ c.stColor }}">{{ c.status }}</span><a href="#" style="text-decoration:none">verify ↗</a>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </main>
+  <dc-import name="Footer" hint-size="100%,180px"></dc-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const ISS = { AWS:['#FCEBCF','#92400E'], CNCF:['#D7F1F7','#0E7490'], HashiCorp:['#EBE2FD','#6D28D9'], Google:['#D9F0E0','#166534'], 'Linux Foundation':['#E4E3FC','#4338CA'] };
+const C = [
+  ['Certified Kubernetes Administrator (CKA)','CNCF','2026-03','2029-03',['kubernetes','ops']],
+  ['AWS Solutions Architect – Associate','AWS','2025-11','2028-11',['aws','architecture']],
+  ['Terraform Associate (003)','HashiCorp','2025-08','2027-08',['iac','terraform']],
+  ['Professional Cloud Developer','Google','2025-02','2027-02',['gcp','go']],
+  ['Certified Kubernetes Application Developer','CNCF','2024-10','2026-10',['kubernetes']],
+  ['Linux Foundation Certified SysAdmin','Linux Foundation','2023-06','2025-06',['linux']],
+  ['AWS Cloud Practitioner','AWS','2022-09','2025-09',['aws']],
+  ['Vault Associate','HashiCorp','2024-04','2026-04',['security','vault']]
+];
+const T = { en:{ eyebrow:'certificates', title:'Badges and certifications.', sub:'Verified through Credly and issuer portals. Expired ones stay listed, faded.', all:'all' },
+  tr:{ eyebrow:'sertifikalar', title:'Rozetler ve sertifikalar.', sub:'Credly ve sağlayıcı portallarıyla doğrulanır. Süresi dolanlar soluk görünür.', all:'hepsi' } };
+class Component extends DCLogic {
+  state = { iss:'', lang: localStorage.getItem('kromatik-lang') || 'en' };
+  componentDidMount() { this.onL = e => this.setState({ lang:e.detail }); window.addEventListener('kromatik-lang', this.onL); }
+  componentWillUnmount() { window.removeEventListener('kromatik-lang', this.onL); }
+  renderVals() {
+    const { iss, lang } = this.state; const t = T[lang]; const now = '2026-10';
+    const all = C.map(([name,issuer,date,exp,skills],i) => { const active = exp > now; const soon = active && exp <= '2027-01';
+      return { name, issuer, date, skills, slot:'cert-' + i, tint:ISS[issuer][0], ink:ISS[issuer][1], status: !active ? 'expired' : soon ? 'renew soon' : 'active', stColor: !active ? '#5A6578' : soon ? '#B45309' : '#15803D', op: active ? 1 : 0.55, active }; });
+    return { t,
+      stats: [['active', all.filter(c => c.active).length, '#15803D'],['issuers', Object.keys(ISS).length, '#0E7490'],['total', all.length, '#0E1525']].map(([k,v,c]) => ({ k, v, c })),
+      chips: ['', ...Object.keys(ISS)].map(k => { const on = k === iss; const ink = k ? ISS[k][1] : '#0E1525'; return { label: k || t.all, pick: () => this.setState({ iss:k }), bg: on ? ink : '#FFFFFF', color: on ? '#FFFFFF' : '#5A6578', border: on ? ink : '#DCE1E8' }; }),
+      certs: all.filter(c => !iss || c.issuer === iss)
+    };
+  }
+}
+</script>
+</body>
+</html>
