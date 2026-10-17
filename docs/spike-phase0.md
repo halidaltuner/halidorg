@@ -1,6 +1,6 @@
 # Phase 0 spike: container access to D1, R2 and KV
 
-Decision for ADR-001's open question. Status: **path chosen and proven locally; edge numbers not measured yet.**
+Decision for ADR-001's open question. Status: **path chosen, proven locally and on staging; cold start unconfirmed.**
 
 ## Decision
 
@@ -40,6 +40,22 @@ These numbers are the bridge's own overhead against simulated stores. They say n
 
 Also run through `wrangler dev`: `/en/` returns `X-Cache: MISS` then `HIT`; `/admin` with an unknown session cookie goes container to bridge to D1 and returns 303 to the login page.
 
+## Measured on staging (2026-10-17)
+
+`staging.halid.org`, `lite` instance, requests from Istanbul. `GET /x/spike/bridge?method=B&n=20`:
+
+| Op | ok / fail | p50 ms | p95 ms |
+|---|---|---|---|
+| d1_select | 20 / 0 | 45.3 | 97.0 |
+| kv_get | 20 / 0 | 8.8 | 11.7 |
+| kv_put | 20 / 0 | 37.8 | 104.6 |
+| r2_get | 20 / 0 | 52.2 | 69.2 |
+| r2_put | 20 / 0 | 176.3 | 224.5 |
+
+KV page cache, `GET /en/` six times: the first was `X-Cache: MISS` (`kv;dur=75, origin;dur=29`), the next five `HIT` with `kv;dur` 3 to 24 ms. Total time seen from Istanbul was 220 to 290 ms, most of it the network round trip.
+
+Cold start, unconfirmed: after 6.5 minutes idle (`sleepAfter` is 5m), the first `GET /admin/login` took 338 ms against 230 to 249 ms warm. That gap is too small for a container boot, so either the container had not slept or something else woke it in the window. Confirm from the container's `startup_ms` log line before relying on it.
+
 ## Two traps found on the way
 
 1. **`ContainerProxy` must be exported** from the Worker entrypoint, or the container fails to start once `outboundByHost` is set.
@@ -49,11 +65,7 @@ Both were in the spike code, so method B had never actually run before this.
 
 ## Not measured yet
 
-Each of these needs the staging deploy (`docs/environments.md`):
-
-- container cold start at the edge (first request after `sleepAfter`)
-- KV hit latency at the edge (`Server-Timing: kv;dur=`)
-- bridge latency against real D1, KV and R2
+- container cold start, confirmed from logs
 - monthly cost at expected traffic
 
 Once measured, add the numbers here and remove `internal/spike`, the `/__bridge` route and the method C and D code.
