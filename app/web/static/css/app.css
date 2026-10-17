@@ -5,6 +5,21 @@ body { margin: 0; font-family: var(--font-sans); color: var(--text); background:
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .mono { font-family: var(--font-mono); }
 
+/* tr/en switcher (design/Header.dc.html): segmented, active segment inverted. */
+.site-top { display: flex; justify-content: flex-end; padding: 16px 24px; }
+.lang-switch {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-1);
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.2;
+}
+.lang-switch a { padding: 6px 9px; color: var(--text-muted); background: var(--surface); text-decoration: none; }
+.lang-switch a:hover { color: var(--text); }
+.lang-switch a[aria-current] { background: var(--text); color: var(--surface); }
+
 /* Admin Login (design/Admin Login.dc.html) */
 body.dark { background: var(--dk-bg); }
 .dark a { color: var(--dk-cyan); }
@@ -69,11 +84,18 @@ body.dark { background: var(--dk-bg); }
 .login-deploy { font-family: var(--font-mono); font-size: 12px; color: var(--dk-muted); }
 
 .login-panel {
+  position: relative;
   display: grid;
   place-items: center;
   padding: 48px 24px;
   background: var(--dk-surface);
 }
+.login-lang { position: absolute; top: 24px; right: 24px; }
+/* Dark variant: same shape, inverted on the dark band. */
+.dark .lang-switch { border-color: var(--dk-border); }
+.dark .lang-switch a { color: var(--dk-muted); background: transparent; }
+.dark .lang-switch a:hover { color: var(--dk-text); }
+.dark .lang-switch a[aria-current] { background: var(--dk-text); color: var(--dk-bg); }
 .login-card { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 20px; }
 .login-head { display: flex; justify-content: space-between; align-items: center; }
 .login-head h2 { margin: 0; font-size: 24px; font-weight: 600; }

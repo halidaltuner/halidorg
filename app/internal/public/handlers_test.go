@@ -78,3 +78,58 @@ func TestUnknownLangIs404(t *testing.T) {
 		t.Fatalf("got %d, want 404", rec.Code)
 	}
 }
+
+func TestSetLang(t *testing.T) {
+	mux := newMux(t)
+	cases := map[string]string{
+		"/lang/en?next=%2Fen%2F":                    "/en/",
+		"/lang/tr?next=%2Fadmin%2Flogin%3Fnext%3Dx": "/admin/login?next=x",
+		"/lang/tr": "/tr/",
+		"/lang/tr?next=https%3A%2F%2Fevil.example": "/tr/",
+		"/lang/tr?next=%2F%2Fevil.example":         "/tr/",
+		"/lang/tr?next=%2F%5Cevil.example":         "/tr/",
+		"/lang/tr?next=evil":                       "/tr/",
+	}
+	for target, want := range cases {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest("GET", target, nil))
+		if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != want {
+			t.Errorf("%s: got %d %q, want 303 %q", target, rec.Code, rec.Header().Get("Location"), want)
+		}
+		c := rec.Result().Cookies()
+		if len(c) != 1 || c[0].Name != "lang" || c[0].Path != "/" || !c[0].Secure || c[0].MaxAge <= 0 {
+			t.Errorf("%s: cookie %+v", target, c)
+		}
+	}
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/lang/de?next=%2F", nil))
+	if rec.Code != http.StatusNotFound || len(rec.Result().Cookies()) != 0 {
+		t.Errorf("unsupported lang: %d", rec.Code)
+	}
+}
+
+func TestRootHonoursLangCookie(t *testing.T) {
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Set("Accept-Language", "tr-TR")
+	req.AddCookie(&http.Cookie{Name: "lang", Value: "en"})
+	rec := httptest.NewRecorder()
+	newMux(t).ServeHTTP(rec, req)
+	if rec.Header().Get("Location") != "/en/" || !strings.Contains(rec.Header().Get("Vary"), "Cookie") {
+		t.Fatalf("got %q vary %q", rec.Header().Get("Location"), rec.Header().Get("Vary"))
+	}
+}
+
+func TestHomeHasSwitcher(t *testing.T) {
+	rec := httptest.NewRecorder()
+	newMux(t).ServeHTTP(rec, httptest.NewRequest("GET", "/tr/", nil))
+	body := rec.Body.String()
+	for _, want := range []string{
+		`aria-label="Dil"`,
+		`href="/lang/tr?next=%2Ftr%2F" hreflang="tr" lang="tr" aria-current="true">tr</a>`,
+		`href="/lang/en?next=%2Fen%2F" hreflang="en" lang="en">en</a>`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %s in\n%s", want, body)
+		}
+	}
+}

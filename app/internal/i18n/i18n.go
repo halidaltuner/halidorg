@@ -2,6 +2,8 @@
 package i18n
 
 import (
+	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 )
@@ -33,6 +35,7 @@ var catalog = map[string]map[string]string{
 		"hello.body":               "Bu sayfa Go tarafından render edildi ve edge'de önbelleğe alındı.",
 		"lang.tr":                  "Türkçe",
 		"lang.en":                  "English",
+		"lang.switch":              "Dil",
 	},
 	"en": {
 		"admin.login.title":        "Sign in",
@@ -54,6 +57,7 @@ var catalog = map[string]map[string]string{
 		"hello.body":               "This page was rendered by Go and cached at the edge.",
 		"lang.tr":                  "Türkçe",
 		"lang.en":                  "English",
+		"lang.switch":              "Language",
 	},
 }
 
@@ -92,4 +96,35 @@ func Negotiate(header string) string {
 		}
 	}
 	return best
+}
+
+// Cookie holds an explicit language choice from the tr/en switcher. It wins
+// over Accept-Language, so a choice sticks across visits.
+const Cookie = "lang"
+
+// FromRequest picks the language for a page without a language in its URL:
+// the switcher cookie if valid, else the browser's Accept-Language.
+func FromRequest(r *http.Request) string {
+	if c, err := r.Cookie(Cookie); err == nil && IsSupported(c.Value) {
+		return c.Value
+	}
+	return Negotiate(r.Header.Get("Accept-Language"))
+}
+
+// Option is one segment of the tr/en switcher.
+type Option struct {
+	Lang   string
+	Href   string
+	Active bool
+}
+
+// Switcher builds the switcher for a page in lang. target maps a language to
+// the page to land on: its translation for public pages, the same path for admin.
+func Switcher(lang string, target func(string) string) []Option {
+	opts := make([]Option, 0, len(Supported))
+	for _, l := range Supported {
+		href := "/lang/" + l + "?next=" + url.QueryEscape(target(l))
+		opts = append(opts, Option{Lang: l, Href: href, Active: l == lang})
+	}
+	return opts
 }

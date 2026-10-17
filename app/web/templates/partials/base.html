@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{template "title" .}}</title>
 {{range .Alternates}}<link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">
-{{end}}</head>
+{{end}}<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/app.css">
+</head>
 <body>
+<header class="site-top">{{template "lang-switch" .}}</header>
 {{template "content" .}}
 </body>
 </html>

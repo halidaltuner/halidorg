@@ -80,3 +80,18 @@ func TestAdminNeedsSession(t *testing.T) {
 		t.Errorf("logout without session: %d", rec.Code)
 	}
 }
+
+func TestLoginFollowsLangCookie(t *testing.T) {
+	mux := newMux(t, auth.Config{})
+	req := httptest.NewRequest("GET", "/admin/login", nil)
+	req.Header.Set("Accept-Language", "en-US")
+	req.AddCookie(&http.Cookie{Name: "lang", Value: "tr"})
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	body := rec.Body.String()
+	for _, want := range []string{`<html lang="tr">`, "Google ile devam et", `href="/lang/en?next=%2Fadmin%2Flogin"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %q", want)
+		}
+	}
+}

@@ -27,7 +27,8 @@ type Handlers struct {
 func New(a *auth.Auth) (*Handlers, error) {
 	funcs := template.FuncMap{"tr": i18n.T}
 	parse := func(page string) (*template.Template, error) {
-		return template.New(page).Funcs(funcs).ParseFS(web.Templates, "templates/admin/base.html", "templates/admin/"+page+".html")
+		return template.New(page).Funcs(funcs).ParseFS(web.Templates,
+			"templates/admin/base.html", "templates/partials/lang_switch.html", "templates/admin/"+page+".html")
 	}
 	login, err := parse("login")
 	if err != nil {
@@ -62,6 +63,7 @@ type loginPage struct {
 	Lang, Env, Deploy, Next string
 	Dark                    bool
 	Flash                   *auth.Flash
+	Switch                  []i18n.Option
 }
 
 func (h *Handlers) loginPage(w http.ResponseWriter, r *http.Request) {
@@ -69,9 +71,11 @@ func (h *Handlers) loginPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) renderLogin(w http.ResponseWriter, r *http.Request, status int, flash *auth.Flash) {
+	lang := i18n.FromRequest(r)
 	h.render(w, status, h.login, loginPage{
-		Lang: i18n.Negotiate(r.Header.Get("Accept-Language")), Env: h.env, Deploy: h.deploy,
+		Lang: lang, Env: h.env, Deploy: h.deploy,
 		Next: auth.SafeNext(r.URL.Query().Get("next")), Dark: true, Flash: flash,
+		Switch: i18n.Switcher(lang, samePage(r)),
 	})
 }
 
@@ -99,13 +103,26 @@ func (h *Handlers) start(w http.ResponseWriter, r *http.Request, next string, se
 type homePage struct {
 	Lang, Email string
 	Dark        bool
+	Switch      []i18n.Option
 }
 
 func (h *Handlers) homePage(w http.ResponseWriter, r *http.Request) {
+	lang := i18n.FromRequest(r)
 	h.render(w, http.StatusOK, h.home, homePage{
-		Lang:  i18n.Negotiate(r.Header.Get("Accept-Language")),
-		Email: auth.SessionFrom(r.Context()).Email,
+		Lang:   lang,
+		Email:  auth.SessionFrom(r.Context()).Email,
+		Switch: i18n.Switcher(lang, samePage(r)),
 	})
+}
+
+// samePage keeps admin on the page it is on: admin URLs carry no language.
+// A POST (the failed-login render) has no page to repeat, so it lands on login.
+func samePage(r *http.Request) func(string) string {
+	target := r.URL.RequestURI()
+	if r.Method != http.MethodGet {
+		target = auth.LoginPath
+	}
+	return func(string) string { return target }
 }
 
 // render buffers so a template error becomes a clean 500, not half a page.

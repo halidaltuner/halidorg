@@ -8,6 +8,8 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/web"
@@ -21,6 +23,7 @@ type alternate struct {
 type page struct {
 	Lang       string
 	Alternates []alternate
+	Switch     []i18n.Option
 }
 
 // Handlers holds parsed templates for public pages.
@@ -32,7 +35,7 @@ type Handlers struct {
 func New() (*Handlers, error) {
 	funcs := template.FuncMap{"tr": i18n.T}
 	hello, err := template.New("hello").Funcs(funcs).ParseFS(web.Templates,
-		"templates/partials/base.html", "templates/public/hello.html")
+		"templates/partials/base.html", "templates/partials/lang_switch.html", "templates/public/hello.html")
 	if err != nil {
 		return nil, err
 	}
@@ -43,13 +46,14 @@ func New() (*Handlers, error) {
 func (h *Handlers) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", h.root)
 	mux.HandleFunc("GET /{lang}/{$}", h.home)
+	mux.HandleFunc("GET /lang/{lang}", setLang)
 }
 
 func (h *Handlers) root(w http.ResponseWriter, r *http.Request) {
-	lang := i18n.Negotiate(r.Header.Get("Accept-Language"))
+	lang := i18n.FromRequest(r)
 	// Varies per visitor, so the edge must not cache it under the path key.
 	w.Header().Set("Cache-Control", "private, no-store")
-	w.Header().Set("Vary", "Accept-Language")
+	w.Header().Set("Vary", "Accept-Language, Cookie")
 	http.Redirect(w, r, "/"+lang+"/", http.StatusFound)
 }
 
@@ -64,7 +68,8 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request) {
 		alts = append(alts, alternate{Lang: l, Href: "/" + l + "/"})
 	}
 	var buf bytes.Buffer
-	if err := h.hello.ExecuteTemplate(&buf, "base", page{Lang: lang, Alternates: alts}); err != nil {
+	sw := i18n.Switcher(lang, func(l string) string { return "/" + l + "/" })
+	if err := h.hello.ExecuteTemplate(&buf, "base", page{Lang: lang, Alternates: alts, Switch: sw}); err != nil {
 		slog.Error("render hello", "lang", lang, "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
@@ -86,4 +91,32 @@ func writeCacheable(w http.ResponseWriter, r *http.Request, body []byte) {
 		return
 	}
 	_, _ = w.Write(body)
+}
+
+// setLang stores the switcher's choice and returns to next. Public pages link
+// here with next set to their translation, admin pages with their own path, so
+// the cached public HTML stays identical for every visitor.
+func setLang(w http.ResponseWriter, r *http.Request) {
+	lang := r.PathValue("lang")
+	if !i18n.IsSupported(lang) {
+		http.NotFound(w, r)
+		return
+	}
+	http.SetCookie(w, &http.Cookie{
+		Name: i18n.Cookie, Value: lang, Path: "/", MaxAge: 365 * 24 * 3600,
+		Secure: true, HttpOnly: true, SameSite: http.SameSiteLaxMode,
+	})
+	w.Header().Set("Cache-Control", "no-store")
+	http.Redirect(w, r, localPath(r.URL.Query().Get("next"), "/"+lang+"/"), http.StatusSeeOther)
+}
+
+// localPath returns next when it is a path on this site, else fallback, so
+// /lang cannot be used as an open redirect.
+func localPath(next, fallback string) string {
+	u, err := url.Parse(next)
+	if err != nil || next == "" || u.Scheme != "" || u.Host != "" ||
+		!strings.HasPrefix(next, "/") || strings.HasPrefix(next, "//") || strings.Contains(next, "\\") {
+		return fallback
+	}
+	return u.RequestURI()
 }

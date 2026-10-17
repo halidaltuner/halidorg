@@ -1,0 +1,1 @@
+{{define "lang-switch"}}<nav class="lang-switch" aria-label="{{tr .Lang "lang.switch"}}">{{range .Switch}}<a href="{{.Href}}" hreflang="{{.Lang}}" lang="{{.Lang}}"{{if .Active}} aria-current="true"{{end}}>{{.Lang}}</a>{{end}}</nav>{{end}}

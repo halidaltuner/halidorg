@@ -2,5 +2,4 @@
 {{define "content"}}<main>
 <h1>{{tr .Lang "hello.title"}}</h1>
 <p>{{tr .Lang "hello.body"}}</p>
-<nav>{{range .Alternates}}<a href="{{.Href}}" hreflang="{{.Lang}}">{{tr $.Lang (printf "lang.%s" .Lang)}}</a> {{end}}</nav>
 </main>{{end}}
