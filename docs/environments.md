@@ -100,3 +100,15 @@ Create the token from the **Edit Cloudflare Workers** template, then trim it to 
 | Zone (halid.org) | Workers Routes: Edit | the `staging.halid.org` custom domain |
 
 The template's Workers Routes, KV and Account Settings rows come from Cloudflare. The Containers, D1 and R2 rows are inferred from what the deploy touches, not taken from a published minimum, so the first staging deploy is the test: a missing permission fails with `Authentication error [code: 10000]` and names the API call.
+
+## 5. Cloudflare Access on staging
+
+Staging sits behind Access as a second layer in front of the app's own Google login (ADR-005). Set up in the Zero Trust dashboard (team `deepcontrol`, Free plan) on 2026-10-17:
+
+- Application `halidorg staging`, self-hosted, destination `staging.halid.org`, session 24 hours.
+- Policy `halid.org accounts only`: Allow, include "Emails ending in" `@halid.org`.
+- Login method: One-time PIN (no identity provider configured). Access mails a code to the address you enter, and only `@halid.org` addresses get one.
+
+Every path is covered, `/healthz` included. CI deploys are unaffected because they go through the Cloudflare API. Scripts that call staging, such as latency probes, need an Access service token sent as `CF-Access-Client-Id` and `CF-Access-Client-Secret`, plus a policy that allows it.
+
+Prod has no Access application; adding one later needs no code change.
