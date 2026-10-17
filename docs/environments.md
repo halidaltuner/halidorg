@@ -6,7 +6,7 @@ Three environments share one `wrangler.jsonc` (ARCHITECTURE.md §5). Each has it
 |---|---|---|---|---|---|
 | local | `halidorg` (`wrangler dev`) | `halidorg-local` | `local-pages` | `halidorg-media-local` | `http://localhost:8787` |
 | staging | `halidorg-staging` | `halidorg-staging` | `halidorg-staging-pages` | `halidorg-media-staging` | `https://staging.halid.org` |
-| prod | `halidorg-prod` | `halidorg-prod` | `halidorg-prod-pages` | `halidorg-media-prod` | workers.dev until the Phase 3 cutover |
+| prod | `halidorg-prod` | `halidorg-prod` | `halidorg-prod-pages` | `halidorg-media-prod` | `https://halidorg-prod.halid-09d.workers.dev` until the Phase 3 cutover |
 
 Local resources need no creation: `wrangler dev` simulates them under `.wrangler/state`.
 

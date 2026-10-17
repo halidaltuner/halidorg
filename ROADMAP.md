@@ -6,15 +6,15 @@ Screens marked **(designed)** have a high-fidelity prototype in `/design`; build
 ## Phase 0: Spike and foundations (M)
 Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + KV render-on-publish) and lay foundations.
 
-- [ ] Wrangler project: edge Worker + Go container + D1 + R2 + KV, staging env
-- [ ] Verify container access to D1/R2/KV (direct vs Worker bridge), pick one (ADR-001)
-- [ ] Measure container cold start and KV hit latency
-- [ ] Google OIDC login restricted to @halid.org, server-side `hd` + email checks, `admin_sessions`, 12h session (ADR-005)
+- [x] Wrangler project: edge Worker + Go container + D1 + R2 + KV, staging env
+- [x] Verify container access to D1/R2/KV (direct vs Worker bridge), pick one (ADR-001)
+- [x] Measure container cold start and KV hit latency
+- [x] Google OIDC login restricted to @halid.org, server-side `hd` + email checks, `admin_sessions`, 12h session (ADR-005)
 - [x] Admin Login screen **(designed)**: default, loading, non-halid error states
-- [ ] Cloudflare Access on staging as an extra layer
+- [x] Cloudflare Access on staging as an extra layer
 - [x] D1 migration tooling (`/migrations`, `wrangler d1 migrations`)
-- [ ] CI: lint, test, build image, deploy staging on `main`, prod on tag
-- [ ] Decide FTS5 vs Pagefind for search
+- [x] CI: lint, test, build image, deploy staging on `main`, prod on tag
+- [x] Decide FTS5 vs Pagefind for search
 - [x] Commit `/design` handoff to the repo
 
 **Exit:** "hello" page rendered by Go, cached in KV, served by Worker; Google login works and rejects non-halid accounts.
