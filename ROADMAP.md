@@ -10,12 +10,12 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] Verify container access to D1/R2/KV (direct vs Worker bridge), pick one (ADR-001)
 - [ ] Measure container cold start and KV hit latency
 - [ ] Google OIDC login restricted to @halid.org, server-side `hd` + email checks, `admin_sessions`, 12h session (ADR-005)
-- [ ] Admin Login screen **(designed)**: default, loading, non-halid error states
+- [x] Admin Login screen **(designed)**: default, loading, non-halid error states
 - [ ] Cloudflare Access on staging as an extra layer
-- [ ] D1 migration tooling (`/migrations`, `wrangler d1 migrations`)
+- [x] D1 migration tooling (`/migrations`, `wrangler d1 migrations`)
 - [ ] CI: lint, test, build image, deploy staging on `main`, prod on tag
 - [ ] Decide FTS5 vs Pagefind for search
-- [ ] Commit `/design` handoff to the repo
+- [x] Commit `/design` handoff to the repo
 
 **Exit:** "hello" page rendered by Go, cached in KV, served by Worker; Google login works and rejects non-halid accounts.
 

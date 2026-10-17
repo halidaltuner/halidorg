@@ -1,0 +1,102 @@
+# Environments
+
+Three environments share one `wrangler.jsonc` (ARCHITECTURE.md §5). Each has its own D1, R2 and KV.
+
+| Env | Worker | D1 | KV | R2 | Origin |
+|---|---|---|---|---|---|
+| local | `halidorg` (`wrangler dev`) | `halidorg-local` | `local-pages` | `halidorg-media-local` | `http://localhost:8787` |
+| staging | `halidorg-staging` | `halidorg-staging` | `halidorg-staging-pages` | `halidorg-media-staging` | `https://staging.halid.org` |
+| prod | `halidorg-prod` | `halidorg-prod` | `halidorg-prod-pages` | `halidorg-media-prod` | workers.dev until the Phase 3 cutover |
+
+Local resources need no creation: `wrangler dev` simulates them under `.wrangler/state`.
+
+## 1. Create staging and prod resources
+
+Run from `worker/` so the pinned wrangler is used. `--location` is a placement hint; `eeur` is closest to Istanbul.
+
+```bash
+cd worker
+
+npx wrangler d1 create halidorg-staging --location eeur
+npx wrangler d1 create halidorg-prod --location eeur
+
+npx wrangler kv namespace create halidorg-staging-pages
+npx wrangler kv namespace create halidorg-prod-pages
+
+npx wrangler r2 bucket create halidorg-media-staging --location eeur
+npx wrangler r2 bucket create halidorg-media-prod --location eeur
+```
+
+Each `d1 create` prints a `database_id`, each `kv namespace create` an `id`. Put them in `wrangler.jsonc`:
+
+| Placeholder | Value from |
+|---|---|
+| `STAGING_D1_DATABASE_ID` | `d1 create halidorg-staging` |
+| `PROD_D1_DATABASE_ID` | `d1 create halidorg-prod` |
+| `STAGING_KV_NAMESPACE_ID` | `kv namespace create halidorg-staging-pages` |
+| `PROD_KV_NAMESPACE_ID` | `kv namespace create halidorg-prod-pages` |
+
+R2 is bound by bucket name, so it needs no id. Then apply the schema:
+
+```bash
+npx wrangler d1 migrations apply DB --remote --env staging -c ../wrangler.jsonc
+npx wrangler d1 migrations apply DB --remote --env prod -c ../wrangler.jsonc
+```
+
+## 2. Secrets
+
+| Secret | Value |
+|---|---|
+| `GOOGLE_CLIENT_ID` | OAuth client id (section 3) |
+| `GOOGLE_CLIENT_SECRET` | OAuth client secret |
+| `SESSION_SECRET` | at least 32 random bytes: `openssl rand -base64 48` |
+
+`wrangler secret put` reads the value from a prompt, so it never lands in shell history:
+
+```bash
+npx wrangler secret put GOOGLE_CLIENT_ID --env staging -c ../wrangler.jsonc
+npx wrangler secret put GOOGLE_CLIENT_SECRET --env staging -c ../wrangler.jsonc
+npx wrangler secret put SESSION_SECRET --env staging -c ../wrangler.jsonc
+```
+
+Prod gets the same three with `--env prod` once its OAuth client exists (Phase 3). Use a different `SESSION_SECRET` per env: it keys the session ids, so sharing it would let a staging row hash match prod.
+
+Locally, put the same names in `.dev.vars` at the repo root (gitignored):
+
+```
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+SESSION_SECRET=...
+```
+
+Without them the login page renders, and "Continue with Google" fails closed with the generic error banner.
+
+## 3. Google OAuth client
+
+In Google Cloud Console, create an OAuth client of type **Web application** in a project owned by the halid.org Workspace:
+
+- Authorized redirect URIs: `http://localhost:8787/admin/auth/callback`, `https://staging.halid.org/admin/auth/callback`. Prod adds `https://halid.org/admin/auth/callback` at cutover.
+- Audience: **Internal**, so only halid.org accounts can complete consent. The server checks `hd` and the email domain regardless (ADR-005).
+- **Enable `auth_time`** for the client. Re-auth for publish and delete asks Google for `auth_time` and refuses without it, so with this off every publish loops back to Google.
+
+Re-auth is unverified against Google: whether `max_age=0` makes Google ask for the password again, rather than returning the existing session's `auth_time`, needs a live test on staging. If Google returns an old `auth_time`, re-auth fails closed with the generic banner.
+
+## 4. CI
+
+`.github/workflows/ci.yml` runs on pull requests; `deploy.yml` deploys staging on `main` and prod on a `v*` tag, applying D1 migrations before `wrangler deploy`.
+
+Repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+
+Create the token from the **Edit Cloudflare Workers** template, then trim it to the halid.org account and zone:
+
+| Scope | Permission | Why |
+|---|---|---|
+| Account | Workers Scripts: Edit | upload the Worker |
+| Account | Containers: Edit | push the image and update the container application |
+| Account | D1: Edit | `d1 migrations apply --remote` |
+| Account | Workers KV Storage: Edit | the deploy validates the KV binding |
+| Account | Workers R2 Storage: Edit | the deploy checks the bucket exists; Read may be enough |
+| Account | Account Settings: Read | wrangler reads account details |
+| Zone (halid.org) | Workers Routes: Edit | the `staging.halid.org` custom domain |
+
+The template's Workers Routes, KV and Account Settings rows come from Cloudflare. The Containers, D1 and R2 rows are inferred from what the deploy touches, not taken from a published minimum, so the first staging deploy is the test: a missing permission fails with `Authentication error [code: 10000]` and names the API call.

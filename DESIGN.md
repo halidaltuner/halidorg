@@ -33,8 +33,9 @@
 | `--success` / `--warning` / `--info` | `#15803D` / `#B45309` / `#4F46E5` | statuses |
 
 ### Dark band
-`--dk-bg #0B1220` · `--dk-surface #111A2E` · `--dk-surface-2 #17223A` · `--dk-border #24304A` · `--dk-text #E6EBF2` · `--dk-muted #8D98AB` · `--dk-cyan #22D3EE` · `--dk-rose #FB7185` · `--dk-green #4ADE80` · `--dk-amber #FBBF24` · `--dk-indigo #A5B4FC`.
-Grid texture: two 1px `#17223A` linear-gradients, 48px cell, opacity .6.
+`--dk-bg #0B1220` · `--dk-surface #111A2E` · `--dk-surface-2 #17223A` · `--dk-border #24304A` · `--dk-text #E6EBF2` · `--dk-muted #8D98AB` · `--dk-cyan #22D3EE` · `--dk-rose #FB7185` · `--dk-green #4ADE80` · `--dk-amber #FBBF24` · `--dk-indigo #A5B4FC` · `--dk-cyan-hover #67E8F9` (link hover on dark, from Admin Login).
+Grid texture: two 1px `#17223A` linear-gradients, 48px cell, opacity .6 (.7 on Admin Login, per the prototype).
+Google sign-in mark: `--google-red #EA4335` · `--google-yellow #FBBC05` · `--google-green #34A853` · `--google-blue #4285F4`. Brand colors for that button only, not palette.
 
 ### Section tones (`--tone-{name}-tint|ink|stripe`)
 | Tone | Tint | Ink | Stripe | Sections |

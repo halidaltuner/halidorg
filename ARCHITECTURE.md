@@ -22,7 +22,7 @@ flowchart LR
 
 | Component | Responsibility |
 |---|---|
-| **Edge Worker** (thin, TypeScript) | Routing, KV page cache, static assets, R2 media, signed bridge to D1/R2/KV for the container, cron fan-out |
+| **Edge Worker** (thin, TypeScript) | Routing, KV page cache, static assets, R2 media, bridge to D1/R2/KV for the container (outbound interception of `bridge.internal`), cron fan-out |
 | **Go app** (Container) | Admin UI, Markdown rendering, public SSR on cache miss, htmx endpoints, importer, sync jobs, OG image generation |
 | **D1** | All content, relations, tags, i18n pairs, FTS5 search index, audit log |
 | **KV** | Pre-rendered public HTML keyed by `lang:path`, feed XML, sitemap |
@@ -51,6 +51,7 @@ flowchart LR
 - **Why:** goldmark + chroma (syntax highlighting) + `html/template` + image libs exceed comfortable WASM size limits; `syumai/workers` is experimental and its D1 support is alpha.
 - **Trade-off:** container cold start. Mitigated by render-on-publish into KV so public reads skip the container.
 - **Phase 0 spike must verify:** container access to D1/R2/KV (direct binding vs Worker bridge), cold start numbers, monthly cost at expected traffic.
+- **Store access (decided 2026-10-17):** the container calls `http://bridge.internal/{d1,kv,r2}/...`; the Worker intercepts it (`outboundByHost`) and answers with its own bindings. No public route, no secret, traffic stays inside Cloudflare. Go client: `app/internal/store`. Numbers and open items: `docs/spike-phase0.md`.
 - **Fallback:** if Containers prove awkward, move the public renderer into the Worker and keep Go only for admin.
 
 ### ADR-002: D1 is the source of truth, Markdown is the authoring format
@@ -66,11 +67,11 @@ flowchart LR
 - **Status:** Accepted (2026-10-17), supersedes the earlier Cloudflare Access proposal. Driven by the Admin Login design.
 - **Flow:** `/admin/login` → Google OIDC (authorization code + PKCE, `hd=halid.org` as a hint) → `/admin/auth/callback`.
 - **Server-side checks:** verify ID token signature and `aud`/`iss`, then require `hd == "halid.org"` **and** email domain `@halid.org` **and** `email_verified`. `hd` alone is never trusted. Optional allowlist of exact emails in `site_settings`.
-- **Session:** opaque ID in a `Secure; HttpOnly; SameSite=Lax` cookie, row in `admin_sessions`, 12h lifetime.
-- **Re-auth:** publish and delete require `last_reauth_at` within 10 minutes; otherwise redirect to Google with `prompt=login` / `max_age`.
+- **Session:** opaque 256-bit token in a `Secure; HttpOnly; SameSite=Lax` cookie scoped to `/admin`, 12h lifetime. The `admin_sessions` row id is HMAC-SHA256(`SESSION_SECRET`, token), so a leaked table cannot be replayed as cookies.
+- **Re-auth:** publish and delete require `last_reauth_at` within 10 minutes; otherwise redirect to Google with `max_age=0` and `claims={"id_token":{"auth_time":{"essential":true}}}` (Google has no `prompt=login`). The callback requires an `auth_time` inside the window and fails closed without one, so `auth_time` must be enabled for the OAuth client (`docs/environments.md`).
 - **Errors:** non-halid account shows the rose-rule banner from the design. No password form anywhere.
 - **Defense in depth:** staging also sits behind Cloudflare Access; prod admin may add it later without code changes.
-- **Secrets:** Google client ID/secret via `wrangler secret`.
+- **Secrets:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SESSION_SECRET` via `wrangler secret`.
 
 ### ADR-006: Revisions, not overwrites
 - Every manual save creates a revision; consecutive autosaves (800ms debounce) coalesce into one. Published pointer moves on publish. Enables diff and rollback in admin.
