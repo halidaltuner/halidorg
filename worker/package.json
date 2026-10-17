@@ -1,0 +1,19 @@
+{
+  "name": "halidorg-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev -c ../wrangler.jsonc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "types": "wrangler types src/worker-configuration.d.ts -c ../wrangler.jsonc --no-strict-vars --env-file ../scripts/spike/.empty.env"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "0.3.7"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "3.2.4",
+    "wrangler": "4.148.0"
+  }
+}

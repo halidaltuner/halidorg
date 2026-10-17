@@ -1,0 +1,13 @@
+{{define "base"}}<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{template "title" .}}</title>
+{{range .Alternates}}<link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">
+{{end}}</head>
+<body>
+{{template "content" .}}
+</body>
+</html>
+{{end}}

@@ -1,0 +1,168 @@
+/* Component styles. Values come from tokens.css; sizes follow the prototypes. */
+
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; font-family: var(--font-sans); color: var(--text); background: var(--bg); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--font-mono); }
+
+/* Admin Login (design/Admin Login.dc.html) */
+body.dark { background: var(--dk-bg); }
+.dark a { color: var(--dk-cyan); }
+.dark a:hover { color: var(--dk-cyan-hover); }
+.dark :focus-visible { outline-color: var(--dk-cyan); }
+
+.login {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+  background: var(--dk-bg);
+  color: var(--dk-text);
+}
+
+.login-brand {
+  position: relative;
+  overflow: hidden;
+  padding: 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 48px;
+  border-right: 1px solid var(--dk-border);
+}
+.login-brand > * { position: relative; }
+.login-brand > .login-grid,
+.login-brand > .login-ring { position: absolute; }
+.login-grid {
+  inset: 0;
+  background-image:
+    linear-gradient(var(--dk-surface-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dk-surface-2) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: .7;
+}
+.login-ring {
+  box-sizing: content-box; /* the prototype's 420px excludes the border */
+  width: 420px;
+  height: 420px;
+  border-radius: 50%;
+  border: 2px solid var(--dk-cyan);
+  opacity: .25;
+  right: -120px;
+  bottom: -120px;
+}
+.login-ring.rose { border-color: var(--dk-rose); right: -108px; bottom: -128px; }
+
+.dark a.wordmark {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  color: var(--dk-text);
+  text-decoration: none;
+  text-shadow: -2px 0 var(--dk-aberration-rose), 2px 0 var(--dk-aberration-cyan);
+}
+.wordmark .dot { color: var(--dk-rose); text-shadow: none; }
+
+.login-pitch { display: flex; flex-direction: column; gap: 16px; max-width: 420px; }
+.login-eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--dk-cyan); }
+.login-pitch h1 { margin: 0; font-size: 40px; line-height: 1.1; font-weight: 600; letter-spacing: -0.02em; }
+.login-deploy { font-family: var(--font-mono); font-size: 12px; color: var(--dk-muted); }
+
+.login-panel {
+  display: grid;
+  place-items: center;
+  padding: 48px 24px;
+  background: var(--dk-surface);
+}
+.login-card { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 20px; }
+.login-head { display: flex; justify-content: space-between; align-items: center; }
+.login-head h2 { margin: 0; font-size: 24px; font-weight: 600; }
+.env-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-1);
+  color: var(--dk-amber);
+  border: 1px solid var(--dk-amber);
+}
+.login-lede { margin: 0; font-size: 15px; line-height: 1.6; color: var(--dk-muted); }
+.login-lede .domain { font-family: var(--font-mono); color: var(--dk-cyan); }
+
+.login-error {
+  padding: 12px 14px;
+  border-left: 3px solid var(--dk-rose);
+  background: var(--dk-surface-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+.login-error .mono { color: var(--dk-rose); }
+
+.login-form { margin: 0; }
+.google-btn {
+  width: 100%;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 0;
+  border-radius: var(--radius-1);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.google-btn[aria-busy="true"] { cursor: progress; }
+.google-g {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--surface);
+  background: conic-gradient(var(--google-red) 0 25%, var(--google-yellow) 0 50%, var(--google-green) 0 75%, var(--google-blue) 0);
+}
+
+.login-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--dk-border);
+  border-radius: var(--radius-2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dk-muted);
+  line-height: 1.6;
+}
+.login-notes .ok { color: var(--dk-green); }
+.dark a.login-back {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--dk-muted);
+  text-decoration: none;
+  text-align: center;
+}
+
+/* /admin stub (derive): replaced by the Dashboard in Phase 1. */
+.admin-stub { max-width: 560px; margin: 96px auto; padding: 0 24px; display: flex; flex-direction: column; gap: 16px; }
+.admin-stub h1 { margin: 0; font-size: 28px; line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
+.admin-stub p { margin: 0; color: var(--text-muted); }
+.admin-stub .mono { color: var(--text); }
+.btn {
+  align-self: flex-start;
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-1);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--accent); }

@@ -1,0 +1,46 @@
+{{define "title"}}{{tr .Lang "admin.login.title"}} · halid.org{{end}}
+{{define "content"}}
+<main class="login">
+  <section class="login-brand">
+    <div class="login-grid" aria-hidden="true"></div>
+    <div class="login-ring" aria-hidden="true"></div>
+    <div class="login-ring rose" aria-hidden="true"></div>
+    <a class="wordmark" href="/">halid<span class="dot">.</span></a>
+    {{/* The prototype's status summary (drafts, webmentions, failed jobs) needs the Phase 1 tables. */}}
+    <div class="login-pitch">
+      <span class="login-eyebrow">// admin</span>
+      <h1>{{tr .Lang "admin.login.pitch"}}</h1>
+    </div>
+    <span class="login-deploy">{{if .Deploy}}{{tr .Lang "admin.login.deploy"}} {{.Deploy}} · {{end}}{{.Env}}</span>
+  </section>
+
+  <section class="login-panel">
+    <div class="login-card">
+      <div class="login-head">
+        <h2>{{tr .Lang "admin.login.title"}}</h2>
+        {{if ne .Env "prod"}}<span class="env-badge">{{.Env}}</span>{{end}}
+      </div>
+      <p class="login-lede">{{tr .Lang "admin.login.lede"}} <span class="domain">@halid.org</span>.</p>
+      {{with .Flash}}
+      <div class="login-error" role="alert">
+        {{if eq .Kind "domain"}}<span class="mono">{{.Email}}</span> {{tr $.Lang "admin.login.denied"}}{{else}}{{tr $.Lang "admin.login.failed"}}{{end}}
+      </div>
+      {{end}}
+      <form class="login-form" method="post" action="/admin/login">
+        <input type="hidden" name="next" value="{{.Next}}">
+        <button type="submit" class="google-btn" data-loading="{{tr .Lang "admin.login.loading"}}">
+          <span class="google-g" aria-hidden="true">G</span>
+          <span class="google-label">{{tr .Lang "admin.login.cta"}}</span>
+        </button>
+      </form>
+      <div class="login-notes">
+        <span><span class="ok">✓</span> {{tr .Lang "admin.login.note_hd"}}</span>
+        <span><span class="ok">✓</span> {{tr .Lang "admin.login.note_session"}}</span>
+        <span><span class="ok">✓</span> {{tr .Lang "admin.login.note_2sv"}}</span>
+      </div>
+      <a class="login-back" href="/">{{tr .Lang "admin.login.back"}}</a>
+    </div>
+  </section>
+</main>
+<script src="/static/js/login.js" defer></script>
+{{end}}

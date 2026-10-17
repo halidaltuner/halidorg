@@ -1,0 +1,114 @@
+// Edge Worker + Go container (ADR-001). Top level is the local env (`wrangler dev`),
+// which accepts any resource id. Staging and prod ids were printed by the create
+// commands in docs/environments.md.
+// Bindings and vars are not inherited by envs, so each env repeats them in full.
+// Secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET) go through
+// `wrangler secret put` or `.dev.vars`, never here.
+{
+  "$schema": "./worker/node_modules/wrangler/config-schema.json",
+  "name": "halidorg",
+  "main": "worker/src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+
+  "containers": [
+    {
+      "class_name": "App",
+      "image": "./Dockerfile",
+      "instance_type": "lite",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "APP", "class_name": "App" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["App"] }],
+
+  "kv_namespaces": [{ "binding": "PAGES", "id": "local-pages" }],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "halidorg-local",
+      "database_id": "local-db",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-local" }],
+
+  "vars": {
+    "APP_ENV": "local",
+    "PUBLIC_ORIGIN": "http://localhost:8787",
+    // Phase 0 spike endpoints (/x/spike/*, /__bridge/*). Remove with internal/spike.
+    "SPIKE_ENABLED": "1",
+    "BRIDGE_PUBLIC_URL": "http://host.docker.internal:8787/__bridge"
+  },
+
+  "env": {
+    "staging": {
+      "name": "halidorg-staging",
+      "routes": [{ "pattern": "staging.halid.org", "custom_domain": true }],
+      "containers": [
+        {
+          "class_name": "App",
+          "image": "./Dockerfile",
+          "instance_type": "lite",
+          "max_instances": 1
+        }
+      ],
+      "durable_objects": {
+        "bindings": [{ "name": "APP", "class_name": "App" }]
+      },
+      "kv_namespaces": [{ "binding": "PAGES", "id": "fa8629b429b34621bacdb30d912fc88f" }],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "halidorg-staging",
+          "database_id": "06d5c0e6-7d18-4db5-935f-a8f45d24cbed",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
+      "vars": {
+        "APP_ENV": "staging",
+        "PUBLIC_ORIGIN": "https://staging.halid.org",
+        "SPIKE_ENABLED": "1",
+        "BRIDGE_PUBLIC_URL": "https://staging.halid.org/__bridge"
+      }
+    },
+
+    "prod": {
+      "name": "halidorg-prod",
+      // No halid.org route until the Phase 3 cutover: a custom_domain here would
+      // take the domain from Ghost on the first prod deploy. Reachable on workers.dev.
+      "workers_dev": true,
+      "containers": [
+        {
+          "class_name": "App",
+          "image": "./Dockerfile",
+          "instance_type": "lite",
+          "max_instances": 1
+        }
+      ],
+      "durable_objects": {
+        "bindings": [{ "name": "APP", "class_name": "App" }]
+      },
+      "kv_namespaces": [{ "binding": "PAGES", "id": "717e354737f142aaab2d86b381873270" }],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "halidorg-prod",
+          "database_id": "afcbea10-e0d6-46ab-bf01-3c9f5d24dcd9",
+          "migrations_dir": "migrations"
+        }
+      ],
+      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-prod" }],
+      "vars": {
+        "APP_ENV": "prod",
+        // Admin login on prod needs this origin and its own OAuth client (Phase 3).
+        "PUBLIC_ORIGIN": "https://halid.org",
+        "SPIKE_ENABLED": "0",
+        "BRIDGE_PUBLIC_URL": ""
+      }
+    }
+  }
+}
