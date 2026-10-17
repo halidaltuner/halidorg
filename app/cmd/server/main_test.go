@@ -16,7 +16,9 @@ func TestRoutes(t *testing.T) {
 		"/en/":                   http.StatusOK,
 		"/admin/login":           http.StatusOK,
 		"/admin":                 http.StatusSeeOther,
+		"/_styleguide":           http.StatusOK,
 		"/static/css/tokens.css": http.StatusOK,
+		"/static/js/header.js":   http.StatusOK,
 		"/static/fonts/ibm-plex-sans-latin-400-normal.woff2": http.StatusOK,
 		"/static/css/missing.css":                            http.StatusNotFound,
 		"/static/":                                           http.StatusNotFound,
@@ -27,5 +29,18 @@ func TestRoutes(t *testing.T) {
 		if rec.Code != want {
 			t.Errorf("%s: got %d, want %d", path, rec.Code, want)
 		}
+	}
+}
+
+func TestStyleguideIs404InProd(t *testing.T) {
+	t.Setenv("APP_ENV", "prod")
+	mux, err := routes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/_styleguide", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("got %d, want 404", rec.Code)
 	}
 }

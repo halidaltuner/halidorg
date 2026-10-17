@@ -1,0 +1,13 @@
+{{/* Small shared components. Each takes named args via dict. */}}
+
+{{/* chip: label, href, on, tone. Filter chips are links so the state lives in the URL. */}}
+{{define "chip"}}<a class="chip tone-{{or .tone "navy"}}" href="{{.href}}"{{if .on}} aria-current="true"{{end}}>{{.label}}</a>{{end}}
+
+{{/* tag-pill: label, href (optional), tone. */}}
+{{define "tag-pill"}}{{if .href}}<a class="tag-pill tone-{{or .tone "cyan"}}" href="{{.href}}">{{.label}}</a>{{else}}<span class="tag-pill tone-{{or .tone "cyan"}}">{{.label}}</span>{{end}}{{end}}
+
+{{/* status-badge: label, kind (success, warning, info, muted). */}}
+{{define "status-badge"}}<span class="badge {{or .kind "muted"}}">{{.label}}</span>{{end}}
+
+{{/* callout: kind (tip, warning, note, danger), label, body (template.HTML from the renderer). */}}
+{{define "callout"}}<aside class="callout {{or .kind "note"}}"><div class="callout-label">{{or .label .kind}}</div>{{.body}}</aside>{{end}}

@@ -1,0 +1,12 @@
+{{/* Site footer (design/Footer.dc.html). Reads ui.Chrome; empty fields are omitted. */}}
+{{define "footer"}}<footer class="site-footer">
+<div class="tri-stripe" aria-hidden="true"></div>
+<div class="site-footer-row">
+  <div class="site-footer-brand">
+    <span class="wordmark">halid<span class="dot">.</span></span>
+    {{with .Footer.Tagline}}<span class="tagline">{{.}}</span>{{end}}
+  </div>
+  {{with .Footer.Links}}<nav class="site-footer-links">{{range .}}<a href="{{.Href}}"{{if .Muted}} class="muted"{{end}}>{{.Label}}</a>{{end}}</nav>{{end}}
+  {{with .Footer.Deploy}}<span class="site-footer-deploy">deploy <span class="sha">{{.}}</span></span>{{end}}
+</div>
+</footer>{{end}}

@@ -15,6 +15,7 @@ import (
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/public"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/styleguide"
 	"halid.org/engine/web"
 )
 
@@ -75,6 +76,11 @@ func routes() (*http.ServeMux, error) {
 		return nil, err
 	}
 
+	sg, err := styleguide.New()
+	if err != nil {
+		return nil, err
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Cache-Control", "no-store")
@@ -83,6 +89,7 @@ func routes() (*http.ServeMux, error) {
 	})
 	pub.Register(mux)
 	adm.Register(mux)
+	sg.Register(mux)
 	// Two segments, not /static/: that pattern overlaps /{lang}/{$} and ServeMux panics.
 	mux.Handle("GET /static/{dir}/{file}", staticHandler())
 	return mux, nil

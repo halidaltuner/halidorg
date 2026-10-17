@@ -1,0 +1,118 @@
+{{define "styleguide"}}<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>styleguide · halid.org</title>
+<link rel="stylesheet" href="/static/css/tokens.css">
+<link rel="stylesheet" href="/static/css/app.css">
+<script src="/static/js/header.js" defer></script>
+</head>
+<body>
+{{template "header" .}}
+<main class="sg">
+  <h1>styleguide</h1>
+  <p class="sg-note">dev only, 404 in prod. Narrow the window under 900px to see the mobile header and nav sheet.</p>
+
+  <h2>// base</h2>
+  <div class="sg-swatches">
+    <div><span style="background:var(--bg)"></span>--bg</div>
+    <div><span style="background:var(--surface)"></span>--surface</div>
+    <div><span style="background:var(--surface-2)"></span>--surface-2</div>
+    <div><span style="background:var(--border)"></span>--border</div>
+    <div><span style="background:var(--border-soft)"></span>--border-soft</div>
+    <div><span style="background:var(--text)"></span>--text</div>
+    <div><span style="background:var(--text-muted)"></span>--text-muted</div>
+    <div><span style="background:var(--link)"></span>--link</div>
+    <div><span style="background:var(--accent)"></span>--accent</div>
+    <div><span style="background:var(--accent-2)"></span>--accent-2</div>
+    <div><span style="background:var(--success)"></span>--success</div>
+    <div><span style="background:var(--warning)"></span>--warning</div>
+    <div><span style="background:var(--info)"></span>--info</div>
+  </div>
+
+  <h2>// dark band</h2>
+  <div class="sg-dark">
+    <div class="sg-swatches">
+      <div><span style="background:var(--dk-bg)"></span>--dk-bg</div>
+      <div><span style="background:var(--dk-surface)"></span>--dk-surface</div>
+      <div><span style="background:var(--dk-surface-2)"></span>--dk-surface-2</div>
+      <div><span style="background:var(--dk-border)"></span>--dk-border</div>
+      <div><span style="background:var(--dk-text)"></span>--dk-text</div>
+      <div><span style="background:var(--dk-muted)"></span>--dk-muted</div>
+      <div><span style="background:var(--dk-cyan)"></span>--dk-cyan</div>
+      <div><span style="background:var(--dk-rose)"></span>--dk-rose</div>
+      <div><span style="background:var(--dk-green)"></span>--dk-green</div>
+      <div><span style="background:var(--dk-amber)"></span>--dk-amber</div>
+      <div><span style="background:var(--dk-indigo)"></span>--dk-indigo</div>
+    </div>
+  </div>
+
+  <h2>// tones</h2>
+  <div class="sg-tones">
+    {{range .Tones}}<div class="sg-tone tone-{{.}}"><span class="t"></span><span class="i"></span><span class="s"></span><code>{{.}}</code></div>{{end}}
+  </div>
+
+  <h2>// type</h2>
+  <div class="sg-type">
+    {{range .Scale}}<div><code>{{.}}</code><span style="font-size:{{.}}px">halid engineering notebook</span></div>{{end}}
+    <div><code>mono</code><span class="mono">halid engineering notebook · 2026-10-17</span></div>
+  </div>
+
+  <h2>// space · radius · shadow · focus</h2>
+  <div class="sg-space">{{range .Space}}<div><span style="width:{{.}}px"></span><code>{{.}}</code></div>{{end}}</div>
+  <div class="sg-boxes">
+    <div style="border-radius:var(--radius-1)">radius 4</div>
+    <div style="border-radius:var(--radius-2)">radius 8</div>
+    <div style="border-radius:var(--radius-pill)">pill</div>
+    <div style="box-shadow:var(--shadow-card)">card</div>
+    <div style="box-shadow:var(--shadow-card-hover)">card hover</div>
+    <div style="box-shadow:var(--shadow-hero)">hero</div>
+    <div style="box-shadow:var(--shadow-popover)">popover</div>
+    <div style="outline:var(--focus-ring);outline-offset:2px">focus</div>
+  </div>
+
+  <h2>// header · active section</h2>
+  {{range .Headers}}<div class="sg-frame">{{template "header" .}}</div>{{end}}
+
+  <h2>// footer</h2>
+  <div class="sg-frame">{{template "footer" .}}</div>
+
+  <h2>// cover</h2>
+  <div class="sg-covers">
+    {{range .Tones}}<div class="sg-cover">{{template "cover" dict "tone" . "radius" 2}}</div>{{end}}
+  </div>
+
+  <h2>// chips</h2>
+  <div class="sg-row">
+    {{template "chip" dict "label" "all" "href" "?" "on" true "tone" "navy"}}
+    {{range .Tones}}{{template "chip" dict "label" . "href" "?" "tone" .}}{{end}}
+  </div>
+  <div class="sg-row">
+    {{range .Tones}}{{template "chip" dict "label" . "href" "?" "on" true "tone" .}}{{end}}
+  </div>
+
+  <h2>// tag pills</h2>
+  <div class="sg-row">{{range .Tones}}{{template "tag-pill" dict "label" . "tone" .}}{{end}}</div>
+
+  <h2>// status badges</h2>
+  <div class="sg-row">
+    {{template "status-badge" dict "label" "published" "kind" "success"}}
+    {{template "status-badge" dict "label" "renew soon" "kind" "warning"}}
+    {{template "status-badge" dict "label" "draft" "kind" "info"}}
+    {{template "status-badge" dict "label" "archived" "kind" "muted"}}
+  </div>
+
+  <h2>// callouts</h2>
+  <div class="sg-stack">
+    {{template "callout" dict "kind" "tip" "body" .Callout}}
+    {{template "callout" dict "kind" "warning" "body" .Callout}}
+    {{template "callout" dict "kind" "note" "body" .Callout}}
+    {{template "callout" dict "kind" "danger" "body" .Callout}}
+  </div>
+</main>
+{{template "footer" .}}
+</body>
+</html>
+{{end}}
