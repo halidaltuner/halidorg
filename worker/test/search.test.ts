@@ -9,7 +9,7 @@ describe("parse", () => {
 		["htmx", `"htmx"*`, ""],
 		["go htm", `"go" "htm"*`, ""],
 		["pr: radar", `"radar"*`, "project"],
-		["h:rack", `"rack"*`, "project"],
+		["h:rack", `"rack"*`, "homelab"],
 		["S: fold", `"fold"*`, "snippet"],
 		["n: loop", `"loop"*`, "note"],
 		["l: grug", `"grug"*`, "link"],
@@ -34,6 +34,7 @@ describe("entryHref", () => {
 		expect(entryHref({ kind: "link", lang: "en", slug: "x", url: "https://grugbrain.dev/" })).toBe("https://grugbrain.dev/");
 		expect(entryHref({ kind: "fav", lang: "tr", slug: "ddia", url: null })).toBe("/tr/favs#ddia");
 		expect(entryHref({ kind: "project", lang: "en", slug: "x", url: null })).toBe("/en/projects/x");
+		expect(entryHref({ kind: "homelab", lang: "en", slug: "rack", url: null })).toBe("/en/projects/rack");
 		expect(entryHref({ kind: "buildlog", lang: "en", slug: "x", url: null })).toBe("");
 	});
 });
@@ -82,6 +83,23 @@ describe("search", () => {
 		const fts = log.find((l) => l.sql.includes("search_fts"))!;
 		expect(fts.args).toEqual([`"htm"*`, "note"]);
 		expect(fts.sql).toContain("status = 'published' AND visibility = 'public'");
+	});
+
+	it("tells projects and homelab builds apart by the main database", async () => {
+		const plog: { sql: string; args: unknown[] }[] = [];
+		const penv: SearchEnv = {
+			SEARCH: d1(() => [{ entry_id: "s" }, { entry_id: "r" }], plog),
+			DB: d1(
+				() => [
+					{ id: "s", kind: "project", lang: "en", slug: "site", title: "halid.org", summary: "", url: null },
+					{ id: "r", kind: "homelab", lang: "en", slug: "rack", title: "rack", summary: "", url: null },
+				],
+				plog,
+			),
+		};
+		expect(await search(penv, "h: ra", "en")).toEqual([{ href: "/en/projects/rack", title: "rack", kind: "homelab", lang: "en" }]);
+		expect(plog[0]!.sql).toContain("kind IN ('project', 'homelab')");
+		expect(await search(penv, "pr: ra", "en")).toEqual([{ href: "/en/projects/site", title: "halid.org", kind: "project", lang: "en" }]);
 	});
 
 	it("answers JSON, privately, and only on /x/search", async () => {

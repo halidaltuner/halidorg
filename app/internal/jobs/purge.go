@@ -156,9 +156,10 @@ func Paths(c Change) []string {
 			add(ItemPath(Ref{Kind: "buildlog", Lang: r.Lang, Slug: s, Parent: r.Slug}))
 		}
 		if r.Kind == "buildlog" && i18n.IsSupported(r.Lang) {
-			// the project's timeline, and home's stream
+			// the project's timeline, and the stream on home and /stream
 			add(ItemPath(Ref{Kind: "project", Lang: r.Lang, Slug: r.Parent}))
 			add("/" + r.Lang + "/")
+			add("/" + r.Lang + "/stream")
 		}
 		for _, f := range r.Files {
 			add(RawPath(*r, f))
@@ -175,6 +176,7 @@ func Paths(c Change) []string {
 		if seg, ok := listPath[r.Kind]; ok && i18n.IsSupported(r.Lang) {
 			l := "/" + r.Lang
 			add(l + "/")
+			add(l + "/stream")
 			add(l + "/" + seg)
 			if r.Kind == "post" {
 				add(l + "/feed.xml")

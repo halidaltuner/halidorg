@@ -36,7 +36,7 @@ func TestParse(t *testing.T) {
 		{"htmx", `"htmx"*`, ""},
 		{"go htm", `"go" "htm"*`, ""},
 		{"pr: radar", `"radar"*`, "project"},
-		{"h:rack", `"rack"*`, "project"},
+		{"h:rack", `"rack"*`, "homelab"},
 		{"S: fold", `"fold"*`, "snippet"},
 		{"x: foo", `"x" "foo"*`, ""}, // unknown prefix is plain text
 		{`ISTANBUL "OR" NEAR(a b)`, `"istanbul" "or" "near" "a" "b"*`, ""},

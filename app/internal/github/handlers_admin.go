@@ -210,14 +210,16 @@ func (h *Admin) link(w http.ResponseWriter, r *http.Request) {
 			slog.Error("enqueue entry.changed", "entry", id, "err", err)
 		}
 	}
+	h.refresh(r)
 	http.Redirect(w, r, "/admin/github?done=saved", http.StatusSeeOther)
 }
 
-// refresh queues the projects lists, which show the pins.
+// refresh queues the pages that show pins (projects, /github) or link
+// GitHub rows to projects (the stream on home and /stream).
 func (h *Admin) refresh(r *http.Request) {
 	var paths []string
 	for _, l := range i18n.Supported {
-		paths = append(paths, "/"+l+"/projects")
+		paths = append(paths, "/"+l+"/projects", "/"+l+"/github", "/"+l+"/", "/"+l+"/stream")
 	}
 	if err := jobs.EnqueuePages(r.Context(), h.jobs, paths...); err != nil {
 		slog.Error("enqueue pages.changed", "err", err)

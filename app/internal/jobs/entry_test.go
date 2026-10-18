@@ -15,6 +15,7 @@ import (
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/jobs"
@@ -275,5 +276,25 @@ func TestShortFormKinds(t *testing.T) {
 	}
 	if hits := find(t, s.Search, "n:grugbrain"); len(hits) != 0 {
 		t.Errorf("n: prefix matched a link: %v", hits)
+	}
+
+	// Homelab builds are indexed under their own kind: h: finds them, pr: not.
+	cat := "01K0000000000000000000HM01"
+	projects := project.NewRepo(s.DB)
+	for _, d := range []project.Draft{
+		{Project: project.Project{Entry: content.Entry{Slug: "rack", Lang: "en", Title: "quiet rack"}, Type: project.Homelab, CategoryID: &cat}},
+		{Project: project.Project{Entry: content.Entry{Slug: "radar", Lang: "en", Title: "quiet radar"}, Type: project.Software}},
+	} {
+		p, err := projects.Create(ctx, d)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := projects.Publish(ctx, p.ID); err != nil {
+			t.Fatal(err)
+		}
+		run(p.ID)
+	}
+	if h, pr := find(t, s.Search, "h:quiet"), find(t, s.Search, "pr:quiet"); len(h) != 1 || len(pr) != 1 || h[0] == pr[0] {
+		t.Errorf("h: %v, pr: %v", h, pr)
 	}
 }

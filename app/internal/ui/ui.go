@@ -231,6 +231,8 @@ var Partials = []string{
 	"templates/partials/footer.html",
 	"templates/partials/cover.html",
 	"templates/partials/chips.html",
+	"templates/partials/stream.html",
+	"templates/partials/github.html",
 }
 
 // Parse parses files from web.Templates together with Partials and Funcs.

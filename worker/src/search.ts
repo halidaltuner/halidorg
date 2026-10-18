@@ -18,13 +18,13 @@ const PREFIXES: Record<string, string> = {
 	l: "link",
 	f: "fav",
 	pr: "project",
-	h: "project", // homelab builds are projects
+	h: "homelab", // homelab builds: projects indexed under their own kind
 };
 
 const LANGS = ["tr", "en"];
 
 /** Item pages per kind; links open their URL, favs the favs page. */
-const SECTIONS: Record<string, string> = { post: "posts", note: "notes", snippet: "snippets", project: "projects" };
+const SECTIONS: Record<string, string> = { post: "posts", note: "notes", snippet: "snippets", project: "projects", homelab: "projects" };
 
 /** search.Fold: ı, İ and I become i, everything else lowercases. */
 export function fold(s: string): string {
@@ -102,7 +102,13 @@ export async function search(env: SearchEnv, raw: string, lang: string): Promise
 	let sql = `SELECT entry_id, bm25(search_fts, 0, 0, 0, 0, 0, 0, 10.0, 4.0, 1.0, 6.0) AS rank
 FROM search_fts WHERE search_fts MATCH ?`;
 	const args: unknown[] = [q.match];
-	if (q.kind) {
+	// Projects and homelab builds share entries.kind; homelab rows indexed
+	// before Phase 4.5 still say project, so both kinds are read and the
+	// type from the main database decides below.
+	const projects = q.kind === "project" || q.kind === "homelab";
+	if (projects) {
+		sql += " AND kind IN ('project', 'homelab')";
+	} else if (q.kind) {
 		sql += " AND kind = ?";
 		args.push(q.kind);
 	}
@@ -113,8 +119,8 @@ FROM search_fts WHERE search_fts MATCH ?`;
 	const ids = hits.map((h) => h.entry_id);
 	const entries = (
 		await env.DB.prepare(
-			`SELECT e.id, e.kind, e.lang, e.slug, e.title, e.summary, l.url
-FROM entries e LEFT JOIN links l ON l.entry_id = e.id
+			`SELECT e.id, CASE WHEN p.project_type = 'homelab' THEN 'homelab' ELSE e.kind END AS kind, e.lang, e.slug, e.title, e.summary, l.url
+FROM entries e LEFT JOIN links l ON l.entry_id = e.id LEFT JOIN projects p ON p.entry_id = e.id
 WHERE e.status = 'published' AND e.visibility = 'public' AND e.id IN (${ids.map(() => "?").join(", ")})`,
 		)
 			.bind(...ids)
@@ -125,7 +131,7 @@ WHERE e.status = 'published' AND e.visibility = 'public' AND e.id IN (${ids.map(
 	const other: Row[] = [];
 	for (const id of ids) {
 		const e = byID.get(id);
-		if (!e) continue;
+		if (!e || (projects && e.kind !== q.kind)) continue;
 		const href = entryHref(e);
 		if (!href) continue;
 		const row = { href, title: e.title || e.summary || e.slug, kind: e.kind, lang: e.lang };

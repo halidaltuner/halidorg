@@ -91,12 +91,12 @@ func (s *Sync) run(ctx context.Context, _ json.RawMessage) error {
 	return perr
 }
 
-// paths are the pages that show GitHub data: the projects lists and the
-// pages of projects linked to a repo.
+// paths are the pages that show GitHub data: the projects lists, /github,
+// the stream (home and /stream) and the pages of projects linked to a repo.
 func (s *Sync) paths(ctx context.Context) ([]string, error) {
 	var out []string
 	for _, l := range i18n.Supported {
-		out = append(out, "/"+l+"/projects")
+		out = append(out, "/"+l+"/projects", "/"+l+"/github", "/"+l+"/", "/"+l+"/stream")
 	}
 	res, err := s.db.Query(ctx, `SELECT e.lang, e.slug FROM entries e JOIN projects p ON p.entry_id = e.id
 WHERE p.github_repo IS NOT NULL AND e.status = 'published' AND e.visibility = 'public'`)

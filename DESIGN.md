@@ -236,3 +236,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Project cards linked to a repo show "★ stars" and "pushed 2h ago" in the foot, as the prototype.
 - `/admin/github` (derive): last sync (status, time, error; a missing token says how to add it), "run now", and a repo table with pin/unpin and the project link.
 
+## 25. Implementation notes (Phase 4.5)
+- Stream rows gain projects (◆ green, meta the project status), homelab builds (⌁ orange, meta the status), build logs (meta "build log", in their project's tone) and GitHub activity as project rows (meta "release" or "new repo"), as the Home prototype. Chips add project and homelab.
+- `/{lang}/stream` (derive): list header, the home stream's chips and day-grouped card at 860px. The chips filter on the server so every page is full; "older →" and "← newest" move between pages of 30. Filtered and later pages are noindex. Home's stream ends with a "whole stream →" link.
+- `/{lang}/github` (derive): the projects header pattern (◆ green eyebrow), the Projects GitHub section without its heading (the page title says it), then every activity row by month in the stream card. On Projects the section heading links to it.
+- Palette: `pr:` finds software projects, `h:` homelab builds (⌁ dot in `--kind-homelab`).

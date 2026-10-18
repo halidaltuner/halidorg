@@ -196,3 +196,45 @@ func Ago(lang string, d time.Duration) string {
 	}
 	return fmt.Sprintf(i18n.T(lang, "github.y"), h/(24*365))
 }
+
+// Month is one month of the activity list on /github.
+type Month struct {
+	Month string // 2026-10
+	Items []ActivityRow
+}
+
+// ActivityRow is a release or a new repo.
+type ActivityRow struct {
+	Type, Title, Note, URL, Date string
+}
+
+// Activity reads the newest limit activity rows of repos still on GitHub,
+// grouped by month, newest first.
+func Activity(ctx context.Context, db store.DB, limit int) ([]Month, error) {
+	res, err := db.Query(ctx, `SELECT a.type, a.title, a.note, a.url, a.occurred_at FROM gh_activity a
+JOIN gh_repos r ON r.full_name = a.repo WHERE r.gone = 0 ORDER BY a.occurred_at DESC, a.id DESC LIMIT ?`, limit)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := store.Scan[struct {
+		Type  string `json:"type"`
+		Title string `json:"title"`
+		Note  string `json:"note"`
+		URL   string `json:"url"`
+		At    int64  `json:"occurred_at"`
+	}](res)
+	if err != nil {
+		return nil, err
+	}
+	var out []Month
+	for _, r := range rows {
+		t := time.Unix(r.At, 0).UTC()
+		row := ActivityRow{Type: r.Type, Title: r.Title, Note: r.Note, URL: r.URL, Date: t.Format("2006-01-02")}
+		if n := len(out); n > 0 && out[n-1].Month == t.Format("2006-01") {
+			out[n-1].Items = append(out[n-1].Items, row)
+			continue
+		}
+		out = append(out, Month{Month: t.Format("2006-01"), Items: []ActivityRow{row}})
+	}
+	return out, nil
+}

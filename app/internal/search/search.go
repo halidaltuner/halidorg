@@ -48,7 +48,7 @@ var kindPrefixes = map[string]string{
 	"l":  "link",
 	"f":  "fav",
 	"pr": "project",
-	"h":  "project", // homelab builds are projects (CONTENT_MODEL.md)
+	"h":  "homelab", // homelab builds: projects indexed under their own kind
 }
 
 // Query is a parsed user query.
