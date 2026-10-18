@@ -5,6 +5,7 @@ import { handleBridge } from "./bridge";
 import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta, renderedBy } from "./cache";
 import { consume, type JobMessage, logNotFound } from "./jobs";
 import { serveR2Public } from "./r2public";
+import { serveSearch } from "./search";
 
 // Required by outboundByHost: without it the container fails to start.
 export { ContainerProxy } from "@cloudflare/containers";
@@ -47,6 +48,9 @@ export default {
 		}
 		const obj = await serveR2Public(req, url, env);
 		if (obj) return obj;
+		// The palette searches at the edge (ADR-010): no container involved.
+		const found = await serveSearch(req, url, env);
+		if (found) return found;
 		if (!isCacheableRequest(req)) return origin(req, env);
 
 		const key = cacheKey(url);
