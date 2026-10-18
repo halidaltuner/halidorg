@@ -24,6 +24,7 @@ import (
 	"halid.org/engine/internal/public"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/styleguide"
+	"halid.org/engine/internal/taxonomy"
 	"halid.org/engine/internal/ui"
 	"halid.org/engine/web"
 )
@@ -114,6 +115,11 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	quick.Register(mux)
+	tax, err := taxonomy.New(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	tax.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

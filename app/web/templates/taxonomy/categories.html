@@ -1,0 +1,44 @@
+{{define "main"}}
+<div class="adm-head"><h1>{{tr .Lang "admin.cat.title"}}</h1></div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{with .Error}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<nav class="tx-tabs mono" aria-label="{{tr .Lang "admin.cat.kinds"}}">{{range .Tabs}}<a href="{{.Href}}"{{if .On}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
+<section class="adm-panel">
+<table class="adm-table tx-table">
+<thead><tr><th>{{tr .Lang "admin.cat.order"}}</th><th>slug</th><th>TR</th><th>EN</th><th>{{tr .Lang "admin.tax.tone"}}</th><th>{{tr .Lang "admin.cat.parent"}}</th><th>{{tr .Lang "admin.tax.entries"}}</th><th></th></tr></thead>
+<tbody>
+{{- range .Rows}}
+<tr{{if .ParentID}} class="tx-child"{{end}}>
+<td class="tx-move"><form method="post" action="/admin/categories/{{.ID}}/move">
+<button type="submit" name="dir" value="up" class="adm-btn link" aria-label="{{tr $.Lang "admin.cat.up"}}"{{if .First}} disabled{{end}}>↑</button>
+<button type="submit" name="dir" value="down" class="adm-btn link" aria-label="{{tr $.Lang "admin.cat.down"}}"{{if .Last}} disabled{{end}}>↓</button></form></td>
+<td class="mono">{{if .ParentID}}↳ {{end}}{{.Slug}}</td>
+<td><input form="c-{{.ID}}" name="name_tr" value="{{.NameTR}}" aria-label="TR"></td>
+<td><input form="c-{{.ID}}" name="name_en" value="{{.NameEN}}" aria-label="EN"></td>
+<td>{{template "tone-picker" dict "form" (print "c-" .ID) "tones" $.Tones "on" .Tone "lang" $.Lang}}</td>
+<td><select form="c-{{.ID}}" name="parent" aria-label="{{tr $.Lang "admin.cat.parent"}}"{{if .Children}} disabled title="{{tr $.Lang "admin.cat.has_children"}}"{{end}}>
+<option value="">{{tr $.Lang "admin.cat.top"}}</option>
+{{- $row := .}}{{range $.Parents}}{{if ne .ID $row.ID}}<option value="{{.ID}}"{{if and $row.ParentID (eq .ID (deref $row.ParentID))}} selected{{end}}>{{.Slug}}</option>{{end}}{{end}}
+</select></td>
+<td class="mono muted">{{.Entries}}</td>
+<td><form id="c-{{.ID}}" method="post" action="/admin/categories/{{.ID}}"><button type="submit" class="adm-btn">{{tr $.Lang "admin.tax.save"}}</button></form></td>
+</tr>
+{{- else}}
+<tr><td colspan="8" class="adm-empty">{{tr $.Lang "admin.cat.empty"}}</td></tr>
+{{- end}}
+</tbody>
+</table>
+</section>
+<section class="adm-panel adm-narrow">
+<h2>{{tr .Lang "admin.cat.new"}}</h2>
+<form class="adm-form" method="post" action="/admin/categories">
+<input type="hidden" name="kind" value="{{.Kind}}">
+<label>TR<input name="name_tr" value="{{.New.NameTR}}"></label>
+<label>EN<input name="name_en" value="{{.New.NameEN}}"></label>
+<label>slug<input name="slug" value="{{.New.Slug}}" placeholder="{{tr .Lang "admin.cat.slug_hint"}}" spellcheck="false" autocapitalize="off"></label>
+<fieldset class="tx-tone-field"><legend>{{tr .Lang "admin.tax.tone"}}</legend>{{template "tone-picker" dict "form" "" "tones" .Tones "on" .New.Tone "lang" .Lang}}</fieldset>
+<label>{{tr .Lang "admin.cat.parent"}}<select name="parent"><option value="">{{tr .Lang "admin.cat.top"}}</option>{{range .Parents}}<option value="{{.ID}}">{{.Slug}}</option>{{end}}</select></label>
+<button type="submit" class="adm-btn solid">{{tr .Lang "admin.cat.create"}}</button>
+</form>
+</section>
+{{end}}
