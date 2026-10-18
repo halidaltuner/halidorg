@@ -4,13 +4,14 @@ import (
 	"context"
 	"strings"
 
+	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/store"
 )
 
 // duplicate is an entry that already holds the pasted address.
 type duplicate struct {
-	ID, Kind, KindLabel, Title, Status string
+	ID, Href, Kind, KindLabel, Title, Status string
 }
 
 // dupKey is the form of an address compared for duplicates: no fragment,
@@ -59,6 +60,6 @@ ORDER BY e.created_at DESC LIMIT 1`, k, k, k)
 	if title == "" {
 		title = d.Summary
 	}
-	return &duplicate{ID: d.ID, Kind: d.Kind, KindLabel: i18n.T(lang, "palette.kind."+d.Kind), Title: title,
+	return &duplicate{ID: d.ID, Href: admin.EditorHref(d.Kind, d.ID), Kind: d.Kind, KindLabel: i18n.T(lang, "palette.kind."+d.Kind), Title: title,
 		Status: i18n.T(lang, "admin.status."+d.Status)}, nil
 }

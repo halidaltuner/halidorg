@@ -1377,3 +1377,42 @@ html.pal-open { overflow: hidden; }
 .pal-row .k { font-family: var(--font-mono); font-size: var(--fs-12); color: var(--text-muted); }
 .pal-empty { margin: 0; padding: 16px 16px; font-family: var(--font-mono); font-size: var(--fs-13); color: var(--text-muted); }
 .pal-hints { display: flex; gap: var(--sp-16); flex-wrap: wrap; padding: 10px var(--sp-16); border-top: 1px solid var(--border); background: var(--bg); font-family: var(--font-mono); font-size: var(--fs-12); color: var(--text-muted); }
+
+/* Short-kind admin: notes, snippets, links, favs (Phase 2.6, derive, DESIGN.md §20) */
+.ent-list { list-style: none; margin: 0; padding: 0; }
+.ent-list li + li { border-top: 1px solid var(--border-soft); }
+.ent-list a { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-12); padding: 10px var(--sp-16); color: var(--text); text-decoration: none; min-height: 44px; box-sizing: border-box; }
+.ent-list a:hover .ent-title { color: var(--link); }
+.ent-title { min-width: 0; overflow-wrap: anywhere; font-size: var(--fs-14); }
+.ent-meta { display: flex; align-items: baseline; gap: var(--sp-8); flex: none; font-size: var(--fs-11); color: var(--text-muted); }
+.ent-back { font-size: var(--fs-12); color: var(--link); text-decoration: none; flex-basis: 100%; }
+.ent-view { font-size: var(--fs-12); color: var(--link); text-decoration: none; }
+.ent-panel { max-width: 760px; }
+.ent-form { border-bottom: 0; padding: var(--sp-16); gap: var(--sp-12); }
+.ent-form textarea { resize: vertical; line-height: 1.5; }
+.ent-form fieldset { margin: 0; padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-16); }
+.ent-form legend { padding: 0; margin-bottom: 4px; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--text-muted); }
+.ent-langs label.check { min-height: 32px; }
+.ent-hint { margin: 0; font-size: var(--fs-12); color: var(--text-muted); }
+.ent-files { flex-direction: column; flex-wrap: nowrap; }
+.ent-file { display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-12); border: 1px solid var(--border); border-radius: var(--radius-1); background: var(--bg); }
+.ent-file-head { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 64px; gap: var(--sp-8); }
+.ent-file textarea { white-space: pre; overflow-x: auto; }
+.ent-actions { display: flex; gap: var(--sp-8); flex-wrap: wrap; padding-top: var(--sp-4); }
+.ent-actions .adm-btn { align-self: auto; padding: 8px 16px; }
+.ent-reauthed { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; max-width: 760px; padding: var(--sp-12) var(--sp-16); border-left: 3px solid var(--success); background: var(--surface); }
+.ent-reauthed p { margin: 0; font-size: var(--fs-13); }
+.ent-delete { max-width: 760px; }
+.ent-delete summary { padding: var(--sp-12) var(--sp-16); font-size: var(--fs-12); color: var(--accent-2); cursor: pointer; }
+.ent-delete form { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; padding: 0 var(--sp-16) var(--sp-16); }
+.ent-delete p { margin: 0; font-size: var(--fs-13); }
+@media (max-width: 760px) {
+  /* Phone: 16px text so iOS does not zoom, 44px targets (Quick Capture rules). */
+  .ent-form input:not([type=checkbox]):not([type=radio]), .ent-form select, .ent-form textarea { font-size: 16px; min-height: 44px; box-sizing: border-box; }
+  .ent-actions .adm-btn, .ent-delete .adm-btn { min-height: 44px; flex: 1; }
+  .ent-head-new { display: inline-flex; align-items: center; min-height: 44px; }
+  .ent-langs label.check { min-height: 44px; }
+  .ent-file-head { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .ent-file-head label:first-child { grid-column: 1 / -1; }
+  .ent-list a { flex-direction: column; gap: 4px; }
+}

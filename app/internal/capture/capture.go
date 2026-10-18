@@ -394,6 +394,7 @@ type savedPage struct {
 	Published    bool
 	OfferPublish bool // back from re-auth with the draft still a draft
 	Public       string
+	Edit         string // the entry in its admin editor
 }
 
 func (h *Handlers) savedPage(w http.ResponseWriter, r *http.Request) {
@@ -430,6 +431,7 @@ LEFT JOIN notes n ON n.entry_id = e.id WHERE e.id = ?`, id)
 	}
 	p.Meta = strings.Join(parts, " · ")
 	p.OfferPublish = !p.Published && r.URL.Query().Get("publish") == "1"
+	p.Edit = admin.EditorHref(e.Kind, id)
 	if p.Published {
 		switch e.Kind {
 		case note.Kind:

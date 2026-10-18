@@ -139,7 +139,7 @@ func TestSaveKinds(t *testing.T) {
 	if err != nil || l.Status != content.Draft || l.Slug != "hypermedia-a-reintroduction" || l.Summary != "The one to reread." || l.Domain != "hypermedia.systems" {
 		t.Fatalf("link %+v %v", l, err)
 	}
-	must(t, st.do(st.fresh, "GET", rec.Header().Get("Location"), nil, "none").Body.String(), "saved as link", "draft · en · hypermedia.systems", `href="/admin/quick"`)
+	must(t, st.do(st.fresh, "GET", rec.Header().Get("Location"), nil, "none").Body.String(), "saved as link", "draft · en · hypermedia.systems", `href="/admin/quick"`, `<a class="qc-view mono" href="/admin/links/`+id+`">edit →</a>`)
 	if queued(st) != 1 {
 		t.Errorf("jobs %d", queued(st))
 	}
@@ -228,7 +228,7 @@ func TestDuplicateWarning(t *testing.T) {
 
 	// Fetching the same address, spelled differently, warns and carries dup_ok.
 	body := st.do(st.fresh, "GET", "/admin/quick?url=https://hypermedia.systems/x%23ch1", nil, "none").Body.String()
-	must(t, body, `This address is already saved:`, `<a href="/admin/quick/saved/`+id+`">link: Hypermedia: A Reintroduction</a>`,
+	must(t, body, `This address is already saved:`, `<a href="/admin/links/`+id+`">link: Hypermedia: A Reintroduction</a>`,
 		`· draft`, `name="dup_ok" value="https://hypermedia.systems/x#ch1"`)
 	if strings.Contains(st.do(st.fresh, "GET", "/admin/quick?url=https://hypermedia.systems/y", nil, "none").Body.String(), "already saved") {
 		t.Error("warning for a new address")

@@ -14,8 +14,12 @@ import (
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/capture"
+	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
+	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/shortadmin"
+	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/fetch"
@@ -110,6 +114,15 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	}
 	postAdmin.Register(mux)
 	link.NewAdmin(stores.DB, authn, runner).Register(mux)
+	for _, editor := range []func(store.DB, *admin.UI, *auth.Auth, *jobs.Jobs) (*shortadmin.Admin, error){
+		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor,
+	} {
+		e, err := editor(stores.DB, adminUI, authn, runner)
+		if err != nil {
+			return nil, err
+		}
+		e.Register(mux)
+	}
 	quick, err := capture.New(stores.DB, adminUI, authn, runner, fetch.New(5*time.Second))
 	if err != nil {
 		return nil, err

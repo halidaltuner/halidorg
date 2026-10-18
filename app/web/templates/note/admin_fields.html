@@ -1,0 +1,4 @@
+{{define "entry-fields"}}
+<label>{{tr .Lang "kind.note.source"}}<input name="source_url" value="{{.Item.SourceURL}}" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://"></label>
+<label class="check"><input type="checkbox" name="til" value="1"{{if .Item.TIL}} checked{{end}}>{{tr .Lang "kind.note.til"}}</label>
+{{end}}

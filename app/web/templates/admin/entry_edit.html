@@ -1,0 +1,44 @@
+{{define "main"}}
+<div class="adm-head">
+<a class="mono ent-back" href="/admin/{{.Section}}">← {{tr .Lang (print "admin.nav." .Section)}}</a>
+<h1>{{.Title}}</h1>
+{{- if not .New}}<span class="adm-st s-{{.Entry.Status}}">{{tr .Lang (print "admin.status." .Entry.Status)}}</span>{{end}}
+{{- with .PublicHref}}<a class="mono ent-view" href="{{.}}">{{tr $.Lang "entry.view"}}</a>{{end}}
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{- if .Reauthed}}
+<form class="ent-reauthed" method="post" action="{{.Action}}/publish"><input type="hidden" name="now" value="1"><p>{{tr .Lang "admin.editor.reauthed"}}</p><button type="submit" class="adm-btn solid">{{tr .Lang "admin.editor.publish_now"}}</button></form>
+{{- end}}
+<section class="adm-panel ent-panel">
+<form class="adm-form ent-form" method="post" action="{{.Action}}">
+{{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<label>{{tr .Lang "admin.editor.title"}}<input name="title" value="{{.Entry.Title}}" autocomplete="off"></label>
+{{- if .New}}
+<fieldset class="ent-langs"><legend>{{tr .Lang "admin.editor.lang"}}</legend>
+{{- range .Langs}}<label class="check"><input type="radio" name="lang" value="{{.}}"{{if eq . $.Entry.Lang}} checked{{end}}>{{.}}</label>{{end}}
+</fieldset>
+{{- end}}
+{{template "entry-fields" .}}
+<label>{{tr .Lang (print "kind." .Kind ".summary")}}<textarea name="summary" rows="3">{{.Entry.Summary}}</textarea></label>
+{{- if .Body}}
+<label>{{tr .Lang (print "kind." .Kind ".body")}}<textarea name="markdown" rows="10" class="mono" spellcheck="true">{{.Markdown}}</textarea></label>
+{{- end}}
+<label>{{tr .Lang "admin.editor.tags"}}<input name="tags" value="{{.TagsValue}}" placeholder="{{tr .Lang "admin.editor.tags_hint"}}" autocapitalize="off" spellcheck="false"></label>
+<label>{{tr .Lang "admin.editor.slug"}}<input name="slug" value="{{.Entry.Slug}}" class="mono" autocapitalize="off" spellcheck="false"{{if .New}} placeholder="{{tr .Lang "entry.slug_auto"}}"{{end}}></label>
+{{- if not .New}}<p class="ent-hint mono">{{.Entry.Lang}}{{if .NotLive}} · {{tr .Lang "admin.editor.not_live"}}{{end}}</p>{{end}}
+<div class="ent-actions">
+<button type="submit" class="adm-btn" name="action" value="save">{{if .New}}{{tr .Lang "entry.save_draft"}}{{else}}{{tr .Lang "admin.editor.save"}}{{end}}</button>
+<button type="submit" class="adm-btn solid" name="action" value="publish"{{if not .New}} formaction="{{.Action}}/publish"{{end}}>{{if eq .Entry.Status "published"}}{{tr .Lang "entry.update"}}{{else}}{{tr .Lang "admin.editor.publish"}}{{end}}</button>
+</div>
+</form>
+</section>
+{{- if not .New}}
+<details class="adm-panel ent-delete">
+<summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>
+<form method="post" action="{{.Action}}/delete">
+<p>{{tr .Lang "entry.delete_sure"}}{{if .PublicHref}} {{tr .Lang "entry.delete_gone"}}{{end}}</p>
+<button type="submit" class="adm-btn danger">{{tr .Lang "admin.delete.confirm"}}</button>
+</form>
+</details>
+{{- end}}
+{{end}}

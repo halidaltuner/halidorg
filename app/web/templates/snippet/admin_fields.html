@@ -1,0 +1,18 @@
+{{define "entry-fields"}}
+<label>{{tr .Lang "entry.category"}}<select name="category">{{range .Options.Categories}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<fieldset class="ent-files">
+<legend>{{tr .Lang "kind.snippet.files"}}</legend>
+<p class="ent-hint">{{tr .Lang "kind.snippet.files_hint"}}</p>
+{{- range $i, $f := .Options.Files}}
+<div class="ent-file">
+<div class="ent-file-head">
+<label>{{tr $.Lang "kind.snippet.file_name"}}<input name="file_name" value="{{$f.Filename}}" class="mono" autocapitalize="off" spellcheck="false" placeholder="main.go"></label>
+<label>{{tr $.Lang "kind.snippet.file_lang"}}<input name="file_lang" value="{{$f.Language}}" class="mono" autocapitalize="off" spellcheck="false" placeholder="{{tr $.Lang "kind.snippet.lang_auto"}}"></label>
+<label>{{tr $.Lang "kind.snippet.file_order"}}<input name="file_order" value="{{$i}}" class="mono" inputmode="numeric"></label>
+</div>
+<label>{{tr $.Lang "kind.snippet.file_code"}}<textarea name="file_code" rows="8" class="mono" autocapitalize="off" spellcheck="false" wrap="off">{{$f.Code}}</textarea></label>
+</div>
+{{- end}}
+</fieldset>
+<label>{{tr .Lang "kind.snippet.gist"}}<input name="gist_url" value="{{.Item.GistURL}}" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://gist.github.com/…"></label>
+{{end}}

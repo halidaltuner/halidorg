@@ -22,10 +22,13 @@ type EntryRow struct {
 	Kind, Title, Href, Meta string
 }
 
+// editors are the kinds with an admin editor, by their URL segment.
+var editors = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "link": "links", "fav": "favs"}
+
 // EditorHref is the admin editor of an entry, or "" for kinds without one yet.
 func EditorHref(kind, id string) string {
-	if kind == "post" {
-		return "/admin/posts/" + id
+	if seg, ok := editors[kind]; ok {
+		return "/admin/" + seg + "/" + id
 	}
 	return ""
 }
