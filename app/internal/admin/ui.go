@@ -59,7 +59,7 @@ func (u *UI) ParseBare(name string, files ...string) (*template.Template, error)
 // shown greyed, not linked (Phase 1.6 prompt).
 type SideItem struct {
 	Label, Href, Count string
-	Sub, Active, Off    bool
+	Sub, Active, Off   bool
 }
 
 // Shell is what shell.html reads.

@@ -121,8 +121,8 @@ func Funcs() template.FuncMap {
 	return template.FuncMap{
 		"tr": i18n.T, "dict": dict, "date": Date, "minutes": Minutes,
 		"langs": func() []string { return i18n.Supported },
-		"add": func(a, b int) int { return a + b },
-		"sub": func(a, b int) int { return a - b },
+		"add":   func(a, b int) int { return a + b },
+		"sub":   func(a, b int) int { return a - b },
 	}
 }
 
