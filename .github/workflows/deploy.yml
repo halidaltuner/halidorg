@@ -50,6 +50,8 @@ jobs:
       - run: npx wrangler d1 migrations apply DB --remote --env "$WRANGLER_ENV" -c ../wrangler.jsonc
       # Search index database (ADR-010); derived data, rebuildable from DB.
       - run: npx wrangler d1 migrations apply SEARCH --remote --env "$WRANGLER_ENV" -c ../wrangler.jsonc
+      # The image names its own commit (Dockerfile, ui.DeploySHA).
+      - run: echo "$GITHUB_SHA" > ../app/BUILD_SHA
       # Docker on the runner builds the container image; wrangler pushes it.
       - run: npx wrangler deploy --env "$WRANGLER_ENV" -c ../wrangler.jsonc --var "DEPLOY_SHA:$GITHUB_SHA"
       # Pages in KV from the previous deploy are served stale and re-rendered

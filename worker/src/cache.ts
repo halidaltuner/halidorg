@@ -55,6 +55,17 @@ export interface PageMeta {
 }
 
 /**
+ * The commit that rendered a response: the container's X-Build-Sha when it
+ * sends a valid one, else the deploy serving now. During a rollout an old
+ * container still answers; its pages must be stored under its own commit
+ * so they stay stale and are rendered again by the new one.
+ */
+export function renderedBy(res: Response, deploy: string | undefined): string | undefined {
+	const sha = res.headers.get("X-Build-Sha") ?? "";
+	return /^[0-9a-f]{7,40}$/.test(sha) ? sha : deploy;
+}
+
+/**
  * A stored page is stale when it was rendered by another deploy than the one
  * serving now: template and CSS changes must reach pages whose content did
  * not change. Without a DEPLOY_SHA (local dev) nothing is stale.

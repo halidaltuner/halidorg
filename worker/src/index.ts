@@ -2,7 +2,7 @@
 // to the Go container, and bridges the container to D1/KV/R2.
 import { Container, getContainer } from "@cloudflare/containers";
 import { handleBridge } from "./bridge";
-import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta } from "./cache";
+import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta, renderedBy } from "./cache";
 import { consume, type JobMessage, logNotFound } from "./jobs";
 import { serveR2Public } from "./r2public";
 
@@ -113,7 +113,7 @@ function metaOf(res: Response, env: Env): PageMeta {
 		etag: res.headers.get("ETag") ?? "",
 		contentType: res.headers.get("Content-Type") ?? "text/html; charset=utf-8",
 		storedAt: Math.floor(Date.now() / 1000),
-		deploy: env.DEPLOY_SHA,
+		deploy: renderedBy(res, env.DEPLOY_SHA),
 	};
 }
 

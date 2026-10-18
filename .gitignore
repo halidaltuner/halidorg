@@ -6,3 +6,4 @@ node_modules/
 .env
 /app/bin/
 .cache/
+/app/BUILD_SHA

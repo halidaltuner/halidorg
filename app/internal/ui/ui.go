@@ -102,18 +102,28 @@ func items(list []section, lang, active string, all bool) []NavItem {
 	return out
 }
 
-// deploySHA is the commit serving now. It starts from DEPLOY_SHA, which the
-// Durable Object sets when the container starts, and follows the Worker's
-// X-Deploy-Sha header (DeployHeader), which is current on every request.
+// buildSHA is the commit this binary was built from, set at build time
+// (Dockerfile: -ldflags -X from app/BUILD_SHA, written by the deploy
+// workflow). Empty in local builds and tests.
+var buildSHA string
+
+// deploySHA is the Worker's DEPLOY_SHA from the X-Deploy-Sha header, the
+// fallback when the binary has no build SHA.
 var deploySHA atomic.Value
 
 var shaRE = regexp.MustCompile(`^[0-9a-f]{7,40}$`)
 
 func init() { deploySHA.Store("") }
 
-// DeploySHA is the full commit CI deployed, or empty outside CI deploys:
-// the Worker's last header, else the env var the container started with.
+// DeploySHA is the commit whose code renders pages here: the build SHA when
+// the binary has one. During a rollout an old container keeps answering
+// for a while; it must name its own commit, not the one the Worker just
+// deployed, or the edge would store its pages as current (worker/src/cache.ts
+// isStale). Without a build SHA: the Worker's header, else DEPLOY_SHA.
 func DeploySHA() string {
+	if buildSHA != "" {
+		return buildSHA
+	}
 	if sha := deploySHA.Load().(string); sha != "" {
 		return sha
 	}
@@ -129,13 +139,20 @@ func Deploy() string {
 	return sha
 }
 
-// DeployHeader wraps the app: the edge Worker sends its DEPLOY_SHA on every
-// request it forwards (and overwrites any client value), so pages and KV
-// metadata name the deploy that is live, not the one the container started with.
+// BuildHeader is the response header naming the commit that rendered it;
+// the Worker stores it as the KV page's deploy.
+const BuildHeader = "X-Build-Sha"
+
+// DeployHeader wraps the app: it follows the Worker's X-Deploy-Sha (used
+// when the binary has no build SHA) and names the rendering commit on every
+// response when the binary has one.
 func DeployHeader(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if sha := r.Header.Get("X-Deploy-Sha"); shaRE.MatchString(sha) && sha != DeploySHA() {
+		if sha := r.Header.Get("X-Deploy-Sha"); shaRE.MatchString(sha) && sha != deploySHA.Load().(string) {
 			deploySHA.Store(sha)
+		}
+		if buildSHA != "" {
+			w.Header().Set(BuildHeader, buildSHA)
 		}
 		next.ServeHTTP(w, r)
 	})
