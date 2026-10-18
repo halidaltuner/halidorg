@@ -12,7 +12,10 @@ import (
 	"testing"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/link"
+	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/render/og"
@@ -206,5 +209,71 @@ func TestBacklinks(t *testing.T) {
 	}
 	if self, _ := content.Backlinks(ctx, s.DB, source, false); len(self) != 0 {
 		t.Errorf("self link recorded: %+v", self)
+	}
+}
+
+// TestShortFormKinds: publishing a note, a snippet and a link renders a card
+// for kinds with pages and indexes their kind fields (code, domain).
+func TestShortFormKinds(t *testing.T) {
+	s, j, q := setup(t)
+	ctx := context.Background()
+	jobs.NewEntryJobs(s.DB, s.Search, s.Blob, jobs.NewWarmer(http.NewServeMux(), s.KV)).Register(j)
+	run := func(id string) {
+		t.Helper()
+		if err := jobs.Enqueue(ctx, j, id, nil); err != nil {
+			t.Fatal(err)
+		}
+		if code := deliver(j, q.Sent[len(q.Sent)-1], "1", true); code != 200 {
+			t.Fatalf("job %d", code)
+		}
+	}
+
+	notes := note.NewRepo(s.DB)
+	n, err := notes.Create(ctx, note.Draft{Note: note.Note{Entry: content.Entry{Slug: "til-fold", Lang: "en", Summary: "Folding ı"}}, Markdown: "Turkish dotless ı folds to i."})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := notes.Publish(ctx, n.ID); err != nil {
+		t.Fatal(err)
+	}
+	run(n.ID)
+
+	snips := snippet.NewRepo(s.DB)
+	sn, err := snips.Create(ctx, snippet.Draft{Snippet: snippet.Snippet{Entry: content.Entry{Slug: "shutdown", Lang: "en", Title: "graceful shutdown"},
+		Files: []snippet.File{{Filename: "main.go", Code: "signal.NotifyContext(ctx, syscall.SIGTERM)"}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := snips.Publish(ctx, sn.ID); err != nil {
+		t.Fatal(err)
+	}
+	run(sn.ID)
+
+	links := link.NewRepo(s.DB)
+	l, err := links.Create(ctx, link.Draft{Link: link.Link{Entry: content.Entry{Slug: "grug", Lang: "en", Title: "Grug"}, URL: "https://grugbrain.dev/"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := links.Publish(ctx, l.ID); err != nil {
+		t.Fatal(err)
+	}
+	run(l.ID)
+
+	blob := s.Blob.(*storetest.Blob)
+	for _, key := range []string{"og/en/notes/til-fold.png", "og/en/snippets/shutdown.png"} {
+		if _, ok := blob.Objects[key]; !ok {
+			t.Errorf("card %s missing", key)
+		}
+	}
+	if _, ok := blob.Objects["og/en/links/grug.png"]; ok {
+		t.Error("links have no pages and need no card")
+	}
+	for q, want := range map[string]string{"notifycontext": sn.ID, "s:sigterm": sn.ID, "grugbrain": l.ID, "l:grugbrain": l.ID, "n:dotless": n.ID} {
+		if hits := find(t, s.Search, q); len(hits) != 1 || hits[0] != want {
+			t.Errorf("search %q = %v, want %s", q, hits, want)
+		}
+	}
+	if hits := find(t, s.Search, "n:grugbrain"); len(hits) != 0 {
+		t.Errorf("n: prefix matched a link: %v", hits)
 	}
 }

@@ -59,6 +59,23 @@ func (h *Handlers) search(w http.ResponseWriter, r *http.Request) {
 	_ = paletteTmpl.Execute(w, rows)
 }
 
+// entryHref is where a result opens: the entry's page, a link's own URL,
+// or the favs page (favs have no page of their own).
+func entryHref(kind, lang, slug string, url *string) string {
+	if seg, ok := sections[kind]; ok {
+		return "/" + lang + "/" + seg + "/" + slug
+	}
+	switch kind {
+	case "link":
+		if url != nil {
+			return *url
+		}
+	case "fav":
+		return "/" + lang + "/favs#" + slug
+	}
+	return ""
+}
+
 // paletteRows looks titles up in the main database (the index may lag a
 // publish by a job) and keeps hits that still resolve to a public page.
 func (h *Handlers) paletteRows(r *http.Request, lang string, hits []search.Hit) ([]paletteRow, error) {
@@ -69,17 +86,20 @@ func (h *Handlers) paletteRows(r *http.Request, lang string, hits []search.Hit) 
 	for i, x := range hits {
 		args[i] = x.EntryID
 	}
-	res, err := h.db.Query(r.Context(), `SELECT id, kind, lang, slug, title FROM entries
-WHERE status = 'published' AND visibility = 'public' AND id IN (?`+strings.Repeat(", ?", len(hits)-1)+`)`, args...)
+	res, err := h.db.Query(r.Context(), `SELECT e.id, e.kind, e.lang, e.slug, e.title, e.summary, l.url
+FROM entries e LEFT JOIN links l ON l.entry_id = e.id
+WHERE e.status = 'published' AND e.visibility = 'public' AND e.id IN (?`+strings.Repeat(", ?", len(hits)-1)+`)`, args...)
 	if err != nil {
 		return nil, err
 	}
 	recs, err := store.Scan[struct {
-		ID    string `json:"id"`
-		Kind  string `json:"kind"`
-		Lang  string `json:"lang"`
-		Slug  string `json:"slug"`
-		Title string `json:"title"`
+		ID      string  `json:"id"`
+		Kind    string  `json:"kind"`
+		Lang    string  `json:"lang"`
+		Slug    string  `json:"slug"`
+		Title   string  `json:"title"`
+		Summary string  `json:"summary"`
+		URL     *string `json:"url"`
 	}](res)
 	if err != nil {
 		return nil, err
@@ -95,11 +115,18 @@ WHERE status = 'published' AND visibility = 'public' AND id IN (?`+strings.Repea
 			continue
 		}
 		x := recs[i]
-		seg, ok := sections[x.Kind]
-		if !ok {
+		href := entryHref(x.Kind, x.Lang, x.Slug, x.URL)
+		if href == "" {
 			continue
 		}
-		row := paletteRow{Href: "/" + x.Lang + "/" + seg + "/" + x.Slug, Title: x.Title, Kind: x.Kind, KindLabel: i18n.T(lang, "palette.kind."+x.Kind)}
+		title := x.Title
+		if title == "" {
+			title = x.Summary // untitled notes
+		}
+		if title == "" {
+			title = x.Slug
+		}
+		row := paletteRow{Href: href, Title: title, Kind: x.Kind, KindLabel: i18n.T(lang, "palette.kind."+x.Kind)}
 		if x.Lang == lang {
 			mine = append(mine, row)
 		} else {

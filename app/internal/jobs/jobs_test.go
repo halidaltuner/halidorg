@@ -31,9 +31,23 @@ func TestPaths(t *testing.T) {
 	if got := Paths(Change{Prev: &Ref{Kind: "post", Lang: "tr", Slug: "x"}}); !contains(got, "/tr/posts/x") || !contains(got, "/sitemap.xml") {
 		t.Errorf("delete paths = %v", got)
 	}
+	// A note: its page and fallback, the notes list and the notes feeds, not
+	// the post feeds.
+	notePaths := Paths(Change{Now: &Ref{Kind: "note", Lang: "en", Slug: "til", Listed: true}})
+	if want := []string{"/en/", "/en/notes", "/en/notes/atom.xml", "/en/notes/feed.json", "/en/notes/feed.xml", "/en/notes/til", "/sitemap.xml", "/tr/notes/til"}; !reflect.DeepEqual(notePaths, want) {
+		t.Errorf("note paths =\n%v\nwant\n%v", notePaths, want)
+	}
+	// A link has no page of its own: the list and its feeds.
+	linkPaths := Paths(Change{Now: &Ref{Kind: "link", Lang: "tr", Slug: "grug", Listed: true}})
+	if want := []string{"/sitemap.xml", "/tr/", "/tr/links", "/tr/links/atom.xml", "/tr/links/feed.json", "/tr/links/feed.xml"}; !reflect.DeepEqual(linkPaths, want) {
+		t.Errorf("link paths =\n%v\nwant\n%v", linkPaths, want)
+	}
+	if got := Paths(Change{Now: &Ref{Kind: "fav", Lang: "en", Slug: "ddia"}}); !contains(got, "/en/favs") || contains(got, "/en/favs/ddia") {
+		t.Errorf("fav paths = %v", got)
+	}
 	// Kinds without pages yet contribute nothing.
-	if got := Paths(Change{Now: &Ref{Kind: "note", Lang: "en", Slug: "x"}}); len(got) != 0 {
-		t.Errorf("note paths = %v", got)
+	if got := Paths(Change{Now: &Ref{Kind: "garden", Lang: "en", Slug: "x"}}); len(got) != 0 {
+		t.Errorf("garden paths = %v", got)
 	}
 }
 
