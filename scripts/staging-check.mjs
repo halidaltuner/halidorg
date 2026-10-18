@@ -1,5 +1,6 @@
-// Phase 1 exit check against staging (prompts/phase-1.md, "Phase 1 exit
-// check"). Read-only: it never signs in to the admin and never writes.
+// Exit checks against staging: Phase 1 (prompts/phase-1.md, "Phase 1 exit
+// check") and Phase 4 (projects, homelab, GitHub, stream). Read-only: it
+// never signs in to the admin and never writes.
 // Run by .github/workflows/staging-check.yml with the Access service token.
 //
 //   STAGING_ORIGIN=https://staging.halid.org CF_ACCESS_CLIENT_ID=… CF_ACCESS_CLIENT_SECRET=… \
@@ -95,11 +96,70 @@ check("404: styled page, not cached", nf.res.status === 404 && /noindex/.test(nf
 const adm = await get("/admin");
 check("Admin: needs a session (redirects to login)", adm.res.status === 303 && (adm.res.headers.get("location") || "").startsWith("/admin/login"), `${adm.res.status} ${adm.res.headers.get("location")}`);
 
-// 5. Screenshots for the visual comparison with design/*.dc.html.
+// 5. Phase 4: projects, homelab, build logs, GitHub, stream.
+const projects = await kvHit("/en/projects");
+await kvHit("/en/homelab");
+await kvHit("/en/stream");
+const ghPage = await kvHit("/en/github");
+const pslugs = [...projects.body.matchAll(/class="pj-card" href="\/en\/projects\/([a-z0-9-]+)"/g)].map((m) => m[1]);
+check("Projects: the list has software projects", pslugs.length > 0, pslugs.slice(0, 5).join(", "));
+const hl = await get("/en/homelab");
+const hslugs = [...new Set([...hl.body.matchAll(/href="\/en\/projects\/([a-z0-9-]+)"/g)].map((m) => m[1]))];
+check("Homelab: the page lists builds", hslugs.length > 0, hslugs.slice(0, 5).join(", "));
+const shots4 = [["projects", "/en/projects"], ["homelab", "/en/homelab"], ["stream", "/en/stream"], ["github", "/en/github"], ["projects-tr", "/tr/projects"]];
+let logPath = "";
+for (const [label, ps] of [["software", pslugs[0]], ["homelab", hslugs[0]]]) {
+	if (!ps) continue;
+	const d = await kvHit(`/en/projects/${ps}`);
+	shots4.push([`project-${label}`, `/en/projects/${ps}`]);
+	const ogm = d.body.match(/<meta property="og:image" content="([^"]+)"/);
+	if (ogm) {
+		const u = new URL(ogm[1]);
+		const img = await get(u.pathname + u.search);
+		check(`Project (${label}): its OG card is served`, img.res.status === 200 && img.res.headers.get("content-type") === "image/png" && u.pathname.includes("/projects/"),
+			`${u.pathname} ${img.res.status}`);
+	} else check(`Project (${label}): og:image meta present`, false);
+	const lm = d.body.match(/href="(\/en\/projects\/[a-z0-9-]+\/log\/[a-z0-9-]+)"/);
+	if (lm && !logPath) logPath = lm[1];
+}
+if (logPath) {
+	const lg = await kvHit(logPath);
+	check("Build log: page under its project with a back link", lg.res.status === 200 && /class="mono back"/.test(lg.body), logPath);
+	shots4.push(["buildlog", logPath]);
+} else check("Build log: a published build log is linked from a project page", false, "none found");
+const pf = await get("/en/projects/feed.xml");
+check("/en/projects/feed.xml 200 application/rss+xml", pf.res.status === 200 && (pf.res.headers.get("content-type") || "").startsWith("application/rss+xml"));
+const sm = await get("/sitemap.xml");
+for (const path of ["/en/projects", "/en/homelab", "/en/stream", "/en/github"]) check(`Sitemap lists ${path}`, sm.body.includes(`${path}</loc>`));
+if (pslugs[0]) check("Sitemap lists a project page", sm.body.includes(`/en/projects/${pslugs[0]}</loc>`));
+// GitHub: synced data on /github and the projects section.
+check("GitHub: /en/github shows synced data", /<section class="gh">/.test(ghPage.body), /henüz|not been synced/.test(ghPage.body) ? "no sync yet: set GITHUB_TOKEN and run the sync" : "");
+check("GitHub: the projects page has the GitHub section", /<section class="gh">/.test(projects.body));
+check("GitHub: the activity list has rows", /class="gh-activity"/.test(ghPage.body));
+const st = await get("/en/stream");
+check("Stream: project or homelab rows", /glyph k-(project|homelab)/.test(st.body), `${(st.body.match(/class="stream-row"/g) || []).length} rows`);
+check("Home: stream links to /en/stream", home.body.includes('href="/en/stream"'));
+const hk = await get("/en/stream?kind=homelab");
+check("Stream: ?kind=homelab shows only homelab rows", hk.res.status === 200 && !/glyph k-(post|note|snippet|link|fav|project) /.test(hk.body));
+// Palette prefixes tell projects and homelab builds apart.
+const firstWord = (html) => (html.match(/<h1>([^<]+)<\/h1>/)?.[1] ?? "").split(/\s+/).map((w) => w.replace(/[^\p{L}\p{N}]/gu, "")).find((w) => w.length >= 3) ?? "";
+for (const [prefix, ps, want] of [["pr", pslugs[0], "project"], ["h", hslugs[0], "homelab"]]) {
+	if (!ps) continue;
+	const d = await get(`/en/projects/${ps}`);
+	const word = firstWord(d.body) || ps.split("-")[0];
+	const r = await get(`/x/search?lang=en&q=${encodeURIComponent(prefix + ": " + word)}`);
+	let rows = [];
+	try { rows = JSON.parse(r.body); } catch {}
+	check(`Palette: "${prefix}: ${word}" finds ${want} rows only`, rows.length > 0 && rows.every((x) => x.kind === want), rows.map((x) => `${x.kind} ${x.href}`).join(", ") || r.body.slice(0, 80));
+}
+const ga = await get("/admin/github");
+check("Admin: /admin/github needs a session", ga.res.status === 303, `${ga.res.status}`);
+
+// 6. Screenshots for the visual comparison with design/*.dc.html.
 const browser = await chromium.launch();
 const shots = [["home", "/en/"], ["styleguide", "/_styleguide"], ["posts", "/en/posts"]];
 if (slug) shots.push(["post", `/en/posts/${slug}`], ["post-tr-fallback", `/tr/posts/${slug}`]);
-shots.push(["not-found", "/en/nope"], ["admin-login", "/admin/login"]);
+shots.push(["not-found", "/en/nope"], ["admin-login", "/admin/login"], ...shots4);
 for (const [w, h] of [[1280, 900], [390, 844]]) {
 	const ctx = await browser.newContext({ viewport: { width: w, height: h }, extraHTTPHeaders: access, locale: "en-US" });
 	const page = await ctx.newPage();
