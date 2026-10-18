@@ -17,6 +17,7 @@ import (
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/i18n"
+	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
 )
@@ -34,6 +35,7 @@ type Head struct {
 	Alternates  []alternate
 	Noindex     bool
 	OGType      string
+	Image       string // absolute og:image URL (render/og)
 	Scripts     []string
 }
 
@@ -119,7 +121,8 @@ func (h *Handlers) newPage(lang, active, title, path string, switchTo func(strin
 	}
 	return page{
 		Chrome: ui.NewChrome(lang, active, false, switchTo),
-		Head:   Head{Title: title, Canonical: h.origin + "/" + lang + path, Alternates: alts, OGType: "website"},
+		Head: Head{Title: title, Canonical: h.origin + "/" + lang + path, Alternates: alts, OGType: "website",
+			Image: h.origin + og.URL(og.SiteKey(lang), og.Site(lang))},
 	}
 }
 

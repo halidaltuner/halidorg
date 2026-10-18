@@ -153,3 +153,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - The post TOC is hidden under 900px; above the title it pushes the article down a screen. Headings keep their anchors.
 - Reading time: `N min` on cards, stream rows and the featured card; `N min read` on the post page.
 
+## 12. Implementation notes (Phase 1.5)
+- The OG card is drawn in Go (`app/internal/render/og`) from the template's values, with IBM Plex Sans 600 and JetBrains Mono 400/700 TTFs from their OFL releases (licenses next to the fonts). Colors are the band tokens, hard-coded in Go because a PNG renderer cannot read `tokens.css`; change both together.
+- The title is balanced like `text-wrap: balance` and cut after 3 lines with an ellipsis. The prototype has no limit and overflows into the wordmark with long titles.
+- Pages without their own card (home, lists, tags, errors) use a site card: no kind row, the home headline as title, `halid.org` as meta.
+- Any visual change to the card bumps `og.Version`, which changes every card URL so social caches refetch.

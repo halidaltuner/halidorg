@@ -44,8 +44,9 @@ flowchart LR
 1. Save in admin → Go app writes D1 (revision; publish moves `published_revision_id`).
 2. The write path snapshots the entry before the write (`jobs.RefOf`) and enqueues one `entry.changed` job. The container sends it through the bridge (`/queue/send`); the row in `job_runs` is written first.
 3. The Worker's `queue()` handler delivers the message to `POST /internal/jobs` on the container (the Worker refuses `/internal/*` from the internet). 2xx acks; anything else retries with backoff, 3 times, then the DLQ.
-4. The job computes affected paths (`jobs.Paths`: item, list, home, old and new tag pages and tag feeds, language feeds, sitemap, translations), renders each through the same mux in process and writes KV (`page:{lang}:{path}`, same metadata as the Worker). A path that no longer renders is deleted. Then it upserts or deletes the entry's row in the SEARCH database.
-5. Public site never waits on a cold container for published content.
+4. The job first renders the entry's OG card (`render/og`, 1200x630 PNG) to R2 at `og/{lang}/{section}/{slug}.png`, deletes the card at the old key when the entry moved, was unlisted or deleted, and writes the per-language site cards (`og/{lang}/site-{hash}.png`) once per design version. Pages reference cards as `/og/...png?v={hash}`; the hash comes from the card's inputs, so handlers build the URL without reading R2. The Worker serves `/og/*` straight from R2 (immutable when versioned), never through the container.
+5. The job computes affected paths (`jobs.Paths`: item, list, home, old and new tag pages and tag feeds, language feeds, sitemap, translations), renders each through the same mux in process and writes KV (`page:{lang}:{path}`, same metadata as the Worker). A path that no longer renders is deleted. Then it upserts or deletes the entry's row in the SEARCH database.
+6. Public site never waits on a cold container for published content.
 
 ## 3. Key decisions (ADRs)
 

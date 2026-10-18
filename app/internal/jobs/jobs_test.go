@@ -13,6 +13,8 @@ import (
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/i18n"
+	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/search"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/store/storetest"
@@ -250,7 +252,7 @@ func TestEntryChanged(t *testing.T) {
 		write(w)
 	})
 	mux.HandleFunc("GET /en/{$}", func(w http.ResponseWriter, _ *http.Request) { write(w) })
-	ej := NewEntryJobs(s.DB, s.Search, NewWarmer(mux, s.KV))
+	ej := NewEntryJobs(s.DB, s.Search, s.Blob, NewWarmer(mux, s.KV))
 	ej.Register(j)
 
 	p, err := posts.Create(ctx, post.Draft{
@@ -279,6 +281,16 @@ func TestEntryChanged(t *testing.T) {
 	if len(hits) != 1 || hits[0] != p.ID {
 		t.Fatalf("search after publish = %v", hits)
 	}
+	blob := s.Blob.(*storetest.Blob)
+	card, ok := blob.Objects["og/en/posts/fold.png"]
+	if !ok || card.ContentType != "image/png" || !bytes.HasPrefix(card.Body, []byte("\x89PNG")) {
+		t.Errorf("OG card missing or not a PNG; have %d objects", len(blob.Objects))
+	}
+	for _, l := range i18n.Supported {
+		if _, ok := blob.Objects[og.SiteKey(l)]; !ok {
+			t.Errorf("site card %s missing", og.SiteKey(l))
+		}
+	}
 
 	// Edit after publish: public search still sees the published text.
 	if _, _, err := posts.Save(ctx, post.Draft{Post: mustGet(t, posts, p.ID), Markdown: "Now about gölge only.", Tags: []string{"search"}}, content.OriginManual); err != nil {
@@ -301,6 +313,9 @@ func TestEntryChanged(t *testing.T) {
 	}
 	if _, ok := kv.Vals["page:en:/en/posts/fold"]; ok {
 		t.Error("deleted post still in KV")
+	}
+	if _, ok := blob.Objects["og/en/posts/fold.png"]; ok {
+		t.Error("deleted post still has an OG card")
 	}
 	if hits := find(t, s.Search, "isik"); len(hits) != 0 {
 		t.Errorf("deleted post still indexed: %v", hits)

@@ -13,7 +13,12 @@
 <meta property="og:title" content="{{.Head.Title}}">
 {{with .Head.Description}}<meta property="og:description" content="{{.}}">
 {{end}}<meta property="og:type" content="{{or .Head.OGType "website"}}">
-<link rel="alternate" type="application/rss+xml" title="{{tr .Lang "feed.posts"}}" href="/{{.Lang}}/feed.xml">
+{{with .Head.Image}}<meta property="og:image" content="{{.}}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{{$.Head.Title}}">
+<meta name="twitter:card" content="summary_large_image">
+{{end}}<link rel="alternate" type="application/rss+xml" title="{{tr .Lang "feed.posts"}}" href="/{{.Lang}}/feed.xml">
 <link rel="stylesheet" href="/static/css/tokens.css">
 <link rel="stylesheet" href="/static/css/app.css">
 <script src="/static/js/header.js" defer></script>

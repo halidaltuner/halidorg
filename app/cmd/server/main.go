@@ -99,7 +99,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	// Background jobs (Phase 1.3). The warmer renders through this same mux,
 	// so a purge re-renders pages exactly as visitors would get them.
 	runner := jobs.New(stores.DB, stores.Queue)
-	jobs.NewEntryJobs(stores.DB, stores.Search, jobs.NewWarmer(mux, stores.KV)).Register(runner)
+	jobs.NewEntryJobs(stores.DB, stores.Search, stores.Blob, jobs.NewWarmer(mux, stores.KV)).Register(runner)
 	runner.Register(mux)
 
 	seed := authn.RequireSession(devseed.New(stores.DB, runner))

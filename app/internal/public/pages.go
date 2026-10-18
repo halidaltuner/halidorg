@@ -12,6 +12,7 @@ import (
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/render"
+	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
 )
@@ -259,6 +260,11 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 	pg.TOC, _ = decodeTOC(rev.TOCJSON)
 	pg.Head.Description = p.Summary
 	pg.Head.OGType = "article"
+	if p.PublishedAt != nil {
+		// The original's card, also on the untranslated fallback page.
+		card := og.Post(p.Lang, p.Title, *p.PublishedAt, p.ReadingMinutes)
+		pg.Head.Image = h.origin + og.URL(og.EntryKey(p.Lang, "posts", p.Slug), card)
+	}
 	pg.Head.Canonical = h.origin + where[p.Lang]
 	pg.Head.Alternates = nil
 	for _, l := range i18n.Supported {

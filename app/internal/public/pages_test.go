@@ -84,7 +84,7 @@ func TestHomeAndLists(t *testing.T) {
 	if code != 200 {
 		t.Fatalf("list %d", code)
 	}
-	must(t, body, "<h1>Posts</h1>", "/en/posts/ghost", "/en/posts/htmx-admin", `<link rel="canonical" href="https://halid.org/en/posts">`)
+	must(t, body, `content="https://halid.org/og/en/site-`, "<h1>Posts</h1>", "/en/posts/ghost", "/en/posts/htmx-admin", `<link rel="canonical" href="https://halid.org/en/posts">`)
 
 	code, body = get(t, mux, "/en/tags/go")
 	if code != 200 || strings.Contains(body, "/en/posts/ghost\"") {
@@ -114,6 +114,8 @@ func TestPostPage(t *testing.T) {
 		`<meta property="og:type" content="article">`,
 		`/static/js/post.js`,
 		`min read`,
+		`<meta property="og:image" content="https://halid.org/og/en/posts/htmx-admin.png?v=`,
+		`<meta name="twitter:card" content="summary_large_image">`,
 	)
 	if strings.Contains(body, "banner-untranslated") || strings.Contains(body, `name="robots"`) {
 		t.Error("translated-language page shows the banner or noindex")
@@ -139,6 +141,7 @@ func TestUntranslatedFallback(t *testing.T) {
 		`<a href="/en/posts/htmx-admin">özgün sürüm →</a>`,
 		`<meta name="robots" content="noindex">`,
 		`<link rel="canonical" href="https://halid.org/en/posts/htmx-admin">`,
+		`content="https://halid.org/og/en/posts/htmx-admin.png?v=`,
 	)
 	// A translation under another slug: redirect, not banner.
 	rec := httptest.NewRecorder()
