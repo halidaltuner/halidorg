@@ -184,6 +184,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Notes (derive): the post list head with an indigo eyebrow, then a 860px column of white cards. A card has the `~` glyph tile, the publish time as the permalink (`--link`), a TIL pill, the title in body size at weight 500, the body, tags and the source domain.
 
 ## 17. Implementation notes (Phase 2.3)
+
+- Page widths on Snippets, Links and Favs (`--w-snippets`, `--w-links`, `--w-favs`) are content widths, as in the prototypes; the page adds the gutter on top (found in the Phase 2 exit check, the content was 48px narrower). The snippet meta reads "snippet · date · #tag #tag".
 - Links and Favs follow their prototypes. The filter chips are links (`?status=`, `?type=`) so they work without JS; the cached page holds every item and `filter.js` filters in place. Favs offer only the types that have favs.
 - A link row shows its favicon (16px, `--radius-1`) when the job found one, else the prototype's initial tile. The group name links to the category's awesome page.
 - The read chip is static for visitors. Signed in, `links.js` turns it into a button that toggles the status without a revision.
