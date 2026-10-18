@@ -87,7 +87,7 @@ type row struct {
 }
 
 const columns = `id, album_id, media_id, title_tr, title_en, url_500px, camera, lens, exposure, place, taken_at,
-  row_span, col_span, sort, published, created_at, updated_at`
+  row_span, col_span, sort, published, created_at, updated_at, description_tr, description_en`
 
 func (r *Repo) list(ctx context.Context, where string, args ...any) ([]Photo, error) {
 	res, err := r.db.Query(ctx, `SELECT `+columns+` FROM photos WHERE `+where+
@@ -137,6 +137,11 @@ func Validate(p Photo) error {
 			v[f] = "at most 120 characters"
 		}
 	}
+	for f, s := range map[string]string{"description_tr": p.DescTR, "description_en": p.DescEN} {
+		if utf8.RuneCountInString(s) > 2000 {
+			v[f] = "at most 2000 characters"
+		}
+	}
 	if p.AlbumID == "" {
 		v["album"] = "pick an album"
 	}
@@ -159,7 +164,7 @@ func Validate(p Photo) error {
 }
 
 func trimAll(p *Photo) {
-	for _, s := range []*string{&p.TitleTR, &p.TitleEN, &p.Camera, &p.Lens, &p.Exposure, &p.Place} {
+	for _, s := range []*string{&p.TitleTR, &p.TitleEN, &p.DescTR, &p.DescEN, &p.Camera, &p.Lens, &p.Exposure, &p.Place} {
 		*s = strings.TrimSpace(*s)
 	}
 }
@@ -212,13 +217,14 @@ func (r *Repo) Save(ctx context.Context, p Photo) (Photo, error) {
 	if p.Published {
 		pub = 1
 	}
-	_, err = r.db.Query(ctx, `INSERT INTO photos (`+columns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+	_, err = r.db.Query(ctx, `INSERT INTO photos (`+columns+`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT (id) DO UPDATE SET album_id = excluded.album_id, media_id = excluded.media_id, title_tr = excluded.title_tr,
   title_en = excluded.title_en, url_500px = excluded.url_500px, camera = excluded.camera, lens = excluded.lens,
   exposure = excluded.exposure, place = excluded.place, taken_at = excluded.taken_at, row_span = excluded.row_span,
-  col_span = excluded.col_span, sort = excluded.sort, published = excluded.published, updated_at = excluded.updated_at`,
+  col_span = excluded.col_span, sort = excluded.sort, published = excluded.published, updated_at = excluded.updated_at,
+  description_tr = excluded.description_tr, description_en = excluded.description_en`,
 		p.ID, p.AlbumID, p.MediaID, p.TitleTR, p.TitleEN, p.URL500px, p.Camera, p.Lens, p.Exposure, p.Place, p.TakenAt,
-		p.RowSpan, p.ColSpan, p.Sort, pub, p.CreatedAt, p.UpdatedAt)
+		p.RowSpan, p.ColSpan, p.Sort, pub, p.CreatedAt, p.UpdatedAt, p.DescTR, p.DescEN)
 	if err != nil {
 		return p, fmt.Errorf("photo: save: %w", err)
 	}

@@ -15,9 +15,9 @@ import (
 // a :target panel, so it works without JS; photos.js adds Esc.
 
 type photoTile struct {
-	ID, Title, Album, AlbumKey, Camera, Lens, Exposure, Place, Date, URL500px string
-	Rows, Cols                                                                int
-	Image                                                                     image
+	ID, Title, Description, Album, AlbumKey, Camera, Lens, Exposure, Place, Date, URL500px string
+	Rows, Cols                                                                             int
+	Image                                                                                  image
 }
 
 type photosPage struct {
@@ -73,7 +73,7 @@ func (h *Handlers) photos(w http.ResponseWriter, r *http.Request, lang string) {
 		}
 		a := byID[x.AlbumID]
 		count[a.Slug]++
-		t := photoTile{ID: x.ID, Title: x.Title(lang), Album: a.Name(lang), AlbumKey: a.Slug, Camera: x.Camera, Lens: x.Lens,
+		t := photoTile{ID: x.ID, Title: x.Title(lang), Description: x.Description(lang), Album: a.Name(lang), AlbumKey: a.Slug, Camera: x.Camera, Lens: x.Lens,
 			Exposure: x.Exposure, Place: x.Place, Date: photo.Date(x.TakenAt), Rows: x.RowSpan, Cols: x.ColSpan, Image: im}
 		if x.URL500px != nil {
 			t.URL500px = *x.URL500px

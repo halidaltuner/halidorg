@@ -7,6 +7,7 @@ import (
 	"errors"
 	"image"
 	"image/jpeg"
+	"strings"
 	"testing"
 
 	"halid.org/engine/internal/content"
@@ -87,5 +88,17 @@ func TestTitleFromFile(t *testing.T) {
 		if got := TitleFromFile(in); got != want {
 			t.Errorf("%q: %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestDescriptionLimit(t *testing.T) {
+	p := Photo{AlbumID: "a", MediaID: "m", TitleEN: "x", RowSpan: 2, ColSpan: 1, DescEN: strings.Repeat("ç", 2000)}
+	if err := Validate(p); err != nil {
+		t.Fatalf("2000 runes: %v", err)
+	}
+	p.DescEN += "ç"
+	var v content.ValidationError
+	if err := Validate(p); !errors.As(err, &v) || v["description_en"] == "" {
+		t.Errorf("2001 runes: %v", err)
 	}
 }

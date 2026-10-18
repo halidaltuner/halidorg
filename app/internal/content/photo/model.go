@@ -28,6 +28,8 @@ type Photo struct {
 	MediaID   string  `json:"media_id"`
 	TitleTR   string  `json:"title_tr"`
 	TitleEN   string  `json:"title_en"`
+	DescTR    string  `json:"description_tr"`
+	DescEN    string  `json:"description_en"`
 	URL500px  *string `json:"url_500px"`
 	Camera    string  `json:"camera"`
 	Lens      string  `json:"lens"`
@@ -48,4 +50,13 @@ func (p Photo) Title(lang string) string {
 		return p.TitleTR
 	}
 	return p.TitleEN
+}
+
+// Description is the plain-text description in lang, else the other
+// language's.
+func (p Photo) Description(lang string) string {
+	if lang == "tr" && p.DescTR != "" || p.DescEN == "" {
+		return p.DescTR
+	}
+	return p.DescEN
 }

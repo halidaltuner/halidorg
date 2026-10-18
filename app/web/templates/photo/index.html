@@ -30,6 +30,7 @@
 <div class="ph-info">
 <div class="ph-info-head"><span class="mono">{{.Album}}</span><a class="mono ph-close" href="#">{{tr $.Lang "photo.esc"}} ✕</a></div>
 <h2>{{.Title}}</h2>
+{{- with .Description}}<p class="ph-desc">{{.}}</p>{{end}}
 <dl class="ph-exif mono">
 {{- with .Camera}}<dt>{{tr $.Lang "photo.camera"}}</dt><dd>{{.}}</dd>{{end}}
 {{- with .Lens}}<dt>{{tr $.Lang "photo.lens"}}</dt><dd>{{.}}</dd>{{end}}
