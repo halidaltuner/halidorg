@@ -34,10 +34,13 @@ async function get(path, extra = {}) {
 	return { res, body };
 }
 
-// The first request may be a MISS (a cold key) or already a HIT (warmed by a
-// publish job); the second must be a HIT.
+// The first request may be a MISS (a cold key), STALE (stored by an older
+// deploy) or already a HIT (warmed by a publish job); the second must be a HIT.
 async function kvHit(path) {
 	const first = await get(path);
+	// A STALE page re-renders in the background (waitUntil): give it a
+	// moment before asking again.
+	if (first.res.headers.get("x-cache") === "STALE") await new Promise((r) => setTimeout(r, 4000));
 	const second = await get(path);
 	const a = first.res.headers.get("x-cache"), b = second.res.headers.get("x-cache");
 	let why = "";
