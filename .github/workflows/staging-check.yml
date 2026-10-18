@@ -1,0 +1,41 @@
+name: staging-check
+
+# Read-only checks against staging through Cloudflare Access with a service
+# token (environment secrets CF_ACCESS_CLIENT_ID / CF_ACCESS_CLIENT_SECRET).
+# Screenshots and the report are uploaded as the "staging-check" artifact.
+on:
+  workflow_dispatch:
+  push:
+    branches: [phase-1/check] # runs before the workflow is on main; drop after merge
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        working-directory: scripts
+        run: |
+          npm init -y >/dev/null
+          npm install --no-save playwright@1.56.0
+          npx playwright install --with-deps chromium
+      - name: Check staging
+        working-directory: scripts
+        env:
+          STAGING_ORIGIN: https://staging.halid.org
+          CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
+        run: node staging-check.mjs out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: staging-check
+          path: scripts/out/
+          retention-days: 14
