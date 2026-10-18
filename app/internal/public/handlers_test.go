@@ -171,7 +171,7 @@ func TestHomeHasChrome(t *testing.T) {
 		}
 	}
 	// Sections without pages stay out, and home is not a section page.
-	for _, absent := range []string{`aria-current="page"`, "/en/projects", "/en/favs"} {
+	for _, absent := range []string{`aria-current="page"`, "/en/projects", "/en/certificates"} {
 		if strings.Contains(body, absent) {
 			t.Errorf("unexpected %s", absent)
 		}

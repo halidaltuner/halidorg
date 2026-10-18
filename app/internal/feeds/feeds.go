@@ -399,6 +399,23 @@ ORDER BY published_at DESC LIMIT 5000`)
 	return store.Scan[smRow](res)
 }
 
+// awesomeRows lists the awesome pages that render: link categories, and
+// their parents, with published public links in a language.
+func (h *Handlers) awesomeRows(ctx context.Context) ([]smRow, error) {
+	res, err := h.db.Query(ctx, `SELECT DISTINCT e.lang, c.slug FROM links l
+JOIN entries e ON e.id = l.entry_id JOIN categories c ON c.id = l.category_id
+WHERE e.status = 'published' AND e.visibility = 'public'
+UNION
+SELECT DISTINCT e.lang, p.slug FROM links l
+JOIN entries e ON e.id = l.entry_id JOIN categories c ON c.id = l.category_id JOIN categories p ON p.id = c.parent_id
+WHERE e.status = 'published' AND e.visibility = 'public'
+ORDER BY 1, 2`)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[smRow](res)
+}
+
 // itemSegments are the kinds with a page per entry and their URL segment.
 var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets"}
 
@@ -413,7 +430,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})
@@ -434,6 +451,15 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		set.URLs = append(set.URLs, u)
+	}
+	awesome, err := h.awesomeRows(r.Context())
+	if err != nil {
+		slog.Error("sitemap", "err", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	for _, a := range awesome {
+		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + a.Lang + "/awesome/" + a.Slug})
 	}
 	h.writeXML(w, r, "application/xml; charset=utf-8", set)
 }

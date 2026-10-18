@@ -77,6 +77,13 @@ func (a *Auth) deleteSession(ctx context.Context, id string) error {
 	return err
 }
 
+// HintCookie tells public pages, which are the same cached HTML for every
+// visitor, that this browser may have an admin session, so their JS asks
+// /admin before showing admin controls (the links read toggle) instead of
+// waking the container for every visitor. It holds no secret: the /admin
+// request still checks the real session.
+const HintCookie = "admin_hint"
+
 func setSessionCookie(w http.ResponseWriter, token string, maxAge int) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     SessionCookie,
@@ -87,6 +94,11 @@ func setSessionCookie(w http.ResponseWriter, token string, maxAge int) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
+	hint := "1"
+	if maxAge < 0 {
+		hint = ""
+	}
+	http.SetCookie(w, &http.Cookie{Name: HintCookie, Value: hint, Path: "/", MaxAge: maxAge, Secure: true, SameSite: http.SameSiteLaxMode})
 }
 
 // TestSession creates a session for email whose last sign-in or re-auth was

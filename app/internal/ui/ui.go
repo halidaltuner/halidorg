@@ -36,7 +36,7 @@ var (
 		{"photos", false}, {"radar", false}, {"now", false}, {"about", false},
 	}
 	more = []section{
-		{"notes", true}, {"snippets", true}, {"links", false}, {"favs", false}, {"certificates", false},
+		{"notes", true}, {"snippets", true}, {"links", true}, {"favs", true}, {"certificates", false},
 	}
 )
 

@@ -58,14 +58,14 @@ Every content item with its own page has one row here. Type-specific fields live
 `snippet_files(snippet_id, filename, language, code, sort)` one or more files, shown as tabs (0006). A snippet needs at least one file to publish; filenames are unique per snippet and have no slashes. Each revision stores the files in `data_json` (`{"files":[...]}`), so revision diffs and restores include them; the table holds the current files.
 
 ### link
-`links(entry_id, url, domain, favicon_url, category_id, via nullable, archived_url nullable, read_status: unread|read)`
+`links(entry_id, url, domain, favicon_url, category_id, via nullable, archived_url nullable, read_status: unread|read)`. `favicon_url` is set by the entry.changed job: `/favicons/{domain}.{png|jpg|gif|webp|ico}` in R2, one object per domain, served by the Worker; empty when the site has no raster icon.
 `title` = link title, `summary` = my comment. `domain` is derived from `url` (without `www.`). No item page: links live on `/{lang}/links`; search results open the link itself (0006).
 
 ### fav
 `favs(entry_id, fav_type: tool|repo|video|product|article|book|place|other, author nullable, url nullable, rating 1-5 nullable, category_id)` (0006). No item page: favs live on `/{lang}/favs`.
 
 ### awesome list
-A `page` with `data_json.list_category_ids`. No separate table.
+Every link category is an awesome list at `/{lang}/awesome/{category}` (Phase 2.3): its published links, then one section per child category. No table of its own; a page that renders no link is a 404. A curated `page` with `data_json.list_category_ids` can come with pages in Phase 5.
 
 ### project (software and homelab/DIY share one model and one detail template)
 `projects(entry_id, project_type: software|homelab, status: active|paused|archived|idea|done, category_id nullable, tagline, repo_url, demo_url, github_repo nullable, started_at, ended_at, featured bool, cost_total nullable, currency default 'TRY', time_spent_hours nullable)`
@@ -151,7 +151,7 @@ A D1 view unioning published `entries` + `gh_activity` + `radar_history`, cursor
 | garden | `/{lang}/garden/{slug}` |
 | runbook | `/{lang}/runbooks/{slug}` |
 | snippet | `/{lang}/snippets`, `/{lang}/snippets/{slug}`, `/{lang}/snippets/{slug}/raw/{filename}` (text/plain) |
-| link | `/{lang}/links?status=unread` |
+| link | `/{lang}/links?status=unread`, `/{lang}/awesome/{category}` |
 | fav | `/{lang}/favs?type=tool` |
 | project | `/{lang}/projects`, `/{lang}/projects/{slug}` |
 | homelab | `/{lang}/homelab?category=electronics` (detail uses `/projects/{slug}`) |

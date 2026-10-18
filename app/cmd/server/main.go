@@ -13,6 +13,7 @@ import (
 
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
+	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
@@ -106,6 +107,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	postAdmin.Register(mux)
+	link.NewAdmin(stores.DB, authn, runner).Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

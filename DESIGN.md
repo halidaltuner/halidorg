@@ -182,3 +182,10 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - The active file tab has a 2px `--kind-snippet` underline. Without JS every file shows, one under the other, and the tabs are links to them; `snippet.js` shows one file, moves the language badge and raw link with the tab, and unhides `#` (line numbers) and copy.
 - `/{lang}/snippets` shows the newest snippet; `/{lang}/snippets/{slug}` the chosen one with the same list. Below about 616px the list stacks above the viewer.
 - Notes (derive): the post list head with an indigo eyebrow, then a 860px column of white cards. A card has the `~` glyph tile, the publish time as the permalink (`--link`), a TIL pill, the title in body size at weight 500, the body, tags and the source domain.
+
+## 17. Implementation notes (Phase 2.3)
+- Links and Favs follow their prototypes. The filter chips are links (`?status=`, `?type=`) so they work without JS; the cached page holds every item and `filter.js` filters in place. Favs offer only the types that have favs.
+- A link row shows its favicon (16px, `--radius-1`) when the job found one, else the prototype's initial tile. The group name links to the category's awesome page.
+- The read chip is static for visitors. Signed in, `links.js` turns it into a button that toggles the status without a revision.
+- Fav cards keep the striped cover with the type in mono, since favs have no image yet; the type dot is `--kind-fav`. Cards with a URL are links, and `#slug` targets a card (feed items point there) with the focus outline.
+- Awesome list (derive): the list head with the category tone (navy without one), a back link to links, a mono section index when there are child categories, then one H2 and bullet list per section: title in `--link`, domain in mono, comment on its own line.

@@ -183,6 +183,8 @@
   --w-post: 1240px;
   --w-now: 1100px;
   --w-snippets: 1100px;
+  --w-links: 820px;
+  --w-favs: 1100px;
   --w-narrow: 860px;
   --w-prose: 68ch;
   /* 68ch of the 18px body face as a fixed length, so blocks with smaller

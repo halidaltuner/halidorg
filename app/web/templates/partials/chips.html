@@ -11,3 +11,6 @@
 
 {{/* callout: kind (tip, warning, note, danger), label, body (template.HTML from the renderer). */}}
 {{define "callout"}}<aside class="callout {{or .kind "note"}}"><div class="callout-label">{{or .label .kind}}</div>{{.body}}</aside>{{end}}
+
+{{/* filter-chips: a list page filter (links ?status=, favs ?type=). Each chip is a link for the no-JS path; filter.js filters in place. Args: chips []filterChip, label. */}}
+{{define "filter-chips"}}<nav class="chips" aria-label="{{.label}}">{{range .chips}}<a class="chip tone-navy" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>{{end}}
