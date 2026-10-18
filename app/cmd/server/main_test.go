@@ -64,8 +64,9 @@ func TestStaticCaching(t *testing.T) {
 		t.Fatal(err)
 	}
 	for path, want := range map[string]string{
-		web.Asset("/static/css/app.css"): "public, max-age=31536000, immutable",
-		"/static/css/app.css":            "public, max-age=3600",
+		web.Asset("/static/css/app.css"):   "public, max-age=31536000, immutable",
+		"/static/css/app.css?v=0123456789": "public, max-age=60", // an older page's hash
+		"/static/css/app.css":              "public, max-age=3600",
 	} {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
