@@ -5,10 +5,12 @@ Three environments share one `wrangler.jsonc` (ARCHITECTURE.md §5). Each has it
 | Env | Worker | D1 | KV | R2 | Origin |
 |---|---|---|---|---|---|
 | local | `halidorg` (`wrangler dev`) | `halidorg-local` | `local-pages` | `halidorg-media-local` | `http://localhost:8787` |
-| staging | `halidorg-staging` | `halidorg-staging` | `halidorg-staging-pages` | `halidorg-media-staging` | `https://staging.halid.org` |
+| staging | `halidorg-staging` | `halidorg-staging` | `halidorg-staging-pages` | `halidorg-media-staging` | `https://staging.halid.org`, decks `https://decks-staging.halid.org` |
 | prod | `halidorg-prod` | `halidorg-prod` | `halidorg-prod-pages` | `halidorg-media-prod` | `https://halidorg-prod.halid-09d.workers.dev` until the Phase 3 cutover |
 
 Local resources need no creation: `wrangler dev` simulates them under `.wrangler/state`.
+
+Presentation decks have their own origin (ADR-007, `DECKS_ORIGIN`): `http://127.0.0.1:8787` locally (a different origin from `localhost` on the same Worker), `decks-staging.halid.org` on staging, and `decks.halid.org` on prod, whose custom domain is added with the halid.org route at the Phase 3 cutover.
 
 ## 1. Create staging and prod resources
 
@@ -130,7 +132,7 @@ Create the token from the **Edit Cloudflare Workers** template, then trim it to 
 | Account | Workers KV Storage: Edit | the deploy validates the KV binding |
 | Account | Workers R2 Storage: Edit | the deploy checks the bucket exists; Read may be enough |
 | Account | Account Settings: Read | wrangler reads account details |
-| Zone (halid.org) | Workers Routes: Edit | the `staging.halid.org` custom domain |
+| Zone (halid.org) | Workers Routes: Edit | the `staging.halid.org` and `decks-staging.halid.org` custom domains |
 
 The template's Workers Routes, KV and Account Settings rows come from Cloudflare. The Containers, D1 and R2 rows are inferred from what the deploy touches, not taken from a published minimum, so the first staging deploy is the test: a missing permission fails with `Authentication error [code: 10000]` and names the API call.
 
@@ -145,3 +147,5 @@ Staging sits behind Access as a second layer in front of the app's own Google lo
 Every path is covered, `/healthz` included. CI deploys are unaffected because they go through the Cloudflare API. Scripts that call staging, such as latency probes, need an Access service token sent as `CF-Access-Client-Id` and `CF-Access-Client-Secret`, plus a policy that allows it.
 
 Prod has no Access application; adding one later needs no code change.
+
+`decks-staging.halid.org` is outside the Access application on purpose: the site embeds decks in an iframe, and an Access login on another host would need a third-party cookie there. It serves only uploaded deck files under unguessable entry ids.

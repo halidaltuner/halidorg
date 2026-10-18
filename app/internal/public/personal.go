@@ -110,7 +110,11 @@ func (h *Handlers) about(w http.ResponseWriter, r *http.Request, lang string) {
 		return
 	}
 	for _, t := range tiles {
-		p.Cards = append(p.Cards, aboutCard{Href: t.Href, Glyph: t.Glyph, Label: t.Label, Text: t.Count, Tone: t.Tone})
+		text := t.Count
+		if t.About != "" {
+			text = t.About
+		}
+		p.Cards = append(p.Cards, aboutCard{Href: t.Href, Glyph: t.Glyph, Label: t.Label, Text: text, Tone: t.Tone})
 	}
 	if _, err := h.pageRepo.GetPublished(ctx, lang, pages.Now); err == nil {
 		p.Cards = append(p.Cards, aboutCard{Href: "/" + lang + "/now", Glyph: "●", Label: i18n.T(lang, "nav.now"), Text: i18n.T(lang, "about.now_card"), Tone: "indigo"})

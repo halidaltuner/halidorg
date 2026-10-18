@@ -59,15 +59,22 @@
   // Cron (Phase 4.4): enqueue jobs, never call the container (worker/src/jobs.ts SCHEDULES).
   "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
 
+  // DECKS_ORIGIN (ADR-007): presentation decks are served only on this host.
+  // Locally 127.0.0.1 is a different origin from localhost on the same Worker.
   "vars": {
     "APP_ENV": "local",
-    "PUBLIC_ORIGIN": "http://localhost:8787"
+    "PUBLIC_ORIGIN": "http://localhost:8787",
+    "DECKS_ORIGIN": "http://127.0.0.1:8787"
   },
 
   "env": {
     "staging": {
       "name": "halidorg-staging",
-      "routes": [{ "pattern": "staging.halid.org", "custom_domain": true }],
+      "routes": [
+        { "pattern": "staging.halid.org", "custom_domain": true },
+        // The decks origin (ADR-007): the same Worker, deck files only.
+        { "pattern": "decks-staging.halid.org", "custom_domain": true }
+      ],
       "containers": [
         {
           "class_name": "App",
@@ -113,7 +120,8 @@
       "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
       "vars": {
         "APP_ENV": "staging",
-        "PUBLIC_ORIGIN": "https://staging.halid.org"
+        "PUBLIC_ORIGIN": "https://staging.halid.org",
+        "DECKS_ORIGIN": "https://decks-staging.halid.org"
       }
     },
 
@@ -168,7 +176,9 @@
       "vars": {
         "APP_ENV": "prod",
         // Admin login on prod needs this origin and its own OAuth client (Phase 3).
-        "PUBLIC_ORIGIN": "https://halid.org"
+        "PUBLIC_ORIGIN": "https://halid.org",
+        // Its custom domain joins the halid.org route at the Phase 3 cutover.
+        "DECKS_ORIGIN": "https://decks.halid.org"
       }
     }
   }

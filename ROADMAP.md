@@ -70,7 +70,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] `/stream` and `/github` standalone pages **(derive)**; palette prefixes `pr: h:`
 
 ## Phase 5: Presentations, photos, certificates, personal pages (L)
-- [ ] Presentations **(designed)** and Presentation Detail **(designed)**: deck upload to R2, `decks.halid.org` origin, sandboxed iframe, slide controls, outline jump via `postMessage` (ADR-007)
+- [x] Presentations **(designed)** and Presentation Detail **(designed)**: deck upload to R2, `decks.halid.org` origin, sandboxed iframe, slide controls, outline jump via `postMessage` (ADR-007) (staging: `decks-staging.halid.org`; prod's custom domain joins at the Phase 3 cutover)
 - [x] Photos **(designed)**: albums, dense grid with spans, lightbox with EXIF, 500px embed in lightbox only, CSP (ADR-009) (local image and a "view on 500px" link instead of an embed, decided 2026-10-18)
 - [ ] Certificates **(designed)**: issuers, hexagon badges, derived status (active / renew soon / expired)
 - [ ] About **(designed)**: hero, portrait, skills, experience timeline, link cards

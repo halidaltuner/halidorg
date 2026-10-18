@@ -85,10 +85,14 @@ Every link category is an awesome list at `/{lang}/awesome/{category}` (Phase 2.
 `buildlogs(entry_id, project_entry_id, log_date, hours_spent nullable)` rendered as the project timeline and at `/{lang}/projects/{project}/log/{slug}`. A log is in its project's language; deleting a project deletes its logs.
 
 ### presentation (replaces `talk`)
-`presentations(entry_id, pres_type: talk|workshop|lightning, event, city, date, talk_lang, slide_count, deck_r2_key, recording_url nullable, outline_json)`
-- `outline_json`: `[{ "n": 3, "title": "Why render-on-publish" }]` drives the clickable outline
-- `deck_r2_key`: self-contained HTML deck, served from an isolated origin (ADR-007)
-- Related links: `presentation_links(presentation_id, label, url, sort)`
+migrations/0014_presentations.sql, `internal/content/presentation`.
+`presentations(entry_id, pres_type: talk|workshop|lightning, event, city, held_on, talk_lang, slide_count, deck_r2_key, deck_version, recording_url nullable, recording_minutes nullable, outline_json)`
+- The body is the abstract; `summary` is the card description. `held_on` is the day it was given (the list sorts by it); `talk_lang` is the language spoken, shown on the card, apart from the entry's page language.
+- `outline_json`: `[{ "n": 3, "title": "Why render-on-publish" }]` drives the clickable outline. Like a project's rows, the outline and links are kept in the revision's data_json too and the public page shows the published revision's.
+- Related links: `presentation_links(presentation_id, label, url, sort)`, an https URL or a path here; the page marks each with its section's glyph.
+- The deck is one self-contained HTML file (at most 25 MB), uploaded on the editor below the form and stored at `decks/{entry_id}/index.html` in R2, replacing the last upload at once (no revision). `deck_version` is a hash prefix that versions the iframe URL. The upload counts the slides (the outermost `.slide` elements, else `<section>`) and fills an empty outline from their first h1 to h3; a written outline is kept. Deleting the presentation deletes the deck.
+- The deck is served only from the decks origin (`DECKS_ORIGIN`, ADR-007): `{origin}/{entry_id}/?v={version}` to view, `{origin}/{entry_id}/{slug}.html` as a download.
+- Writes queue `entry.changed`; a presentation purges its page, the list and feeds, home and About (the talks card).
 
 ### book
 `books(entry_id, author, isbn, cover_media_id, status: want|reading|done|dropped, progress_pct, started_at, finished_at, rating)`
@@ -172,7 +176,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | homelab | `/{lang}/homelab?category=electronics` (detail uses `/projects/{slug}`) |
 | buildlog | `/{lang}/projects/{project}/log/{slug}` (in the projects feeds) |
 | presentation | `/{lang}/presentations?type=talk`, `/{lang}/presentations/{slug}` |
-| deck | `https://decks.halid.org/{slug}/` (isolated origin) |
+| deck | `https://decks.halid.org/{entry_id}/` (isolated origin; `decks-staging.halid.org` on staging) |
 | photos | `/{lang}/photos?album={slug}` |
 | certificates | `/{lang}/certificates?issuer=aws`, `/{lang}/certificates/feed.xml` |
 | book | `/{lang}/reading` |
@@ -191,7 +195,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 - `summary` ≤ 160 chars when used as SEO description
 - `radar_item` ring change always writes `radar_history`
 - `project_type = homelab` requires `category_id` from homelab categories
-- `presentation.deck_r2_key` must point to a single self-contained HTML file
+- `presentation.deck_r2_key` must point to a single self-contained HTML file (sniffed as HTML, valid UTF-8, at most 25 MB)
 - Deleting an entry with inbound backlinks requires typed slug confirmation and creates a `redirects` row or a 410 tombstone
 
 ## 7. Importer contract (Ghost first)

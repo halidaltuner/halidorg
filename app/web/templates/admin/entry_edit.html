@@ -32,6 +32,7 @@
 </div>
 </form>
 </section>
+{{- block "entry-after" .}}{{end}}
 {{- if not .New}}
 <details class="adm-panel ent-delete">
 <summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>

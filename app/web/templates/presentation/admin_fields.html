@@ -1,0 +1,61 @@
+{{define "entry-fields"}}{{$o := .Options}}
+<fieldset class="ent-langs"><legend>{{tr .Lang "kind.presentation.type"}}</legend>
+{{- range $o.Types}}<label class="check"><input type="radio" name="pres_type" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
+</fieldset>
+<div class="ent-two">
+<label>{{tr .Lang "kind.presentation.event"}}<input name="event" value="{{.Item.Event}}" placeholder="GoTürkiye 2026"></label>
+<label>{{tr .Lang "kind.presentation.city"}}<input name="city" value="{{.Item.City}}"></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "kind.presentation.held_on"}}<input type="date" name="held_on" value="{{$o.HeldOn}}"></label>
+<fieldset class="ent-langs"><legend>{{tr .Lang "kind.presentation.talk_lang"}}</legend>
+{{- range $o.Langs}}<label class="check"><input type="radio" name="talk_lang" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
+</fieldset>
+</div>
+<label>{{tr .Lang "kind.presentation.cover"}}<select name="cover">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<p class="ent-hint">{{tr .Lang "kind.presentation.cover_hint"}}</p>
+<div class="ent-two">
+<label>{{tr .Lang "kind.presentation.recording"}}<input name="recording_url" value="{{$o.Recording}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://"></label>
+<label>{{tr .Lang "kind.presentation.minutes"}}<input name="recording_minutes" value="{{$o.Minutes}}" class="mono" inputmode="numeric" placeholder="32"></label>
+</div>
+<label>{{tr .Lang "kind.presentation.slides"}}<input name="slide_count" value="{{$o.Slides}}" class="mono" inputmode="numeric" placeholder="{{tr .Lang "kind.presentation.slides_hint"}}"></label>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "kind.presentation.outline"}}</legend>
+<p class="ent-hint">{{tr .Lang "kind.presentation.outline_hint"}}</p>
+{{- range $o.Outline}}
+<div class="ent-row r-slide"><input name="outline_n" value="{{if .N}}{{.N}}{{end}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.presentation.slide"}}" placeholder="{{tr $.Lang "kind.presentation.slide"}}"><input name="outline_title" value="{{.Title}}" aria-label="{{tr $.Lang "admin.editor.title"}}" placeholder="{{tr $.Lang "admin.editor.title"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "kind.presentation.related"}}</legend>
+<p class="ent-hint">{{tr .Lang "kind.presentation.related_hint"}}</p>
+{{- range $i, $l := $o.Links}}
+<div class="ent-row r-link"><input name="link_label" value="{{$l.Label}}" aria-label="{{tr $.Lang "admin.editor.title"}}" placeholder="{{tr $.Lang "admin.editor.title"}}"><input name="link_url" value="{{$l.URL}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" aria-label="url" placeholder="https:// · /en/posts/…"><input name="link_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+{{end}}
+
+{{define "entry-after"}}{{$o := .Options}}
+{{- if $o.Saved}}
+<section class="adm-panel ent-panel pr-deck" aria-labelledby="deck-h">
+<h2 id="deck-h">{{tr .Lang "kind.presentation.deck"}}</h2>
+<div class="pr-deck-in">
+{{- if $o.DeckVersion}}
+<p class="mono pr-deck-now">{{tr .Lang "kind.presentation.deck_now"}} · {{.Item.SlideCount}} {{tr .Lang "kind.presentation.slides_n"}} · v{{$o.DeckVersion}}{{with $o.DeckURL}} · <a href="{{.}}" rel="noopener">{{tr $.Lang "kind.presentation.open_deck"}} ↗</a>{{end}}</p>
+{{- else}}
+<p class="ent-hint">{{tr .Lang "kind.presentation.deck_none"}}</p>
+{{- end}}
+</div>
+<form class="adm-form pr-deck-form" method="post" action="{{$o.DeckAction}}" enctype="multipart/form-data">
+<label>{{tr .Lang "kind.presentation.deck_file"}}<input type="file" name="deck" accept=".html,.htm,text/html" required></label>
+<p class="ent-hint">{{printf (tr .Lang "kind.presentation.deck_hint") $o.MaxMB}}</p>
+<div class="ent-actions"><button type="submit" class="adm-btn solid">{{tr .Lang "kind.presentation.deck_upload"}}</button></div>
+</form>
+<details class="pr-bridge pr-deck-in">
+<summary class="mono">{{tr .Lang "kind.presentation.bridge"}}</summary>
+<p class="ent-hint">{{tr .Lang "kind.presentation.bridge_hint"}}</p>
+<pre class="mono pr-bridge-code"><code>{{$o.Bridge}}</code></pre>
+</details>
+</section>
+{{- end}}
+{{end}}

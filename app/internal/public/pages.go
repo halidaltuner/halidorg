@@ -99,9 +99,12 @@ type homePage struct {
 }
 
 // tile is one section tile under the home hero (design/Home.dc.html). Only
-// sections with a page get one: projects and homelab since Phase 4.3.
+// sections with a page get one: projects and homelab since Phase 4.3,
+// presentations since 5.4 (once there is one). About shows the same tiles
+// as link cards, with About's own text when it has one.
 type tile struct {
 	Href, Glyph, Label, Count, Tone string
+	About                           string
 }
 
 // tiles counts the live software projects (active, maintained, running)
@@ -123,10 +126,29 @@ WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`, lang)
 		return nil, err
 	}
 	n := func(key string, v int) string { return fmt.Sprintf(i18n.T(lang, key), v) }
-	return []tile{
+	out := []tile{
 		{Href: "/" + lang + "/projects", Glyph: "◆", Label: i18n.T(lang, "home.tile.projects"), Count: n("home.tile.projects_n", rows[0].Live), Tone: "green"},
 		{Href: "/" + lang + "/homelab", Glyph: "⌁", Label: i18n.T(lang, "home.tile.homelab"), Count: n("home.tile.homelab_n", rows[0].Builds), Tone: "orange"},
-	}, nil
+	}
+	res, err = h.db.Query(r.Context(), `SELECT count(*) AS talks, count(DISTINCT nullif(p.event, '')) AS events
+FROM entries e JOIN presentations p ON p.entry_id = e.id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`, lang)
+	if err != nil {
+		return nil, err
+	}
+	talks, err := store.Scan[struct {
+		Talks  int `json:"talks"`
+		Events int `json:"events"`
+	}](res)
+	if err != nil {
+		return nil, err
+	}
+	if len(talks) == 1 && talks[0].Talks > 0 {
+		out = append(out, tile{Href: "/" + lang + "/presentations", Glyph: "▶", Label: i18n.T(lang, "home.tile.presentations"),
+			Count: n("home.tile.presentations_n", talks[0].Talks), Tone: "rose",
+			About: fmt.Sprintf(i18n.T(lang, "about.talks_card"), talks[0].Talks, max(talks[0].Events, 1))})
+	}
+	return out, nil
 }
 
 func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
@@ -205,10 +227,11 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 }
 
 // sections maps entry kinds to their public URL segment.
-var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets"}
+var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "presentation": "presentations"}
 
 // glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
-var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆", "homelab": "⌁"}
+var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆", "homelab": "⌁",
+	"presentation": "▶"}
 
 // --- Post -------------------------------------------------------------------
 

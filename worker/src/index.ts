@@ -3,6 +3,7 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { handleBridge } from "./bridge";
 import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta, renderedBy } from "./cache";
+import { isDecksHost, serveDeck } from "./decks";
 import { consume, enqueueScheduled, type JobMessage, logNotFound } from "./jobs";
 import { serveR2Public } from "./r2public";
 import { serveSearch } from "./search";
@@ -31,6 +32,7 @@ export class App extends Container<Env> {
 		this.envVars = {
 			APP_ENV: env.APP_ENV,
 			PUBLIC_ORIGIN: env.PUBLIC_ORIGIN,
+			DECKS_ORIGIN: env.DECKS_ORIGIN ?? "",
 			DEPLOY_SHA: env.DEPLOY_SHA ?? "",
 			GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID ?? "",
 			GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET ?? "",
@@ -45,6 +47,9 @@ export class App extends Container<Env> {
 export default {
 	async fetch(req, env, ctx): Promise<Response> {
 		const url = new URL(req.url);
+		// The decks host (ADR-007) serves decks and nothing else: never the
+		// KV pages (their keys ignore the host) or the container.
+		if (isDecksHost(url, env)) return serveDeck(req, url, env);
 		// Container-internal routes (job delivery) never come from the internet.
 		if (url.pathname === "/internal" || url.pathname.startsWith("/internal/")) {
 			return new Response("Not Found", { status: 404 });

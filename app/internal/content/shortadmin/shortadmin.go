@@ -16,6 +16,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -66,6 +67,9 @@ type Kind struct {
 	Nav         string
 	Prefill     func(r *http.Request, d Draft)
 	DeleteStmts func(e content.Entry) []store.Stmt
+	// Deleted runs after a delete, for what lives outside the database (a
+	// presentation's deck in R2). A failure is logged; the entry is gone.
+	Deleted func(ctx context.Context, e content.Entry) error
 	// HasBody decides Body per draft (an About page has a bio, Now has
 	// none). Revised marks kinds whose fields live in the revision too, so
 	// they wait for publish like the body (pages).
@@ -350,6 +354,12 @@ func (h *Admin) editPage(w http.ResponseWriter, r *http.Request) {
 		p.Notice = i18n.T(lang, "entry.published")
 	case q.Get("saved") == "1":
 		p.Notice = i18n.T(lang, "entry.saved")
+	case keyRE.MatchString(q.Get("notice")):
+		// A kind's own route says what it did: admin.{kind}.notice.{key}.
+		p.Notice = i18n.T(lang, "admin."+h.k.Name+".notice."+q.Get("notice"))
+	}
+	if k := q.Get("error"); keyRE.MatchString(k) {
+		p.Errors = append(p.Errors, i18n.T(lang, "admin."+h.k.Name+".error."+k))
 	}
 	h.ui.Render(w, http.StatusOK, h.edit, p)
 }
@@ -546,6 +556,11 @@ ON CONFLICT (from_path) DO UPDATE SET to_path = '', code = 410`, Args: []any{fro
 		h.fail(w, err)
 		return
 	}
+	if h.k.Deleted != nil {
+		if err := h.k.Deleted(r.Context(), e); err != nil {
+			slog.Error(h.k.Name+" admin: after delete", "entry", e.ID, "err", err)
+		}
+	}
 	h.enqueue(r.Context(), e.ID, prev)
 	http.Redirect(w, r, h.base()+"?deleted="+url.QueryEscape(e.Slug), http.StatusSeeOther)
 }
@@ -645,6 +660,9 @@ func contains(xs []string, s string) bool {
 	}
 	return false
 }
+
+// keyRE is a notice or error key a kind's route passes back to the editor.
+var keyRE = regexp.MustCompile(`^[a-z_]{1,32}$`)
 
 // Rows reads repeated form rows: each field name appears once per row, in
 // row order, and order names the field that sorts them (ties keep the form

@@ -19,12 +19,20 @@ const PREFIXES: Record<string, string> = {
 	f: "fav",
 	pr: "project",
 	h: "homelab", // homelab builds: projects indexed under their own kind
+	t: "presentation",
 };
 
 const LANGS = ["tr", "en"];
 
 /** Item pages per kind; links open their URL, favs the favs page. */
-const SECTIONS: Record<string, string> = { post: "posts", note: "notes", snippet: "snippets", project: "projects", homelab: "projects" };
+const SECTIONS: Record<string, string> = {
+	post: "posts",
+	note: "notes",
+	snippet: "snippets",
+	project: "projects",
+	homelab: "projects",
+	presentation: "presentations",
+};
 
 /** search.Fold: ı, İ and I become i, everything else lowercases. */
 export function fold(s: string): string {

@@ -49,6 +49,7 @@ var kindPrefixes = map[string]string{
 	"f":  "fav",
 	"pr": "project",
 	"h":  "homelab", // homelab builds: projects indexed under their own kind
+	"t":  "presentation",
 }
 
 // Query is a parsed user query.
