@@ -249,3 +249,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - `/now/archive` (derive): list header with a back link, versions as dated rows in a card at 860px. A version page is the Now page with "version of {date}" and a "current page →" link.
 - `/admin/pages` (derive): the shared editor; a new page picks About or Now first, then shows that template's sections as rows (dashboard density, note fields on their own line).
 
+## 27. Implementation notes (Phase 5.2)
+- Certificates follow the prototype: the cyan hero with stat tiles (active in `--success`, issuers in the cyan ink, total in text), issuer chips in each issuer's tone (`?issuer=`, filtered in place by `filter.js`, shown with two or more issuers), and cards with the 4px top rule in the issuer ink, the 112px hexagon badge (the issuer tint with a ✓ until a badge image is set), issuer, name, skill pills, then date, status and "verify ↗". Renew soon uses `--warning`; expired cards sit at 55% opacity.
+- About gains the certificates card first: up to five mini hexagons (52px) of active certificates in their issuer tones, and "A, B, C and N more".
+- `/admin/certificates` (derive): the list with issuer, months and status badges (expired muted), the issuers as inline rows below it, and a form per certificate.
+

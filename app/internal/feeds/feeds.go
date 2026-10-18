@@ -14,10 +14,12 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"time"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/certificate"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/store"
@@ -72,7 +74,8 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 
 // kindFeeds are the kinds with their own feeds and the URL segment they sit
 // under. Posts use the language feeds (/{lang}/feed.xml).
-var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs", "project": "projects"}
+var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs", "project": "projects",
+	"certificate": "certificates"}
 
 // item is one feed entry, whatever its kind.
 type item struct {
@@ -113,6 +116,8 @@ func (h *Handlers) load(w http.ResponseWriter, r *http.Request, lang, kind, tag 
 	var err error
 	if kind == "" {
 		items, err = h.postItems(r.Context(), lang, tag)
+	} else if kind == "certificate" {
+		items, err = h.certItems(r.Context(), lang)
 	} else {
 		items, err = h.kindItems(r.Context(), lang, kind)
 	}
@@ -133,6 +138,38 @@ func (h *Handlers) postItems(ctx context.Context, lang, tag string) ([]item, err
 	for i, p := range posts {
 		out[i] = item{URL: h.origin + "/" + p.Lang + "/posts/" + p.Slug, Title: p.Title, Summary: p.Summary, HTML: p.HTML,
 			Published: p.PublishedAt, Updated: p.UpdatedAt, Tags: p.Tags}
+	}
+	return out, nil
+}
+
+// certItems are the published certificates, newest issue first: the same
+// list in both languages, each linking to its verification page when it has
+// one, else to the certificates page.
+func (h *Handlers) certItems(ctx context.Context, lang string) ([]item, error) {
+	repo := certificate.NewRepo(h.db)
+	certs, err := repo.Published(ctx)
+	if err != nil {
+		return nil, err
+	}
+	issuers, err := repo.Issuers(ctx)
+	if err != nil {
+		return nil, err
+	}
+	names := map[string]string{}
+	for _, i := range issuers {
+		names[i.ID] = i.Name
+	}
+	sort.SliceStable(certs, func(i, j int) bool { return certs[i].IssuedAt > certs[j].IssuedAt })
+	out := make([]item, 0, min(len(certs), 20))
+	for _, c := range certs[:min(len(certs), 20)] {
+		it := item{Title: c.Name, Summary: names[c.IssuerID], URL: h.origin + "/" + lang + "/certificates", Updated: c.UpdatedAt, Tags: c.Skills}
+		issued := c.IssuedAt
+		it.Published = &issued
+		if c.CredlyURL != nil {
+			it.URL = *c.CredlyURL
+		}
+		it.HTML = "<p>" + template.HTMLEscapeString(names[c.IssuerID]+" · "+certificate.Month(&c.IssuedAt)) + "</p>"
+		out = append(out, it)
 	}
 	return out, nil
 }
@@ -495,7 +532,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})

@@ -11,8 +11,11 @@ import (
 )
 
 // 4 posts, 3 notes, 2 snippets, 5 links, 4 favs, 2 projects and a build
-// log, an About and a Now page.
-const samplesTotal = 23
+// log, an About and a Now page, 3 certificates.
+const samplesTotal = 26
+
+// Each entry sample queues its own job; the certificates share one.
+const jobsPerSeed = samplesTotal - 3 + 1
 
 func TestSeedIsIdempotent(t *testing.T) {
 	ctx := context.Background()
@@ -22,16 +25,16 @@ func TestSeedIsIdempotent(t *testing.T) {
 	if err != nil || n != samplesTotal {
 		t.Fatalf("first seed: %d %v", n, err)
 	}
-	if got := len(s.Queue.(*storetest.Queue).Sent); got != samplesTotal {
-		t.Errorf("queued %d jobs, want %d", got, samplesTotal)
+	if got := len(s.Queue.(*storetest.Queue).Sent); got != jobsPerSeed {
+		t.Errorf("queued %d jobs, want %d", got, jobsPerSeed)
 	}
 	n, err = Seed(ctx, s.DB, j)
 	if err != nil || n != 0 {
 		t.Fatalf("second seed: %d %v", n, err)
 	}
 	// Existing samples are re-rendered, not created again.
-	if got := len(s.Queue.(*storetest.Queue).Sent); got != 2*samplesTotal {
-		t.Errorf("queued %d jobs after reseed, want %d", got, 2*samplesTotal)
+	if got := len(s.Queue.(*storetest.Queue).Sent); got != 2*jobsPerSeed {
+		t.Errorf("queued %d jobs after reseed, want %d", got, 2*jobsPerSeed)
 	}
 
 	// Categories once, the child under its parent; read status as given.

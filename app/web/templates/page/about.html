@@ -26,7 +26,7 @@
 </div>
 {{- end}}
 {{- with .Cards}}
-<nav class="ab-cards" aria-label="{{tr $.Lang "home.sections"}}">{{range .}}<a class="ab-card tone-{{.Tone}}" href="{{.Href}}"><span><span class="l mono"><span aria-hidden="true">{{.Glyph}}</span> {{.Label}}</span><span class="t">{{.Text}}</span></span><span class="a" aria-hidden="true">→</span></a>{{end}}</nav>
+<nav class="ab-cards" aria-label="{{tr $.Lang "home.sections"}}">{{range .}}<a class="ab-card tone-{{.Tone}}{{if .Badges}} ab-certs{{end}}" href="{{.Href}}"><span><span class="l mono"><span aria-hidden="true">{{.Glyph}}</span> {{.Label}}</span>{{with .Badges}}<span class="ab-hexes" aria-hidden="true">{{range .}}<span class="hex tone-{{.Tone}}">{{with .Image}}<img src="{{.URL}}" alt="" loading="lazy">{{end}}</span>{{end}}</span>{{end}}<span class="t">{{.Text}}</span></span><span class="a" aria-hidden="true">→</span></a>{{end}}</nav>
 {{- end}}
 </section>
 {{- end}}

@@ -1,0 +1,34 @@
+{{define "content"}}<main class="ce tone-cyan" data-filter="issuer"{{with .Issuer}} data-filtered="{{.}}"{{end}}>
+<section class="ce-hero">
+<div class="ce-hero-in">
+<div class="ce-intro">
+<span class="ce-eyebrow mono">✓ {{tr .Lang "cert.eyebrow"}}</span>
+<h1>{{tr .Lang "cert.title"}}</h1>
+<p>{{tr .Lang "cert.sub"}}</p>
+</div>
+{{- if .Cards}}
+<dl class="ce-stats">{{range .Stats}}<div><dd{{with .Tone}} class="tone-{{.}}"{{end}}>{{.Value}}</dd><dt class="mono">{{.Key}}</dt></div>{{end}}</dl>
+{{- end}}
+</div>
+</section>
+<div class="ce-body">
+{{- if .Cards}}
+{{- if gt (len .Chips) 2}}
+<nav class="chips ce-chips" aria-label="{{tr .Lang "cert.filter"}}">{{range .Chips}}<a class="chip tone-{{.Tone}}" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>
+{{- end}}
+<div class="ce-grid">
+{{- range .Cards}}
+<article class="ce-card tone-{{.Tone}}{{if eq .StatusKey "expired"}} is-expired{{end}}" data-filter-value="{{.IssuerKey}}">
+<div class="ce-hex">{{with .Badge}}<img src="{{.URL}}" alt="{{.Alt}}" loading="lazy">{{else}}<span class="mono" aria-hidden="true">✓</span>{{end}}</div>
+<span class="ce-issuer mono">{{.Issuer}}</span>
+<h2>{{.Name}}</h2>
+{{- with .Skills}}<div class="ce-skills">{{range .}}<span class="mono">{{.}}</span>{{end}}</div>{{end}}
+<div class="ce-foot mono"><span>{{.Date}}</span><span class="ce-st st-{{.StatusKey}}">{{.Status}}</span>{{with .Verify}}<a href="{{.}}" rel="noopener">{{tr $.Lang "cert.verify"}} ↗</a>{{else}}<span></span>{{end}}</div>
+</article>
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "cert.empty"}}</p>
+{{- end}}
+</div>
+</main>{{end}}

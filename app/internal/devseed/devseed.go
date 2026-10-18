@@ -139,5 +139,9 @@ func Seed(ctx context.Context, db store.DB, j *jobs.Jobs) (int, error) {
 		return n + short + projects, err
 	}
 	pages, err := seedPages(ctx, db, j)
-	return n + short + projects + pages, err
+	if err != nil {
+		return n + short + projects + pages, err
+	}
+	certs, err := seedCertificates(ctx, db, j)
+	return n + short + projects + pages + certs, err
 }

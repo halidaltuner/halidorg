@@ -17,9 +17,9 @@ func TestNavShowsOnlyEnabledSections(t *testing.T) {
 		c.Nav[1].Slug != "projects" || c.Nav[1].Active || c.Nav[2].Href != "/en/homelab" {
 		t.Fatalf("nav %+v", c.Nav)
 	}
-	// Phase 2.3: notes, snippets, links and favs have pages; certificates
-	// do not yet.
-	if len(c.More) != 4 || c.More[0].Href != "/en/notes" || c.More[3].Href != "/en/favs" {
+	// Phase 2.3: notes, snippets, links and favs have pages; Phase 5.2:
+	// certificates.
+	if len(c.More) != 5 || c.More[0].Href != "/en/notes" || c.More[3].Href != "/en/favs" || c.More[4].Href != "/en/certificates" {
 		t.Fatalf("more %+v", c.More)
 	}
 	if !c.Search {
@@ -79,7 +79,7 @@ func TestHeader(t *testing.T) {
 			t.Errorf("missing %s in\n%s", want, out)
 		}
 	}
-	if !strings.Contains(out, `<details class="nav-more">`) || strings.Contains(out, `href="/en/certificates"`) {
+	if !strings.Contains(out, `<details class="nav-more">`) || strings.Contains(out, `href="/en/presentations"`) {
 		t.Error("more menu must list only the sections that exist")
 	}
 	empty := NewChrome("en", "posts", false, same)
