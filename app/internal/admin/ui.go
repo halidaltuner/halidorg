@@ -95,7 +95,7 @@ var sections = []struct {
 	{"jobs", "", "", false, false},
 	{"redirects", "", "", false, false},
 	{"import", "", "", false, false},
-	{"settings", "", "", false, false},
+	{"settings", "/admin/settings", "", false, true},
 }
 
 // Shell builds the shell for r. active is the sidebar key to mark.

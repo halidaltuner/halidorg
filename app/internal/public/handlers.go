@@ -89,6 +89,7 @@ func New(db store.DB) (*Handlers, error) {
 		"projects":      "templates/project/index.html",
 		"project":       "templates/project/show.html",
 		"buildlog":      "templates/buildlog/show.html",
+		"homelab":       "templates/project/homelab.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
@@ -134,6 +135,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/awesome", func(w http.ResponseWriter, r *http.Request) { h.awesomeIndex(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/awesome/{category}", func(w http.ResponseWriter, r *http.Request) { h.awesome(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/projects", func(w http.ResponseWriter, r *http.Request) { h.projects(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/homelab", func(w http.ResponseWriter, r *http.Request) { h.homelab(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/projects/{slug}", func(w http.ResponseWriter, r *http.Request) { h.project(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/projects/{slug}/log/{log}", func(w http.ResponseWriter, r *http.Request) { h.buildlog(w, r, lang) })
 	}

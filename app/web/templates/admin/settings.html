@@ -1,0 +1,15 @@
+{{define "main"}}
+<div class="adm-head"><h1>{{.Title}}</h1></div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{with .Error}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<section class="adm-panel adm-narrow">
+<h2>{{tr .Lang "settings.homelab"}}</h2>
+<form class="adm-form" method="post" action="/admin/settings/homelab">
+<p class="ent-hint">{{tr .Lang "settings.homelab_hint"}}</p>
+<label>{{tr .Lang "settings.nodes"}}<input name="nodes" value="{{.Homelab.Nodes}}" placeholder="3" maxlength="16"></label>
+<label>{{tr .Lang "settings.idle"}}<input name="idle" value="{{.Homelab.Idle}}" placeholder="38 W" maxlength="16"></label>
+<label>{{tr .Lang "settings.uptime"}}<input name="uptime" value="{{.Homelab.Uptime}}" placeholder="99.9%" maxlength="16"></label>
+<button type="submit" class="adm-btn solid">{{tr .Lang "admin.tax.save"}}</button>
+</form>
+</section>
+{{end}}

@@ -226,3 +226,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Project Detail uses the project tone, else its category's, else green (software) or orange (homelab). The fact strip is the typed rows; a homelab build adds a "cost" cell from cost_total or the sum of its parts. Prices show compact ("₺27.0k"). The aside is "stack" (name and role) or "parts" (a quantity above 1 prefixes the name, "3× mini PC"). Gallery: three or more images follow the 2fr/1fr layout, two sit side by side, one fills the row. Up to 760px the hero and columns stack and the fact strip is two wide (an odd last cell spans both).
 - Build log entry pages (derive) are a 760px article column: back to the project's timeline, a tone dot with the date and hours, the title, the text, and links to the older and newer entries.
 
+## 23. Implementation notes (Phase 4.3)
+- Homelab & DIY follows its prototype in the orange tone. Stat tiles: builds is the count of published homelab builds; nodes, idle W and uptime are typed at `/admin/settings` (free text, at most 16 characters, "–" when empty). The featured plate shows the build marked featured, else the newest. Category chips are `?category=` links in each category's tone, shown when builds sit in two or more categories; `filter.js` filters the cached page in place. Build cards show category (tone ink), status, title, tagline, and cost and time in mono.
+- Home: the tile row under the hero shows only sections with a page (projects: live software projects, homelab: builds), on an `auto-fill` grid so two tiles keep the width they will have with six. The hero gains the outline "projects →" CTA.
+- `/admin/settings` (derive) holds the homelab stats for now; a save queues `pages.changed` for `/{lang}/homelab`.
+

@@ -8,6 +8,7 @@ import (
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/project"
+	"halid.org/engine/internal/settings"
 	"halid.org/engine/internal/store"
 )
 
@@ -125,4 +126,60 @@ func TestProjectsPages(t *testing.T) {
 	must(t, body, `Bu proje henüz Türkçeye çevrilmedi.`, `<meta name="robots" content="noindex">`, `lang="en"`)
 	_, body = get(t, mux, "/tr/projects")
 	must(t, body, `Henüz yayınlanmış proje yok.`)
+}
+
+func TestHomelabPageAndTiles(t *testing.T) {
+	mux, db := newSite(t)
+	seedProjects(t, db)
+	ctx := context.Background()
+	if err := settings.Set(ctx, db, settings.HomelabKey, settings.Homelab{Nodes: "3", Idle: "38 W"}); err != nil {
+		t.Fatal(err)
+	}
+	// A second build in another category, featured.
+	net, cost := "01K0000000000000000000HM05", int64(150000)
+	p, err := project.NewRepo(db).Create(ctx, project.Draft{Project: project.Project{Entry: content.Entry{Slug: "router", Lang: "en", Title: "OpenWrt router"},
+		Type: project.Homelab, CategoryID: &net, Featured: true, CostTotal: &cost, TimeSpent: "2 evenings", ProjectStatus: "done"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := project.NewRepo(db).Publish(ctx, p.ID); err != nil {
+		t.Fatal(err)
+	}
+
+	code, body := get(t, mux, "/en/homelab")
+	if code != 200 {
+		t.Fatalf("homelab %d", code)
+	}
+	must(t, body,
+		`<main class="hl tone-orange" data-filter="category">`,
+		`<div><dd>2</dd><dt class="mono">builds</dt></div><div><dd>3</dd><dt class="mono">nodes</dt></div><div><dd>38 W</dd><dt class="mono">idle W</dt></div><div><dd>–</dd><dt class="mono">uptime</dt></div>`,
+		// featured first
+		`<a class="hl-featured" href="/en/projects/router">`, `<span class="hl-plate"><span>featured: OpenWrt router</span>`,
+		`<a class="chip tone-orange" href="/en/homelab" data-filter-key="" aria-current="true">all</a>`,
+		`<a class="chip tone-orange" href="/en/homelab?category=homelab" data-filter-key="homelab">homelab</a>`,
+		`<a class="chip tone-green" href="/en/homelab?category=network" data-filter-key="network">network</a>`,
+		`<a class="hl-card" href="/en/projects/rack" data-filter-value="homelab">`,
+		`<span class="tone-green">network</span><span>done</span>`,
+		`<div class="hl-card-foot mono"><span>₺1.5k</span><span>2 evenings</span></div>`,
+		`<div class="hl-card-foot mono"><span>₺27.0k</span></div>`,
+		`/static/js/filter.js`,
+	)
+	if strings.Contains(body, "/en/projects/site") {
+		t.Error("software project on the homelab page")
+	}
+	_, body = get(t, mux, "/en/homelab?category=network")
+	must(t, body, `data-filtered="network"`, `href="/en/homelab?category=network" data-filter-key="network" aria-current="true"`)
+	if strings.Contains(body, `href="/en/projects/rack" data-filter-value`) {
+		t.Error("other category in the network filter")
+	}
+	_, body = get(t, mux, "/tr/homelab")
+	must(t, body, `Henüz yayınlanmış kurulum yok.`, `<dd>0</dd>`)
+
+	// Home: the projects and homelab tiles with live counts.
+	_, body = get(t, mux, "/en/")
+	must(t, body,
+		`<a class="home-tile tone-green" href="/en/projects"><span class="g mono" aria-hidden="true">◆</span><span class="l">projects</span><span class="n mono">1 active</span></a>`,
+		`<a class="home-tile tone-orange" href="/en/homelab"><span class="g mono" aria-hidden="true">⌁</span><span class="l">homelab &amp; diy</span><span class="n mono">2 builds</span></a>`,
+		`<a class="cta-outline" href="/en/projects">projects →</a>`,
+	)
 }

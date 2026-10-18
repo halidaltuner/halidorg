@@ -12,9 +12,9 @@ func same(string) string { return "/x" }
 
 func TestNavShowsOnlyEnabledSections(t *testing.T) {
 	c := NewChrome("en", "posts", false, same)
-	// Phase 4.2: projects joins posts; homelab waits for its page (4.3).
-	if len(c.Nav) != 2 || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts" ||
-		c.Nav[1].Slug != "projects" || c.Nav[1].Active {
+	// Phase 4: projects and homelab join posts.
+	if len(c.Nav) != 3 || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts" ||
+		c.Nav[1].Slug != "projects" || c.Nav[1].Active || c.Nav[2].Href != "/en/homelab" {
 		t.Fatalf("nav %+v", c.Nav)
 	}
 	// Phase 2.3: notes, snippets, links and favs have pages; certificates
