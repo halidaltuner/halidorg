@@ -9,7 +9,7 @@ Every prompt assumes `prompts/_constraints.md` (storage via internal/store, sepa
 ```
 Read CLAUDE.md and ARCHITECTURE.md §6 (backups).
 Phase 9, step 1:
-1. Nightly D1 export of the main DB to R2 with 30-day retention (verify it exists from Phase 3; harden it). The SEARCH DB is not exported; document that it is rebuilt with the rebuild-index job.
+1. Nightly D1 export of the main DB to R2 with 30-day retention (Phase 3 now runs after this phase, so create it here; Phase 3 only verifies it before cutover). The SEARCH DB is not exported; document that it is rebuilt with the rebuild-index job.
 2. Weekly full export: every entry as Markdown with front matter, gallery data as JSON, media manifest, zipped in R2.
 3. Restore runbook in docs/runbook-restore.md: restore main DB, then rebuild the SEARCH DB. Script that restores into a fresh staging database; test it once on staging.
 Propose a plan first, then wait for my approval.
