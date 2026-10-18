@@ -40,3 +40,18 @@ func TestSnippetRawPathsAndPeers(t *testing.T) {
 		t.Error("notes have no peer list")
 	}
 }
+
+func TestLinkAwesomePaths(t *testing.T) {
+	prev := &Ref{Kind: "link", Lang: "en", Slug: "grug", Listed: true, Categories: []string{"go", "programming"}}
+	now := *prev
+	now.Categories = []string{"design"}
+	got := Paths(Change{Now: &now, Prev: prev})
+	for _, want := range []string{"/en/links", "/en/awesome/go", "/en/awesome/programming", "/en/awesome/design", "/en/links/feed.xml"} {
+		if !slices.Contains(got, want) {
+			t.Errorf("missing %s in %v", want, got)
+		}
+	}
+	if slices.Contains(got, "/en/links/grug") {
+		t.Error("links have no item pages")
+	}
+}

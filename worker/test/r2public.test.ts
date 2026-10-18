@@ -57,6 +57,18 @@ describe("serveR2Public", () => {
 		}
 	});
 
+	it("serves favicons for a day, ico included", async () => {
+		const f = env({ "favicons/grugbrain.dev.ico": "ico", "favicons/a.example.com.png": "png" });
+		const res = (await serve(req("/favicons/grugbrain.dev.ico"), f))!;
+		expect(res.status).toBe(200);
+		expect(res.headers.get("Content-Type")).toBe("image/x-icon");
+		expect(res.headers.get("Cache-Control")).toBe("public, max-age=86400");
+		expect((await serve(req("/favicons/a.example.com.png"), f))!.status).toBe(200);
+		for (const p of ["/favicons/localhost.png", "/favicons/x.dev.svg", "/favicons/../og/x.png", "/favicons/A.dev.png"]) {
+			expect((await serve(req(p), f))!.status, p).toBe(404);
+		}
+	});
+
 	it("rejects writes", async () => {
 		expect((await serve(req("/og/en/posts/htmx.png", { method: "POST" }), e))!.status).toBe(405);
 	});

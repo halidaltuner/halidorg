@@ -18,6 +18,9 @@ type Ref struct {
 	Title  string   `json:"title,omitempty"`
 	// Files are a snippet's file names, in tab order: each has a raw URL.
 	Files []string `json:"files,omitempty"`
+	// Categories are a link's category and its parent, by slug: each has
+	// an awesome list page.
+	Categories []string `json:"categories,omitempty"`
 }
 
 // Change is one entry change: its state now (nil when deleted), its state
@@ -117,7 +120,8 @@ func ItemPath(r Ref) string {
 // page and K's feeds, home (the stream), each tag page and tag feed (old and
 // new tags), the language feeds (posts), the sitemap, and the pages of its
 // translations. A slug change also covers the old URL. Snippets add their
-// raw files and, when the list changes, the pages of the other snippets.
+// raw files and, when the list changes, the pages of the other snippets;
+// links the awesome pages of their category and its parent.
 func Paths(c Change) []string {
 	set := map[string]bool{}
 	add := func(p string) {
@@ -162,6 +166,13 @@ func Paths(c Change) []string {
 				}
 			}
 			add("/sitemap.xml")
+			if r.Kind == "link" {
+				for _, c := range r.Categories {
+					if content.ValidSlug(c) {
+						add(l + "/awesome/" + c)
+					}
+				}
+			}
 		}
 	}
 	for _, s := range c.Siblings {
