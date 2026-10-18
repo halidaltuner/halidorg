@@ -1,0 +1,5 @@
+{{/* tone-picker: radio swatches of the DESIGN.md tones, plus none. Args: form (form id or ""), tones, on (*string), lang. */}}
+{{define "tone-picker"}}{{$on := ""}}{{with .on}}{{$on = deref .}}{{end}}{{$form := .form}}<span class="tx-tones" role="radiogroup">
+<label class="tx-tone none" title="{{tr .lang "admin.tax.no_tone"}}"><input type="radio" name="tone" value=""{{with $form}} form="{{.}}"{{end}}{{if eq $on ""}} checked{{end}}><span class="sr-only">{{tr .lang "admin.tax.no_tone"}}</span></label>
+{{- range .tones}}<label class="tx-tone tone-{{.}}" title="{{.}}"><input type="radio" name="tone" value="{{.}}"{{with $form}} form="{{.}}"{{end}}{{if eq $on .}} checked{{end}}><span class="sr-only">{{.}}</span></label>{{end}}
+</span>{{end}}

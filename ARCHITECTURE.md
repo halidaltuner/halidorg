@@ -38,7 +38,7 @@ flowchart LR
 2. Hit: return HTML with `Cache-Control` + ETag. No container involved.
 3. Miss: forward to Go app, which renders, writes to KV, returns.
 
-**Interactive fragments** (search, filters, radar, stream pagination): htmx requests to `/x/*`, served by the Go app, short edge cache where safe.
+**Interactive fragments** (filters, radar, stream pagination): htmx requests to `/x/*`, served by the Go app, short edge cache where safe. The palette search (`/x/search`) is answered by the Worker itself from the `SEARCH` and main databases (`worker/src/search.ts`, ADR-010), as JSON; it mirrors the Go query parsing and folding in `internal/search`, which writes the index.
 
 **Admin write** (implemented in Phase 1.3)
 1. Save in admin → Go app writes D1 (revision; publish moves `published_revision_id`).

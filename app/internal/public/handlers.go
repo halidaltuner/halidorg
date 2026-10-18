@@ -56,7 +56,6 @@ type page struct {
 // Handlers holds parsed templates and the post repository.
 type Handlers struct {
 	db          store.DB
-	searchDB    store.DB
 	posts       *post.Repo
 	snippetRepo *snippet.Repo
 	noteRepo    *note.Repo
@@ -67,8 +66,8 @@ type Handlers struct {
 }
 
 // New parses the public templates. It fails at startup rather than per request.
-func New(db, searchDB store.DB) (*Handlers, error) {
-	h := &Handlers{db: db, searchDB: searchDB, posts: post.NewRepo(db), snippetRepo: snippet.NewRepo(db), noteRepo: note.NewRepo(db),
+func New(db store.DB) (*Handlers, error) {
+	h := &Handlers{db: db, posts: post.NewRepo(db), snippetRepo: snippet.NewRepo(db), noteRepo: note.NewRepo(db),
 		linkRepo: link.NewRepo(db), favRepo: fav.NewRepo(db),
 		origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
@@ -105,7 +104,6 @@ func origin() string {
 func (h *Handlers) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", h.root)
 	mux.HandleFunc("GET /lang/{lang}", setLang)
-	mux.HandleFunc("GET /x/search", h.search)
 	for _, l := range i18n.Supported {
 		lang := l
 		mux.HandleFunc("GET /"+lang+"/{$}", func(w http.ResponseWriter, r *http.Request) { h.home(w, r, lang) })

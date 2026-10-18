@@ -1,0 +1,35 @@
+{{define "main"}}
+<div class="adm-head"><h1>{{tr .Lang "admin.tag.title"}}</h1></div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{with .Error}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<section class="adm-panel">
+<table class="adm-table tx-table">
+<thead><tr><th>slug</th><th>TR</th><th>EN</th><th>{{tr .Lang "admin.tax.tone"}}</th><th>{{tr .Lang "admin.tax.entries"}}</th><th></th></tr></thead>
+<tbody>
+{{- range .Rows}}
+<tr>
+<td class="mono">#{{.Slug}}</td>
+<td><input form="t-{{.ID}}" name="name_tr" value="{{.NameTR}}" aria-label="TR"></td>
+<td><input form="t-{{.ID}}" name="name_en" value="{{.NameEN}}" aria-label="EN"></td>
+<td>{{template "tone-picker" dict "form" (print "t-" .ID) "tones" $.Tones "on" .Tone "lang" $.Lang}}</td>
+<td class="mono muted">{{.Entries}}</td>
+<td><form id="t-{{.ID}}" method="post" action="/admin/tags/{{.ID}}"><button type="submit" class="adm-btn">{{tr $.Lang "admin.tax.save"}}</button></form></td>
+</tr>
+{{- else}}
+<tr><td colspan="6" class="adm-empty">{{tr $.Lang "admin.tag.empty"}}</td></tr>
+{{- end}}
+</tbody>
+</table>
+</section>
+{{- if gt (len .Rows) 1}}
+<section class="adm-panel adm-narrow">
+<h2>{{tr .Lang "admin.tag.merge"}}</h2>
+<form class="adm-form" method="post" action="/admin/tags/merge">
+<label>{{tr .Lang "admin.tag.from"}}<select name="from" required><option value=""></option>{{range .Rows}}<option value="{{.ID}}">#{{.Slug}} · {{.Entries}}</option>{{end}}</select></label>
+<label>{{tr .Lang "admin.tag.into"}}<select name="into" required><option value=""></option>{{range .Rows}}<option value="{{.ID}}">#{{.Slug}} · {{.Entries}}</option>{{end}}</select></label>
+<p class="adm-note mono">{{tr .Lang "admin.tag.merge_note"}}</p>
+<button type="submit" class="adm-btn solid">{{tr .Lang "admin.tag.merge_go"}}</button>
+</form>
+</section>
+{{- end}}
+{{end}}

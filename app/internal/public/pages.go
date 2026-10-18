@@ -88,9 +88,12 @@ type streamItem struct {
 
 type homePage struct {
 	page
-	Featured *card
-	Latest   []card
-	Stream   []streamDay
+	Featured   *card
+	Latest     []card
+	Stream     []streamDay
+	Chips      []filterChip
+	StreamKind string // server-side filter (no-JS path)
+	HasStream  bool   // anything published in the stream kinds
 }
 
 func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
@@ -110,15 +113,17 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
 		p.Featured = &cs[0]
 		p.Latest = cs[:min(3, len(cs))]
 	}
-	// Stream: posts only until Phase 2 adds the other kinds, grouped by day.
-	for _, c := range cs {
-		it := streamItem{Kind: "post", Glyph: "¶", Title: c.Title, Href: c.Href, Meta: c.Minutes}
-		if n := len(p.Stream); n > 0 && p.Stream[n-1].Day == c.Date {
-			p.Stream[n-1].Items = append(p.Stream[n-1].Items, it)
-			continue
-		}
-		p.Stream = append(p.Stream, streamDay{Day: c.Date, Items: []streamItem{it}})
+	// Stream: every short-form kind too, grouped by day (design/Home.dc.html).
+	rows, err := streamRows(r.Context(), h.db, lang)
+	if err != nil {
+		h.fail(w, r, err)
+		return
 	}
+	p.StreamKind = streamKind(r)
+	p.Stream = stream(lang, p.StreamKind, rows)
+	p.Chips = streamChips(lang, p.StreamKind, rows)
+	p.HasStream = len(rows) > 0
+	p.Head.Scripts = []string{"/static/js/filter.js"}
 	h.render(w, r, "home", p)
 }
 
@@ -166,7 +171,7 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets"}
 
 // glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
-var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "★", "project": "◆"}
+var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆"}
 
 // --- Post -------------------------------------------------------------------
 

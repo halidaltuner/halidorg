@@ -1,6 +1,7 @@
 // Command palette (design/Header.dc.html): ⌘K / Ctrl+K or the header button
 // opens it, Esc closes it, ↑↓ moves, ↵ opens. Results come from
-// GET /x/search (FTS5 with prefixes, ADR-010) as HTML rows.
+// GET /x/search (FTS5 with prefixes, answered by the Worker, ADR-010) as
+// JSON; kind labels and prefix hints come from the button's data-* (i18n).
 (() => {
 	const btn = document.querySelector("[data-palette]");
 	if (!btn) return;
@@ -19,7 +20,7 @@
 			'<kbd>esc</kbd></div>' +
 			'<div class="pal-list" id="pal-list" role="listbox"></div>' +
 			'<p class="pal-empty" hidden></p>' +
-			'<div class="pal-hints"><span>p: posts</span><span>n: notes</span><span>s: snippets</span><span>l: links</span><span>pr: projects</span><span>h: homelab</span><span>↑↓ ↵</span></div>' +
+			'<div class="pal-hints"></div>' +
 			"</div>";
 		root.querySelector(".pal-panel").setAttribute("aria-label", btn.dataset.label || "command palette");
 		input = root.querySelector("input");
@@ -28,6 +29,12 @@
 		list = root.querySelector(".pal-list");
 		empty = root.querySelector(".pal-empty");
 		empty.textContent = btn.dataset.empty || "";
+		const hints = root.querySelector(".pal-hints");
+		for (const h of [...(btn.dataset.hints || "").split("|").filter(Boolean), "↑↓ ↵"]) {
+			const span = document.createElement("span");
+			span.textContent = h;
+			hints.append(span);
+		}
 		document.body.append(root);
 		root.addEventListener("mousedown", (e) => { if (e.target === root) close(); });
 		input.addEventListener("input", () => { clearTimeout(timer); timer = setTimeout(query, 120); });
@@ -58,18 +65,40 @@
 		if (q === last) return;
 		last = q;
 		ctrl?.abort();
-		if (!q) { list.innerHTML = ""; empty.hidden = true; sel = -1; return; }
+		if (!q) { list.replaceChildren(); empty.hidden = true; sel = -1; return; }
 		ctrl = new AbortController();
+		let rows = [];
 		try {
 			const res = await fetch("/x/search?lang=" + encodeURIComponent(lang) + "&q=" + encodeURIComponent(q), { signal: ctrl.signal });
-			list.innerHTML = res.ok ? await res.text() : "";
+			if (res.ok) rows = await res.json();
 		} catch (e) {
 			if (e.name === "AbortError") return;
-			list.innerHTML = "";
 		}
+		list.replaceChildren(...rows.map(row));
 		[...list.children].forEach((row, i) => { row.id = "pal-opt-" + i; row.setAttribute("aria-selected", "false"); });
 		empty.hidden = list.children.length > 0;
 		select(list.children.length ? 0 : -1);
+	}
+
+	// One result: kind dot, title, kind label (with the language when it is
+	// not the page's). Text only, never HTML from the response.
+	function row(r) {
+		const a = document.createElement("a");
+		a.className = "pal-row";
+		a.href = r.href;
+		a.setAttribute("role", "option");
+		const dot = document.createElement("span");
+		dot.className = "kdot";
+		dot.style.setProperty("--k", "var(--kind-" + r.kind + ")");
+		const t = document.createElement("span");
+		t.className = "t";
+		t.textContent = r.title;
+		const k = document.createElement("span");
+		k.className = "k";
+		k.textContent = (btn.dataset["k" + r.kind[0].toUpperCase() + r.kind.slice(1)] || r.kind) + (r.lang !== lang ? " · " + r.lang : "");
+		if (r.lang !== lang) a.lang = r.lang;
+		a.append(dot, t, k);
+		return a;
 	}
 
 	function select(i) {

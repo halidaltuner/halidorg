@@ -173,6 +173,13 @@ func Funcs() template.FuncMap {
 		"langs": func() []string { return i18n.Supported },
 		"add":   func(a, b int) int { return a + b },
 		"sub":   func(a, b int) int { return a - b },
+		// deref reads an optional string field (a nullable column) in templates.
+		"deref": func(p *string) string {
+			if p == nil {
+				return ""
+			}
+			return *p
+		},
 	}
 }
 
