@@ -1,0 +1,9 @@
+{{define "entry-fields"}}
+<label>url<input name="url" value="{{.Item.URL}}" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" required></label>
+<label>{{tr .Lang "entry.category"}}<select name="category">{{range .Options.Categories}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<fieldset class="ent-langs"><legend>{{tr .Lang "kind.link.read"}}</legend>
+{{- range .Options.Read}}<label class="check"><input type="radio" name="read_status" value="{{.Value}}"{{if .On}} checked{{end}}>{{tr $.Lang (print "links." .Value)}}</label>{{end}}
+</fieldset>
+<label>{{tr .Lang "kind.link.via"}}<input name="via" value="{{.Item.Via}}" autocapitalize="off"></label>
+<label>{{tr .Lang "kind.link.archived"}}<input name="archived_url" value="{{.Item.ArchivedURL}}" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://web.archive.org/…"></label>
+{{end}}

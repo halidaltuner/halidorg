@@ -54,6 +54,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] Notes list and permalink **(derive)**
 - [ ] Quick Capture **(designed)**: URL fetch, link/fav/note, tr/en, draft or publish, success screen; plus bookmarklet
 - [ ] Categories and tags admin **(derive)**
+- [ ] Admin list and editor for notes, snippets (files), links, favs **(derive)**, added after the exit check (2.6)
 - [ ] Home stream: add note, snippet, link, fav rows and kind chips (`?kind=`)
 - [ ] Palette prefixes `n: s: l: f:`
 - [ ] Awesome list pages, per-kind feeds

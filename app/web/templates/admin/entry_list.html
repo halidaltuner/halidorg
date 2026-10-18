@@ -1,0 +1,22 @@
+{{define "main"}}
+<div class="adm-head">
+<h1>{{.Title}}</h1>
+<a class="adm-btn solid ent-head-new" href="/admin/{{.Section}}/new">{{tr .Lang (print "kind." .Kind ".new")}}</a>
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+<form class="adm-filters" method="get" action="/admin/{{.Section}}" role="search">
+<label>{{tr .Lang "admin.posts.col_status"}}<select name="status"><option value="">{{tr .Lang "admin.filter.all"}}</option>{{range .Statuses}}<option value="{{.}}"{{if eq . $.Status}} selected{{end}}>{{tr $.Lang (print "admin.status." .)}}</option>{{end}}</select></label>
+<label>{{tr .Lang "admin.posts.col_lang"}}<select name="lang"><option value="">{{tr .Lang "admin.filter.all"}}</option>{{range $l := langs}}<option value="{{$l}}"{{if eq $l $.Filter}} selected{{end}}>{{$l}}</option>{{end}}</select></label>
+<button type="submit" class="adm-btn">{{tr .Lang "admin.filter.apply"}}</button>
+{{if or .Status .Filter}}<a class="adm-clear" href="/admin/{{.Section}}">{{tr .Lang "admin.filter.clear"}}</a>{{end}}
+</form>
+<section class="adm-panel">
+<ul class="ent-list">
+{{- range .Rows}}
+<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono"><span>{{.Lang}}</span><span class="adm-st s-{{.StatusKey}}">{{.Status}}</span><span>{{.Updated}}</span></span></a></li>
+{{- else}}
+<li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>
+{{- end}}
+</ul>
+</section>
+{{end}}

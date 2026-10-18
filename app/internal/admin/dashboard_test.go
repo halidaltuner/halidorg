@@ -93,7 +93,7 @@ func TestDashboard(t *testing.T) {
 	for _, want := range []string{
 		`<a class="adm-nav-i" href="/admin" aria-current="page"><span>Dashboard</span>`,
 		`href="/admin/posts"><span>posts</span><span class="n">3</span>`,
-		`<span class="adm-nav-i is-off sub" aria-disabled="true"><span>notes</span>`,
+		`<a class="adm-nav-i sub" href="/admin/notes"><span>notes</span>`, `<span class="adm-nav-i is-off sub" aria-disabled="true"><span>projects</span>`,
 		`<span class="adm-env">staging</span>`,
 		`last deploy a3f91c2`,
 		`href="/admin/posts/` + draft + `"`, "Bilingual FTS, part 3",

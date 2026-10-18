@@ -14,6 +14,7 @@
 <form method="post" action="/admin/quick/{{.ID}}/publish"><button type="submit" class="qc-publish">{{tr .Lang "qc.publish_now"}}</button></form>
 {{- end}}
 {{- with .Public}}<a class="qc-view mono" href="{{.}}">{{tr $.Lang "qc.view"}} →</a>{{end}}
+{{- with .Edit}}<a class="qc-view mono" href="{{.}}">{{tr $.Lang "qc.edit"}} →</a>{{end}}
 <a class="qc-again" href="/admin/quick">{{tr .Lang "qc.again"}}</a>
 </div>
 </div>
