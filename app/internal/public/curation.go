@@ -260,7 +260,7 @@ func (h *Handlers) awesome(w http.ResponseWriter, r *http.Request, lang string) 
 type awesomeEntry struct {
 	Name, Href, CountLabel string
 	Count                  int
-	Children               []awesomeEntry
+	Parent                 *awesomeEntry // set for child categories
 }
 
 type awesomeIndexPage struct {
@@ -268,9 +268,9 @@ type awesomeIndexPage struct {
 	Lists []awesomeEntry
 }
 
-// awesomeIndex serves /{lang}/awesome: every awesome list with links in
-// lang, top-level categories in category order with their children. A
-// parent counts its children's links too, as its page lists them.
+// awesomeIndex serves /{lang}/awesome: every link category with links in
+// lang is a list, in category order, children too. A parent counts its
+// children's links, as its page lists them; a child names its parent.
 func (h *Handlers) awesomeIndex(w http.ResponseWriter, r *http.Request, lang string) {
 	ctx := r.Context()
 	cats, err := content.Categories(ctx, h.db, link.Kind)
@@ -283,41 +283,48 @@ func (h *Handlers) awesomeIndex(w http.ResponseWriter, r *http.Request, lang str
 		h.fail(w, r, err)
 		return
 	}
-	own := map[string]int{}
+	count := map[string]int{}
+	byID := map[string]content.Category{}
+	for _, c := range cats {
+		byID[c.ID] = c
+	}
 	for _, l := range list {
-		if l.CategoryID != nil {
-			own[*l.CategoryID]++
+		if l.CategoryID == nil {
+			continue
+		}
+		c, ok := byID[*l.CategoryID]
+		if !ok {
+			continue
+		}
+		count[c.ID]++
+		if c.ParentID != nil {
+			count[*c.ParentID]++
 		}
 	}
 	entry := func(c content.Category) awesomeEntry {
-		return awesomeEntry{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Count: own[c.ID]}
-	}
-	known := map[string]bool{}
-	for _, c := range cats {
-		known[c.ID] = true
+		e := awesomeEntry{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Count: count[c.ID]}
+		key := "awesome.count"
+		if e.Count == 1 {
+			key = "awesome.count_one"
+		}
+		e.CountLabel = strings.Replace(i18n.T(lang, key), "%d", strconv.Itoa(e.Count), 1)
+		return e
 	}
 	p := awesomeIndexPage{page: h.newPage(lang, "links", "awesome · halid.org", "/awesome", nil)}
 	p.Head.Description = i18n.T(lang, "awesome.index_intro")
 	p.Head.Feeds = []feedLink{{Title: i18n.T(lang, "feed.links"), Href: "/" + lang + "/links/feed.xml"}}
-	for _, top := range cats {
-		if top.ParentID != nil && known[*top.ParentID] {
+	for _, c := range cats {
+		if count[c.ID] == 0 {
 			continue
 		}
-		e := entry(top)
-		for _, c := range cats {
-			if c.ParentID != nil && *c.ParentID == top.ID && own[c.ID] > 0 {
-				e.Children = append(e.Children, entry(c))
-				e.Count += own[c.ID]
+		e := entry(c)
+		if c.ParentID != nil {
+			if parent, ok := byID[*c.ParentID]; ok {
+				pe := entry(parent)
+				e.Parent = &pe
 			}
 		}
-		if e.Count > 0 {
-			key := "awesome.count"
-			if e.Count == 1 {
-				key = "awesome.count_one"
-			}
-			e.CountLabel = strings.Replace(i18n.T(lang, key), "%d", strconv.Itoa(e.Count), 1)
-			p.Lists = append(p.Lists, e)
-		}
+		p.Lists = append(p.Lists, e)
 	}
 	h.render(w, r, "awesome-index", p)
 }
