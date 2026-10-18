@@ -40,6 +40,20 @@
       "migrations_dir": "migrations-search"
     }
   ],
+  // Jobs (Phase 1.3): the container produces through the bridge, this Worker
+  // consumes and delivers to the container. 3 retries, then the DLQ.
+  "queues": {
+    "producers": [{ "binding": "JOBS", "queue": "halidorg-jobs-local" }],
+    "consumers": [
+      {
+        "queue": "halidorg-jobs-local",
+        "max_batch_size": 5,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "halidorg-jobs-dlq-local"
+      }
+    ]
+  },
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-local" }],
 
   "vars": {
@@ -78,6 +92,20 @@
           "migrations_dir": "migrations-search"
         }
       ],
+      // Jobs (Phase 1.3): the container produces through the bridge, this Worker
+      // consumes and delivers to the container. 3 retries, then the DLQ.
+      "queues": {
+        "producers": [{ "binding": "JOBS", "queue": "halidorg-jobs-staging" }],
+        "consumers": [
+          {
+            "queue": "halidorg-jobs-staging",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "halidorg-jobs-dlq-staging"
+          }
+        ]
+      },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
       "vars": {
         "APP_ENV": "staging",
@@ -117,6 +145,20 @@
           "migrations_dir": "migrations-search"
         }
       ],
+      // Jobs (Phase 1.3): the container produces through the bridge, this Worker
+      // consumes and delivers to the container. 3 retries, then the DLQ.
+      "queues": {
+        "producers": [{ "binding": "JOBS", "queue": "halidorg-jobs-prod" }],
+        "consumers": [
+          {
+            "queue": "halidorg-jobs-prod",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "halidorg-jobs-dlq-prod"
+          }
+        ]
+      },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-prod" }],
       "vars": {
         "APP_ENV": "prod",

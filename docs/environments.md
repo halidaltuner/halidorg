@@ -58,6 +58,20 @@ npx wrangler d1 migrations apply SEARCH --remote --env prod -c ../wrangler.jsonc
 
 It is never exported or backed up: a rebuild job recreates it from `DB`.
 
+### Job queues (Phase 1.3)
+
+Each env has a jobs queue and a dead-letter queue (`wrangler.jsonc`, `queues`).
+Create them once before the first deploy that carries the `queues` block:
+
+```bash
+npx wrangler queues create halidorg-jobs-staging
+npx wrangler queues create halidorg-jobs-dlq-staging
+npx wrangler queues create halidorg-jobs-prod
+npx wrangler queues create halidorg-jobs-dlq-prod
+```
+
+The API token used by CI needs **Account: Queues: Edit** to deploy a consumer.
+
 ## 2. Secrets
 
 | Secret | Value |

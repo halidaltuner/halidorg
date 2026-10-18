@@ -62,11 +62,21 @@ type Blob interface {
 	Delete(ctx context.Context, key string) error
 }
 
-// Stores bundles the three stores the app uses.
+// Queue is the jobs queue (Cloudflare Queues). The container cannot consume
+// it; the Worker's queue handler delivers each message back to the container
+// at POST /internal/jobs (prompts/_constraints.md).
+type Queue interface {
+	Send(ctx context.Context, msg any) error
+}
+
+// Stores bundles the stores the app uses. Search is the separate FTS5
+// database (ADR-010).
 type Stores struct {
-	DB   DB
-	KV   KV
-	Blob Blob
+	DB     DB
+	Search DB
+	KV     KV
+	Blob   Blob
+	Queue  Queue
 }
 
 // FromEnv returns the bridge-backed stores. BRIDGE_INTERNAL_URL overrides the

@@ -3,6 +3,7 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { handleBridge } from "./bridge";
 import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, type PageMeta } from "./cache";
+import { consume, type JobMessage, logNotFound } from "./jobs";
 
 // Required by outboundByHost: without it the container fails to start.
 export { ContainerProxy } from "@cloudflare/containers";
@@ -39,6 +40,10 @@ export class App extends Container<Env> {
 export default {
 	async fetch(req, env, ctx): Promise<Response> {
 		const url = new URL(req.url);
+		// Container-internal routes (job delivery) never come from the internet.
+		if (url.pathname === "/internal" || url.pathname.startsWith("/internal/")) {
+			return new Response("Not Found", { status: 404 });
+		}
 		if (!isCacheableRequest(req)) return origin(req, env);
 
 		const key = cacheKey(url);
@@ -58,6 +63,10 @@ export default {
 		const res = await origin(fwd, env);
 		const timing = `kv;dur=${kvMs}, origin;dur=${Date.now() - t1}`;
 
+		if (res.status === 404) {
+			ctx.waitUntil(logNotFound(env.DB, url.pathname, Math.floor(Date.now() / 1000)).catch(() => {}));
+		}
+
 		if (!isCacheableResponse(res)) {
 			const out = new Response(res.body, res);
 			out.headers.set("X-Cache", "BYPASS");
@@ -74,7 +83,11 @@ export default {
 		ctx.waitUntil(env.PAGES.put(key, body, { metadata: meta }));
 		return page(req, body, meta, "MISS", timing);
 	},
-} satisfies ExportedHandler<Env>;
+
+	async queue(batch, env): Promise<void> {
+		await consume(batch, (req) => origin(req, env));
+	},
+} satisfies ExportedHandler<Env, JobMessage>;
 
 function origin(req: Request, env: Env): Promise<Response> {
 	return getContainer(env.APP).fetch(req);

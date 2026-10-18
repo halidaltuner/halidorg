@@ -22,7 +22,13 @@ func NewBridge(base string, client *http.Client) Stores {
 		client = &http.Client{Timeout: 15 * time.Second}
 	}
 	b := &bridge{base: base, client: client}
-	return Stores{DB: bridgeDB{b}, KV: bridgeKV{b}, Blob: bridgeBlob{b}}
+	return Stores{
+		DB:     bridgeDB{b, "/d1"},
+		Search: bridgeDB{b, "/search"},
+		KV:     bridgeKV{b},
+		Blob:   bridgeBlob{b},
+		Queue:  bridgeQueue{b},
+	}
 }
 
 type bridge struct {
@@ -72,14 +78,18 @@ func (b *bridge) do(ctx context.Context, method, path string, body []byte, heade
 
 func keyPath(store, key string) string { return "/" + store + "/" + url.PathEscape(key) }
 
-type bridgeDB struct{ b *bridge }
+// bridgeDB is a D1 database on the bridge: /d1 is DB, /search is SEARCH.
+type bridgeDB struct {
+	b      *bridge
+	prefix string
+}
 
 func (d bridgeDB) Query(ctx context.Context, sql string, args ...any) (Result, error) {
 	body, err := json.Marshal(Stmt{SQL: sql, Args: args})
 	if err != nil {
 		return Result{}, err
 	}
-	_, data, err := d.b.do(ctx, http.MethodPost, "/d1/query", body, jsonHeader())
+	_, data, err := d.b.do(ctx, http.MethodPost, d.prefix+"/query", body, jsonHeader())
 	if err != nil {
 		return Result{}, err
 	}
@@ -94,7 +104,7 @@ func (d bridgeDB) Batch(ctx context.Context, stmts ...Stmt) ([]Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, data, err := d.b.do(ctx, http.MethodPost, "/d1/batch", body, jsonHeader())
+	_, data, err := d.b.do(ctx, http.MethodPost, d.prefix+"/batch", body, jsonHeader())
 	if err != nil {
 		return nil, err
 	}
@@ -153,5 +163,17 @@ func (o bridgeBlob) Put(ctx context.Context, key string, body []byte, contentTyp
 
 func (o bridgeBlob) Delete(ctx context.Context, key string) error {
 	_, _, err := o.b.do(ctx, http.MethodDelete, keyPath("r2", key), nil, nil)
+	return err
+}
+
+type bridgeQueue struct{ b *bridge }
+
+// Send enqueues one JSON message on the Worker's JOBS queue.
+func (q bridgeQueue) Send(ctx context.Context, msg any) error {
+	body, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	_, _, err = q.b.do(ctx, http.MethodPost, "/queue/send", body, jsonHeader())
 	return err
 }

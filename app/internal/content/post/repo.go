@@ -246,8 +246,62 @@ func scan(res store.Result) ([]Post, error) {
 	}
 	out := make([]Post, len(rows))
 	for i, r := range rows {
-		out[i] = Post{Entry: r.Entry, ReadingMinutes: r.ReadingMinutes, CanonicalURL: r.CanonicalURL,
-			Mermaid: r.Mermaid == 1, CommentsEnabled: r.CommentsEnabled == 1}
+		out[i], _ = scanOne(r)
+	}
+	return out, nil
+}
+
+func scanOne(r row) (Post, error) {
+	return Post{Entry: r.Entry, ReadingMinutes: r.ReadingMinutes, CanonicalURL: r.CanonicalURL,
+		Mermaid: r.Mermaid == 1, CommentsEnabled: r.CommentsEnabled == 1}, nil
+}
+
+// Published is a public post with its published body, for feeds.
+type Published struct {
+	Post
+	HTML string
+	Tags []string
+}
+
+type publishedRow struct {
+	row
+	BodyHTML string  `json:"body_html"`
+	TagList  *string `json:"tag_list"`
+}
+
+// Feed returns the newest public posts in lang with the published body,
+// optionally only those tagged tag.
+func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int) ([]Published, error) {
+	if limit <= 0 || limit > 50 {
+		limit = 20
+	}
+	q := `SELECT ` + content.EntryColumns + `,
+  p.reading_minutes, p.canonical_url, p.mermaid, p.comments_enabled, rv.body_html,
+  (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tag_list
+FROM entries e JOIN posts p ON p.entry_id = e.id JOIN revisions rv ON rv.id = e.published_revision_id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
+	args := []any{lang}
+	if tag != "" {
+		q += ` AND EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.slug = ?)`
+		args = append(args, tag)
+	}
+	q += ` ORDER BY e.published_at DESC, e.id DESC LIMIT ?`
+	args = append(args, limit)
+	res, err := r.db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := store.Scan[publishedRow](res)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Published, len(rows))
+	for i, x := range rows {
+		ps, _ := scanOne(x.row)
+		out[i] = Published{Post: ps, HTML: x.BodyHTML}
+		if x.TagList != nil && *x.TagList != "" {
+			out[i].Tags = strings.Fields(*x.TagList)
+		}
 	}
 	return out, nil
 }

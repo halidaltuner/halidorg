@@ -16,6 +16,7 @@ Every prompt that touches Worker, container, storage or routes should be read to
 1. Assign `outboundByHost` handlers inside a `static {}` block, not as `static outboundByHost = {...}` (ES2022 class fields skip the setter). `export { ContainerProxy }` is required.
 2. Container env vars are set in the Durable Object constructor. A new image does not restart the DO, so new secrets or `DEPLOY_SHA` may not appear immediately. Plan rollouts accordingly.
 3. Go ServeMux: patterns like `GET /static/` can conflict with `/{lang}/{$}` and panic. Every change that adds routes must pass the `routes()` test in `cmd/server/main_test.go`.
+4. `/{lang}/literal` patterns overlap `/lang/{lang}` (both match `/lang/literal`) and panic. Register language routes with literal prefixes per supported language.
 
 ## Jobs
 - The container cannot consume Queues. A **consumer Worker** receives messages and forwards each job to the container over the internal path. Queue bindings are defined per env in `wrangler.jsonc`.

@@ -35,7 +35,7 @@ Every content item with its own page has one row here. Type-specific fields live
 - `not_found_log(path, hits, last_seen_at)` feeds the dashboard 404 panel
 - `webmentions(id, target_entry_id, source_url, author, author_avatar, content, type, status, received_at)`
 - `syndications(entry_id, network, url, posted_at)` POSSE
-- `job_runs(id, type, payload, status, attempt, max_attempts, error, started_at, finished_at)`
+- `job_runs(id, type, payload, status: queued|running|done|failed|dead, attempt, max_attempts, error, created_at, started_at, finished_at)` (migrations/0003_jobs.sql)
 - `admin_sessions(id, email, created_at, expires_at, last_reauth_at, ip, ua)` see ADR-005. Exception to ULID ids: `id` is the hex HMAC-SHA256 of the cookie token, never the token itself
 - `search_fts` FTS5 virtual table, in the separate `halidorg-search-{env}` database, not the main one (ADR-010)
 

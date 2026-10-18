@@ -283,7 +283,25 @@ func (b *Blob) Delete(_ context.Context, key string) error {
 	return nil
 }
 
-// Stores returns a full set of in-memory stores with the main schema applied.
+// Queue records sent messages as JSON.
+type Queue struct {
+	mu   sync.Mutex
+	Sent []json.RawMessage
+}
+
+func (q *Queue) Send(_ context.Context, msg any) error {
+	b, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	q.Sent = append(q.Sent, b)
+	return nil
+}
+
+// Stores returns a full set of in-memory stores: the main and search
+// schemas applied, empty KV, Blob and Queue.
 func Stores(t testing.TB) store.Stores {
-	return store.Stores{DB: NewDB(t), KV: NewKV(), Blob: NewBlob()}
+	return store.Stores{DB: NewDB(t), Search: NewSearchDB(t), KV: NewKV(), Blob: NewBlob(), Queue: &Queue{}}
 }

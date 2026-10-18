@@ -22,6 +22,9 @@ func TestRoutes(t *testing.T) {
 		"/static/fonts/ibm-plex-sans-latin-400-normal.woff2": http.StatusOK,
 		"/static/css/missing.css":                            http.StatusNotFound,
 		"/static/":                                           http.StatusNotFound,
+		"/robots.txt":                                        http.StatusOK,
+		"/lang/en":                                           http.StatusSeeOther,
+		"/internal/jobs":                                     http.StatusMethodNotAllowed,
 	}
 	for path, want := range cases {
 		rec := httptest.NewRecorder()
@@ -40,6 +43,19 @@ func TestStyleguideIs404InProd(t *testing.T) {
 	}
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/_styleguide", nil))
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("got %d, want 404", rec.Code)
+	}
+}
+
+// The jobs endpoint only answers the Worker's queue consumer.
+func TestInternalJobsNeedsHeader(t *testing.T) {
+	mux, err := routes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("POST", "/internal/jobs", nil))
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("got %d, want 404", rec.Code)
 	}
