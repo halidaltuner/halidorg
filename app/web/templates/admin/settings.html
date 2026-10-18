@@ -12,4 +12,11 @@
 <button type="submit" class="adm-btn solid">{{tr .Lang "admin.tax.save"}}</button>
 </form>
 </section>
+<section class="adm-panel adm-narrow">
+<h2>{{tr .Lang "settings.photos"}}</h2>
+<form class="adm-form" method="post" action="/admin/settings/photos">
+<label>{{tr .Lang "settings.profile_500px"}}<input name="profile_500px" value="{{.Photos.Profile}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://500px.com/p/…"></label>
+<button type="submit" class="adm-btn solid">{{tr .Lang "admin.tax.save"}}</button>
+</form>
+</section>
 {{end}}

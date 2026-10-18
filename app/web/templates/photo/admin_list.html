@@ -1,0 +1,30 @@
+{{define "main"}}
+<div class="adm-head">
+<h1>{{.Title}}</h1>
+<a class="adm-btn solid ent-head-new" href="/admin/photos/new">{{tr .Lang "admin.photo.new"}}</a>
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<section class="adm-panel">
+<ul class="ent-list">
+{{- range .Rows}}
+<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono"><span>{{.Album}}</span>{{with .Date}}<span>{{.}}</span>{{end}}<span>{{.Spans}}</span>{{if not .Published}}<span class="adm-st s-draft">{{tr $.Lang "admin.status.draft"}}</span>{{end}}</span></a></li>
+{{- else}}
+<li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>
+{{- end}}
+</ul>
+</section>
+<section class="adm-panel">
+<h2>{{tr .Lang "admin.photo.albums"}} <span class="n">{{len .Albums}}</span></h2>
+<p class="ent-hint ce-hint">{{tr .Lang "admin.photo.albums_hint"}}</p>
+<div class="ce-issuers">
+{{- range .Albums}}
+<div class="ce-issuer"><form class="ce-row ph-row" method="post" action="/admin/photos/albums"><input type="hidden" name="id" value="{{.ID}}">
+<input name="name_tr" value="{{.NameTR}}" lang="tr" aria-label="{{tr $.Lang "admin.photo.name_tr"}}"><input name="name_en" value="{{.NameEN}}" lang="en" aria-label="{{tr $.Lang "admin.photo.name_en"}}"><input name="slug" value="{{.Slug}}" class="mono" aria-label="slug"><input name="sort" value="{{.Sort}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"><button type="submit" class="adm-btn">{{tr $.Lang "admin.tax.save"}}</button></form>
+<form method="post" action="/admin/photos/albums/{{.ID}}/delete"><button type="submit" class="adm-btn link danger">{{tr $.Lang "admin.cert.delete_issuer"}}</button></form></div>
+{{- end}}
+<form class="ce-row ph-row ce-new" method="post" action="/admin/photos/albums">
+<input name="name_tr" lang="tr" placeholder="{{tr .Lang "admin.photo.name_tr"}}" aria-label="{{tr .Lang "admin.photo.name_tr"}}" required><input name="name_en" lang="en" placeholder="{{tr .Lang "admin.photo.name_en"}}" aria-label="{{tr .Lang "admin.photo.name_en"}}" required><input name="slug" class="mono" placeholder="slug" aria-label="slug"><input name="sort" value="0" class="mono" inputmode="numeric" aria-label="{{tr .Lang "kind.snippet.file_order"}}"><button type="submit" class="adm-btn solid">{{tr .Lang "admin.photo.add_album"}}</button></form>
+</div>
+</section>
+{{end}}

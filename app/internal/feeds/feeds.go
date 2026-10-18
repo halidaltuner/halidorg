@@ -20,6 +20,7 @@ import (
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/certificate"
+	"halid.org/engine/internal/content/photo"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/store"
@@ -75,7 +76,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 // kindFeeds are the kinds with their own feeds and the URL segment they sit
 // under. Posts use the language feeds (/{lang}/feed.xml).
 var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs", "project": "projects",
-	"certificate": "certificates"}
+	"certificate": "certificates", "photo": "photos"}
 
 // item is one feed entry, whatever its kind.
 type item struct {
@@ -118,6 +119,8 @@ func (h *Handlers) load(w http.ResponseWriter, r *http.Request, lang, kind, tag 
 		items, err = h.postItems(r.Context(), lang, tag)
 	} else if kind == "certificate" {
 		items, err = h.certItems(r.Context(), lang)
+	} else if kind == "photo" {
+		items, err = h.photoItems(r.Context(), lang)
 	} else {
 		items, err = h.kindItems(r.Context(), lang, kind)
 	}
@@ -170,6 +173,53 @@ func (h *Handlers) certItems(ctx context.Context, lang string) ([]item, error) {
 		}
 		it.HTML = "<p>" + template.HTMLEscapeString(names[c.IssuerID]+" · "+certificate.Month(&c.IssuedAt)) + "</p>"
 		out = append(out, it)
+	}
+	return out, nil
+}
+
+// photoItems are the newest published photos (by when they were added):
+// each item shows the image and links to its lightbox on the photos page.
+func (h *Handlers) photoItems(ctx context.Context, lang string) ([]item, error) {
+	repo := photo.NewRepo(h.db, nil)
+	list, err := repo.Published(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sort.SliceStable(list, func(i, j int) bool { return list[i].CreatedAt > list[j].CreatedAt })
+	list = list[:min(len(list), 20)]
+	keys := map[string]string{}
+	if len(list) > 0 {
+		args := make([]any, len(list))
+		for i, x := range list {
+			args[i] = x.MediaID
+		}
+		res, err := h.db.Query(ctx, `SELECT id, r2_key, alt_tr, alt_en FROM media WHERE id IN (?`+strings.Repeat(", ?", len(args)-1)+`)`, args...)
+		if err != nil {
+			return nil, err
+		}
+		rows, err := store.Scan[struct {
+			ID    string `json:"id"`
+			Key   string `json:"r2_key"`
+			AltTR string `json:"alt_tr"`
+			AltEN string `json:"alt_en"`
+		}](res)
+		if err != nil {
+			return nil, err
+		}
+		for _, m := range rows {
+			alt := m.AltEN
+			if lang == "tr" {
+				alt = m.AltTR
+			}
+			keys[m.ID] = `<p><img src="` + template.HTMLEscapeString(h.origin+"/"+m.Key) + `" alt="` + template.HTMLEscapeString(alt) + `"></p>`
+		}
+	}
+	out := make([]item, 0, len(list))
+	for _, x := range list {
+		created := x.CreatedAt
+		meta := strings.Trim(strings.Join([]string{x.Place, x.Camera, x.Exposure}, " · "), " ·")
+		out = append(out, item{Title: x.Title(lang), Summary: meta, URL: h.origin + "/" + lang + "/photos#p-" + x.ID,
+			Published: &created, Updated: x.UpdatedAt, HTML: keys[x.MediaID] + "<p>" + template.HTMLEscapeString(meta) + "</p>"})
 	}
 	return out, nil
 }
@@ -532,7 +582,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})

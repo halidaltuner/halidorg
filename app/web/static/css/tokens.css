@@ -116,6 +116,9 @@
   --dk-green: #4ADE80;
   --dk-green-halo: rgba(74, 222, 128, .2); /* the Now pulse dot */
   --dk-text-soft: #C9D1DE; /* About bio on the dark hero */
+  --dk-violet: #A78BFA; /* the album name in the photo lightbox */
+  --dk-scrim: rgba(11, 18, 32, .82); /* caption chips over photos */
+  --dk-scrim-strong: rgba(11, 18, 32, .92); /* behind the photo lightbox */
   --dk-amber: #FBBF24;
   --dk-indigo: #A5B4FC;
   --dk-aberration-rose: rgba(251, 113, 133, .8);

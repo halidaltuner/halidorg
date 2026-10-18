@@ -191,7 +191,7 @@ func (r *Repo) SetAlt(ctx context.Context, id, tr, en string) (Item, error) {
 }
 
 // Delete removes an item that no entry uses as its cover, no project shows
-// in its gallery, no certificate shows as its badge and no page (About, Now) names in its current or published
+// in its gallery, no certificate or photo shows and no page (About, Now) names in its current or published
 // version. Markdown that embeds the URL is not tracked; the admin warns
 // about that.
 func (r *Repo) Delete(ctx context.Context, id string) error {
@@ -202,8 +202,9 @@ func (r *Repo) Delete(ctx context.Context, id string) error {
 	res, err := r.db.Query(ctx, `SELECT (SELECT COUNT(*) FROM entries WHERE cover_media_id = ?)
   + (SELECT COUNT(*) FROM project_gallery WHERE media_id = ?)
   + (SELECT COUNT(*) FROM certificates WHERE badge_media_id = ?)
+  + (SELECT COUNT(*) FROM photos WHERE media_id = ?)
   + (SELECT COUNT(*) FROM entries e JOIN revisions r ON r.id IN (e.current_revision_id, e.published_revision_id)
-     WHERE e.kind = 'page' AND instr(r.data_json, ?) > 0) AS n`, id, id, id, id)
+     WHERE e.kind = 'page' AND instr(r.data_json, ?) > 0) AS n`, id, id, id, id, id)
 	if err != nil {
 		return err
 	}

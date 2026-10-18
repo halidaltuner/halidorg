@@ -97,6 +97,7 @@ flowchart LR
 ### ADR-009: Third-party embeds behind a CSP allowlist
 - 500px photo embeds and Credly links are the only third-party content. CSP `frame-src`/`img-src` allowlist covers 500px CDN and `decks.halid.org`.
 - Photo grid renders a local thumbnail (`image_url`) first and loads the 500px embed only in the lightbox, so the grid stays fast and works if 500px is down.
+- Update (2026-10-18, Phase 5.3): photos do not embed 500px at all. The grid and lightbox serve the image from our media and link out with "view on 500px", so photos need no CSP change; the allowlist only has to cover the decks origin (5.4).
 
 ### ADR-010: Search is D1 FTS5 in a separate database
 - **Status:** Accepted (2026-10-17). Evaluation: `docs/search-decision.md`.

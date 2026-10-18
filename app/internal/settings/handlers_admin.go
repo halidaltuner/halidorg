@@ -14,8 +14,9 @@ import (
 	"halid.org/engine/internal/store"
 )
 
-// Admin serves /admin/settings (derive: dashboard density). For now it holds
-// the homelab stat tiles; a save re-renders the homelab pages.
+// Admin serves /admin/settings (derive: dashboard density): the homelab stat
+// tiles and the 500px profile of the photos page; a save re-renders the
+// pages that show them.
 type Admin struct {
 	db   store.DB
 	ui   *admin.UI
@@ -38,11 +39,13 @@ func NewAdmin(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs) (*Admin, err
 func (h *Admin) Register(mux *http.ServeMux) {
 	mux.Handle("GET /admin/settings", h.auth.RequireSession(http.HandlerFunc(h.show)))
 	mux.Handle("POST /admin/settings/homelab", admin.Guard(h.auth.RequireSession(http.HandlerFunc(h.saveHomelab))))
+	mux.Handle("POST /admin/settings/photos", admin.Guard(h.auth.RequireSession(http.HandlerFunc(h.savePhotos))))
 }
 
 type page struct {
 	admin.Shell
 	Homelab Homelab
+	Photos  Photos
 	Notice  string
 	Error   string
 }
@@ -54,7 +57,11 @@ func (h *Admin) show(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, err)
 		return
 	}
-	if r.URL.Query().Get("saved") == "homelab" {
+	if err := Get(r.Context(), h.db, PhotosKey, &p.Photos); err != nil {
+		h.fail(w, err)
+		return
+	}
+	if r.URL.Query().Get("saved") != "" {
 		p.Notice = i18n.T(lang, "settings.saved")
 	}
 	h.ui.Render(w, http.StatusOK, h.page, p)
@@ -83,6 +90,32 @@ func (h *Admin) saveHomelab(w http.ResponseWriter, r *http.Request) {
 		slog.Error("enqueue pages.changed", "err", err) // the dashboard lists failed jobs to retry
 	}
 	http.Redirect(w, r, "/admin/settings?saved=homelab", http.StatusSeeOther)
+}
+
+func (h *Admin) savePhotos(w http.ResponseWriter, r *http.Request) {
+	v := Photos{Profile: strings.TrimSpace(r.FormValue("profile_500px"))}
+	if v.Profile != "" && !strings.HasPrefix(v.Profile, "https://500px.com/") {
+		lang := i18n.FromRequest(r)
+		p := page{Shell: h.ui.Shell(r, i18n.T(lang, "admin.nav.settings"), "settings"), Photos: v, Error: i18n.T(lang, "settings.bad_500px")}
+		if err := Get(r.Context(), h.db, HomelabKey, &p.Homelab); err != nil {
+			h.fail(w, err)
+			return
+		}
+		h.ui.Render(w, http.StatusUnprocessableEntity, h.page, p)
+		return
+	}
+	if err := Set(r.Context(), h.db, PhotosKey, v); err != nil {
+		h.fail(w, err)
+		return
+	}
+	var paths []string
+	for _, l := range i18n.Supported {
+		paths = append(paths, "/"+l+"/photos")
+	}
+	if err := jobs.EnqueuePages(r.Context(), h.jobs, paths...); err != nil {
+		slog.Error("enqueue pages.changed", "err", err)
+	}
+	http.Redirect(w, r, "/admin/settings?saved=photos", http.StatusSeeOther)
 }
 
 func (h *Admin) fail(w http.ResponseWriter, err error) {

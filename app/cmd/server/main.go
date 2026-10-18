@@ -20,6 +20,7 @@ import (
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/page"
+	"halid.org/engine/internal/content/photo"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/shortadmin"
@@ -159,6 +160,11 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	certAdmin.Register(mux)
+	photoAdmin, err := photo.NewAdmin(stores.DB, stores.Blob, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	photoAdmin.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err
