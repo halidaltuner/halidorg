@@ -137,6 +137,16 @@ type Response struct {
 // Get fetches raw and reads at most max bytes of the body. A larger body
 // is ErrTooLarge. Any status is returned; callers decide what is usable.
 func (c *Client) Get(ctx context.Context, raw string, max int64) (*Response, error) {
+	return c.get(ctx, raw, max, false)
+}
+
+// GetPrefix is Get that keeps the first max bytes of a larger body instead
+// of failing: enough for a page's <head>.
+func (c *Client) GetPrefix(ctx context.Context, raw string, max int64) (*Response, error) {
+	return c.get(ctx, raw, max, true)
+}
+
+func (c *Client) get(ctx context.Context, raw string, max int64, prefix bool) (*Response, error) {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrBlocked, err)
@@ -155,7 +165,7 @@ func (c *Client) Get(ctx context.Context, raw string, max int64) (*Response, err
 		return nil, err
 	}
 	defer res.Body.Close()
-	if res.ContentLength > max {
+	if res.ContentLength > max && !prefix {
 		return nil, ErrTooLarge
 	}
 	body, err := io.ReadAll(io.LimitReader(res.Body, max+1))
@@ -163,7 +173,10 @@ func (c *Client) Get(ctx context.Context, raw string, max int64) (*Response, err
 		return nil, err
 	}
 	if int64(len(body)) > max {
-		return nil, ErrTooLarge
+		if !prefix {
+			return nil, ErrTooLarge
+		}
+		body = body[:max]
 	}
 	return &Response{URL: res.Request.URL, Status: res.StatusCode, ContentType: res.Header.Get("Content-Type"), Body: body}, nil
 }

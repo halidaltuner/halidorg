@@ -1,0 +1,50 @@
+{{define "title"}}{{tr .Lang "qc.title"}}{{end}}
+{{define "qc-top"}}<header class="qc-top">
+<a class="qc-back mono" href="/admin">← admin</a>
+<span class="qc-name">{{tr .Lang "qc.title"}}</span>
+{{with .Env}}<span class="adm-env">{{.}}</span>{{else}}<span class="qc-spacer"></span>{{end}}
+</header>{{end}}
+{{define "content"}}<div class="qc-page">
+<form class="qc" method="post" action="/admin/quick">
+{{template "qc-top" .}}
+<div class="qc-body">
+{{- range .Errors}}<p class="qc-error" role="alert">{{.}}</p>{{end}}
+<div class="qc-field">
+<label class="mono" for="qc-url">url</label>
+<div class="qc-url">
+<input id="qc-url" name="url" value="{{.URL}}" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{tr .Lang "qc.paste"}}"{{if not .Fetched}} autofocus{{end}}>
+<button type="submit" class="qc-fetch" formmethod="get" formaction="/admin/quick" formnovalidate>{{tr .Lang "qc.fetch"}}</button>
+</div>
+{{- with .FetchError}}<p class="qc-hint">{{.}}</p>{{end}}
+</div>
+{{- if .Fetched}}
+<div class="qc-field">
+<label class="mono" for="qc-title">{{tr .Lang "qc.title_label"}}</label>
+<input id="qc-title" name="title" value="{{.Title}}" autocomplete="off">
+{{- with .Desc}}<p class="qc-desc">{{.}}</p>{{end}}
+{{- with .Domain}}<p class="qc-domain mono">{{.}}</p>{{end}}
+<input type="hidden" name="desc" value="{{.Desc}}">
+</div>
+<fieldset class="qc-field">
+<legend class="mono">{{tr .Lang "qc.save_as"}}</legend>
+<div class="qc-kinds">
+{{- range .Kinds}}<input type="radio" class="qc-radio" name="kind" id="qc-kind-{{.Value}}" value="{{.Value}}"{{if .On}} checked{{end}}><label class="qc-kind k-{{.Value}}" for="qc-kind-{{.Value}}"><span class="kdot" aria-hidden="true"></span>{{.Label}}</label>{{end}}
+</div>
+</fieldset>
+<div class="qc-field">
+<label class="mono" for="qc-comment"><span class="qc-l-comment">{{tr .Lang "qc.comment"}}</span><span class="qc-l-note">{{tr .Lang "qc.note"}}</span></label>
+<textarea id="qc-comment" name="comment" rows="4" placeholder="{{tr .Lang "qc.why"}}">{{.Comment}}</textarea>
+</div>
+<fieldset class="qc-langs">
+<legend class="mono">lang</legend>
+{{- range .Langs}}<input type="radio" class="qc-radio" name="lang" id="qc-lang-{{.Value}}" value="{{.Value}}"{{if .On}} checked{{end}}><label class="qc-lang mono" for="qc-lang-{{.Value}}">{{.Label}}</label>{{end}}
+</fieldset>
+{{- end}}
+</div>
+<div class="qc-actions">
+<button type="submit" class="qc-draft" name="action" value="draft"{{if not .Fetched}} disabled{{end}}>{{tr .Lang "qc.draft"}}</button>
+<button type="submit" class="qc-publish" name="action" value="publish"{{if not .Fetched}} disabled{{end}}>{{tr .Lang "qc.publish"}}</button>
+</div>
+</form>
+<p class="qc-bookmarklet mono">{{tr .Lang "qc.bookmarklet"}} <a href="{{.Bookmarklet}}">+ quick capture</a></p>
+</div>{{end}}

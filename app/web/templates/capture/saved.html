@@ -1,0 +1,20 @@
+{{define "title"}}{{tr .Lang "qc.title"}}{{end}}
+{{define "content"}}<div class="qc-page">
+<div class="qc">
+<header class="qc-top">
+<a class="qc-back mono" href="/admin">← admin</a>
+<span class="qc-name">{{tr .Lang "qc.title"}}</span>
+{{with .Env}}<span class="adm-env">{{.}}</span>{{else}}<span class="qc-spacer"></span>{{end}}
+</header>
+<div class="qc-done">
+<span class="qc-done-dot" aria-hidden="true"></span>
+<p class="qc-done-title">{{tr .Lang "qc.saved_as"}} {{.Kind}}</p>
+<p class="qc-done-meta mono">{{.Meta}}</p>
+{{- if .OfferPublish}}
+<form method="post" action="/admin/quick/{{.ID}}/publish"><button type="submit" class="qc-publish">{{tr .Lang "qc.publish_now"}}</button></form>
+{{- end}}
+{{- with .Public}}<a class="qc-view mono" href="{{.}}">{{tr $.Lang "qc.view"}} →</a>{{end}}
+<a class="qc-again" href="/admin/quick">{{tr .Lang "qc.again"}}</a>
+</div>
+</div>
+</div>{{end}}

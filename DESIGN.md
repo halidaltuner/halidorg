@@ -191,3 +191,11 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Awesome list (derive): the list head with the category tone (navy without one), a back link to links, a mono section index when there are child categories, then one H2 and bullet list per section: title in `--link`, domain in mono, comment on its own line.
 - Awesome navigation (after the staging check): the links intro ends with "all awesome lists →" (`/{lang}/awesome`), and each categorized group head has an "awesome →" link on the right in mono 12px `--link`; the group name alone did not read as a link. An awesome page links back to links and to the index.
 - Awesome index (derive): the list head, then one row per category with links, children too, in category order: bold name, link count in mono, and for a child a small "part of {parent}" line. A parent's count includes its children's links, as its page lists them.
+
+## 18. Implementation notes (Phase 2.4)
+- Quick Capture follows `Quick Capture.dc.html`: a 390px card on `--surface-2`, filling the screen under 480px. Every control is at least 44px tall.
+- It works without JS. "fetch" is a GET of the same page with the URL (the bookmarklet opens that GET with `?url=&title=`); link / fav / note and tr / en are radio buttons styled as the prototype's buttons; the comment label reads "note" for notes through `:has()`.
+- Before a fetch only the URL shows and draft / publish are disabled, as in the prototype. A failed fetch keeps the fields open so the title can be typed; fetching with an empty URL opens a note without a link.
+- Publishing saves the draft first. Without a recent sign-in it goes through re-auth and comes back to the saved screen with "publish now".
+- The admin top bar's `+` opens Quick Capture (as in `Admin Dashboard.dc.html`), no longer the new post form.
+- The bookmarklet link sits under the card on wide screens.
