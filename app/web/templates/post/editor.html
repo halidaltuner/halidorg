@@ -99,9 +99,9 @@
 {{- end}}{{end}}
 <form id="ed-delete" method="post" action="/admin/posts/{{.Post.ID}}/delete" hidden></form>
 </div>
-<script src="/static/vendor/htmx.min.js" defer></script>
-<script src="/static/js/code.js" defer></script>
-<script type="module" src="/static/js/editor.js"></script>
+<script src="{{asset "/static/vendor/htmx.min.js"}}" defer></script>
+<script src="{{asset "/static/js/code.js"}}" defer></script>
+<script type="module" src="{{asset "/static/js/editor.js"}}"></script>
 {{end}}
 
 {{define "save-state"}}<span class="ed-saved mono" id="save-state" role="status">{{.SaveLabel}}</span>{{end}}
