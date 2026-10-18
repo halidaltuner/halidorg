@@ -256,3 +256,68 @@ func (h *Handlers) awesome(w http.ResponseWriter, r *http.Request, lang string) 
 	}
 	h.render(w, r, "awesome", p)
 }
+
+type awesomeEntry struct {
+	Name, Href, CountLabel string
+	Count                  int
+	Children               []awesomeEntry
+}
+
+type awesomeIndexPage struct {
+	page
+	Lists []awesomeEntry
+}
+
+// awesomeIndex serves /{lang}/awesome: every awesome list with links in
+// lang, top-level categories in category order with their children. A
+// parent counts its children's links too, as its page lists them.
+func (h *Handlers) awesomeIndex(w http.ResponseWriter, r *http.Request, lang string) {
+	ctx := r.Context()
+	cats, err := content.Categories(ctx, h.db, link.Kind)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	list, err := h.linkRepo.List(ctx, link.ListFilter{Lang: lang})
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	own := map[string]int{}
+	for _, l := range list {
+		if l.CategoryID != nil {
+			own[*l.CategoryID]++
+		}
+	}
+	entry := func(c content.Category) awesomeEntry {
+		return awesomeEntry{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Count: own[c.ID]}
+	}
+	known := map[string]bool{}
+	for _, c := range cats {
+		known[c.ID] = true
+	}
+	p := awesomeIndexPage{page: h.newPage(lang, "links", "awesome · halid.org", "/awesome", nil)}
+	p.Head.Description = i18n.T(lang, "awesome.index_intro")
+	p.Head.Feeds = []feedLink{{Title: i18n.T(lang, "feed.links"), Href: "/" + lang + "/links/feed.xml"}}
+	for _, top := range cats {
+		if top.ParentID != nil && known[*top.ParentID] {
+			continue
+		}
+		e := entry(top)
+		for _, c := range cats {
+			if c.ParentID != nil && *c.ParentID == top.ID && own[c.ID] > 0 {
+				e.Children = append(e.Children, entry(c))
+				e.Count += own[c.ID]
+			}
+		}
+		if e.Count > 0 {
+			key := "awesome.count"
+			if e.Count == 1 {
+				key = "awesome.count_one"
+			}
+			e.CountLabel = strings.Replace(i18n.T(lang, key), "%d", strconv.Itoa(e.Count), 1)
+			p.Lists = append(p.Lists, e)
+		}
+	}
+	h.render(w, r, "awesome-index", p)
+}

@@ -121,7 +121,8 @@ func ItemPath(r Ref) string {
 // new tags), the language feeds (posts), the sitemap, and the pages of its
 // translations. A slug change also covers the old URL. Snippets add their
 // raw files and, when the list changes, the pages of the other snippets;
-// links the awesome pages of their category and its parent.
+// links the awesome pages of their category and its parent, and the
+// awesome index.
 func Paths(c Change) []string {
 	set := map[string]bool{}
 	add := func(p string) {
@@ -166,7 +167,8 @@ func Paths(c Change) []string {
 				}
 			}
 			add("/sitemap.xml")
-			if r.Kind == "link" {
+			if r.Kind == "link" && len(r.Categories) > 0 {
+				add(l + "/awesome") // the index counts the category's links
 				for _, c := range r.Categories {
 					if content.ValidSlug(c) {
 						add(l + "/awesome/" + c)

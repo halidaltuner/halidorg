@@ -41,6 +41,7 @@ func TestRoutes(t *testing.T) {
 		"/en/links":                                          http.StatusOK,
 		"/tr/favs?type=book":                                 http.StatusOK,
 		"/en/awesome/none":                                   http.StatusNotFound,
+		"/tr/awesome":                                        http.StatusOK,
 		"/static/js/filter.js":                               http.StatusOK,
 		"/static/js/links.js":                                http.StatusOK,
 		"/admin/links/session":                               http.StatusSeeOther,

@@ -93,7 +93,12 @@ func TestLinksPage(t *testing.T) {
 		`<span class="lk-status mono is-read" data-link-id=`,
 		`>other · <span data-filter-count>1</span>`,
 		`/static/js/filter.js`, `/static/js/links.js`, `href="/en/links/feed.xml"`,
+		`<a class="lk-awesome" href="/en/awesome">all awesome lists →</a>`,
+		`<a class="lk-awesome mono" href="/en/awesome/architecture">awesome →</a>`,
 	)
+	if strings.Count(body, `class="lk-awesome mono"`) != 3 {
+		t.Error("every categorized group links its awesome list, other does not")
+	}
 	// Category order: architecture (sort 1), postgres, books; other last.
 	order := []string{">architecture</a>", ">postgres</a>", ">books</a>", ">other ·"}
 	last := -1
@@ -156,6 +161,7 @@ func TestAwesomePage(t *testing.T) {
 		`<section class="aw-section" id="arch-books">`,
 		`Hypermedia Systems`,
 		`<link rel="canonical" href="https://halid.org/en/awesome/architecture">`,
+		`<nav class="aw-back mono"><a href="/en/links">← links</a><a href="/en/awesome">all awesome lists</a></nav>`,
 	)
 	if strings.Contains(body, "Postgres full-text") {
 		t.Error("other category on the page")
@@ -169,4 +175,26 @@ func TestAwesomePage(t *testing.T) {
 			t.Errorf("%s: %d", p, code)
 		}
 	}
+}
+
+func TestAwesomeIndex(t *testing.T) {
+	mux, db := newSite(t)
+	seedCuration(t, db)
+	code, body := get(t, mux, "/en/awesome")
+	if code != 200 {
+		t.Fatalf("index %d", code)
+	}
+	must(t, body,
+		`<h1>awesome</h1>`,
+		// architecture counts its own 2 links and the 1 in books.
+		`<a href="/en/awesome/architecture">awesome architecture</a><span class="mono">3 links</span>`,
+		`<div class="aw-index-children mono"><a href="/en/awesome/arch-books">books · 1</a></div>`,
+		`<a href="/en/awesome/postgres">awesome postgres</a><span class="mono">1 link</span>`,
+		`<link rel="canonical" href="https://halid.org/en/awesome">`,
+	)
+	if strings.Contains(body, `href="/en/awesome/arch-books">awesome books`) {
+		t.Error("a child category listed as a top-level list")
+	}
+	_, body = get(t, mux, "/tr/awesome")
+	must(t, body, `Burada henüz bağlantı yok.`)
 }

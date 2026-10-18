@@ -46,7 +46,7 @@ func TestLinkAwesomePaths(t *testing.T) {
 	now := *prev
 	now.Categories = []string{"design"}
 	got := Paths(Change{Now: &now, Prev: prev})
-	for _, want := range []string{"/en/links", "/en/awesome/go", "/en/awesome/programming", "/en/awesome/design", "/en/links/feed.xml"} {
+	for _, want := range []string{"/en/links", "/en/awesome", "/en/awesome/go", "/en/awesome/programming", "/en/awesome/design", "/en/links/feed.xml"} {
 		if !slices.Contains(got, want) {
 			t.Errorf("missing %s in %v", want, got)
 		}
