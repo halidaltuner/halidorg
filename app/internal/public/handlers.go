@@ -72,16 +72,17 @@ func New(db, searchDB store.DB) (*Handlers, error) {
 		linkRepo: link.NewRepo(db), favRepo: fav.NewRepo(db),
 		origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
-		"home":     "templates/public/home.html",
-		"post":     "templates/post/show.html",
-		"list":     "templates/post/list.html",
-		"error":    "templates/public/error.html",
-		"snippets": "templates/snippet/index.html",
-		"notes":    "templates/note/list.html",
-		"note":     "templates/note/show.html",
-		"links":    "templates/link/index.html",
-		"favs":     "templates/fav/index.html",
-		"awesome":  "templates/link/awesome.html",
+		"home":          "templates/public/home.html",
+		"post":          "templates/post/show.html",
+		"list":          "templates/post/list.html",
+		"error":         "templates/public/error.html",
+		"snippets":      "templates/snippet/index.html",
+		"notes":         "templates/note/list.html",
+		"note":          "templates/note/show.html",
+		"links":         "templates/link/index.html",
+		"favs":          "templates/fav/index.html",
+		"awesome":       "templates/link/awesome.html",
+		"awesome-index": "templates/link/awesome_index.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
@@ -125,6 +126,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/notes/{slug}", func(w http.ResponseWriter, r *http.Request) { h.note(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/links", func(w http.ResponseWriter, r *http.Request) { h.links(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/favs", func(w http.ResponseWriter, r *http.Request) { h.favs(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/awesome", func(w http.ResponseWriter, r *http.Request) { h.awesomeIndex(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/awesome/{category}", func(w http.ResponseWriter, r *http.Request) { h.awesome(w, r, lang) })
 	}
 	// Everything else: redirects table, then the styled 404.

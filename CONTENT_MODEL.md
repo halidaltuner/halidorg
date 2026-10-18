@@ -151,7 +151,7 @@ A D1 view unioning published `entries` + `gh_activity` + `radar_history`, cursor
 | garden | `/{lang}/garden/{slug}` |
 | runbook | `/{lang}/runbooks/{slug}` |
 | snippet | `/{lang}/snippets`, `/{lang}/snippets/{slug}`, `/{lang}/snippets/{slug}/raw/{filename}` (text/plain) |
-| link | `/{lang}/links?status=unread`, `/{lang}/awesome/{category}` |
+| link | `/{lang}/links?status=unread`, `/{lang}/awesome` (index), `/{lang}/awesome/{category}` |
 | fav | `/{lang}/favs?type=tool` |
 | project | `/{lang}/projects`, `/{lang}/projects/{slug}` |
 | homelab | `/{lang}/homelab?category=electronics` (detail uses `/projects/{slug}`) |

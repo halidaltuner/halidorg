@@ -2,13 +2,16 @@
 <header class="cur-head">
 <div class="cur-title">
 <h1>{{tr .Lang "nav.links"}}</h1>
-<p>{{tr .Lang "links.intro"}}</p>
+<p>{{tr .Lang "links.intro"}} <a class="lk-awesome" href="/{{.Lang}}/awesome">{{tr .Lang "awesome.all"}} →</a></p>
 </div>
 {{- template "filter-chips" dict "chips" .Chips "label" (tr .Lang "links.filter")}}
 </header>
 {{- range .Groups}}
 <section class="lk-group" data-filter-group>
+<div class="lk-group-head">
 <h2 class="mono">{{if .Href}}<a href="{{.Href}}">{{.Name}}</a>{{else}}{{.Name}}{{end}} · <span data-filter-count>{{len .Items}}</span></h2>
+{{- with .Href}}<a class="lk-awesome mono" href="{{.}}">awesome →</a>{{end}}
+</div>
 {{- range .Items}}
 <div class="lk-row" data-filter-value="{{if .Read}}read{{else}}unread{{end}}">
 {{- if .Favicon}}<img class="lk-icon" src="{{.Favicon}}" alt="" width="16" height="16" loading="lazy">{{else}}<span class="lk-icon lk-initial mono" aria-hidden="true">{{.Initial}}</span>{{end}}

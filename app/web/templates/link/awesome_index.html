@@ -1,0 +1,20 @@
+{{define "content"}}<main class="list-page aw-page">
+<header class="list-head tone-navy">
+<span class="eyebrow mono">↗ // awesome</span>
+<h1>awesome</h1>
+<p class="aw-intro">{{tr .Lang "awesome.index_intro"}}</p>
+<a class="mono back" href="/{{.Lang}}/links">← {{tr .Lang "nav.links"}}</a>
+</header>
+{{- if .Lists}}
+<ul class="aw-index">
+{{- range .Lists}}
+<li>
+<div class="aw-index-line"><a href="{{.Href}}">awesome {{.Name}}</a><span class="mono">{{.CountLabel}}</span></div>
+{{- if .Children}}<div class="aw-index-children mono">{{range .Children}}<a href="{{.Href}}">{{.Name}} · {{.Count}}</a>{{end}}</div>{{end}}
+</li>
+{{- end}}
+</ul>
+{{- else}}
+<p class="empty">{{tr .Lang "links.empty"}}</p>
+{{- end}}
+</main>{{end}}

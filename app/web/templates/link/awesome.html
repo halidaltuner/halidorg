@@ -2,7 +2,7 @@
 <header class="list-head tone-{{.Tone}}">
 <span class="eyebrow mono">↗ // awesome</span>
 <h1>awesome {{.Name}}</h1>
-<a class="mono back" href="/{{.Lang}}/links">← {{tr .Lang "nav.links"}}</a>
+<nav class="aw-back mono"><a href="/{{.Lang}}/links">← {{tr .Lang "nav.links"}}</a><a href="/{{.Lang}}/awesome">{{tr .Lang "awesome.all"}}</a></nav>
 </header>
 {{- if gt (len .Sections) 1}}
 <nav class="aw-toc mono" aria-label="{{tr .Lang "awesome.sections"}}">{{range .Sections}}<a href="#{{.ID}}">{{.Name}}</a>{{end}}</nav>

@@ -430,7 +430,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})
