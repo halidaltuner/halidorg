@@ -5,8 +5,6 @@ name: staging-check
 # Screenshots and the report are uploaded as the "staging-check" artifact.
 on:
   workflow_dispatch:
-  push:
-    branches: [phase-1/fresh] # runs before the workflow is on main; drop after merge
 
 permissions:
   contents: write # pushes the report and screenshots to the checks/staging branch
