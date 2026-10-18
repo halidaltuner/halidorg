@@ -1,0 +1,31 @@
+// Package snippet is the code kind: one or more files shown as tabs, with a
+// Markdown description (CONTENT_MODEL.md §2 snippet).
+package snippet
+
+import "halid.org/engine/internal/content"
+
+// Kind is the entries.kind value.
+const Kind = "snippet"
+
+// File is one tab of a snippet.
+type File struct {
+	Filename string `json:"filename"`
+	Language string `json:"language"`
+	Code     string `json:"code"`
+	Sort     int    `json:"sort"`
+}
+
+// Snippet is an entry plus its snippets row and files.
+type Snippet struct {
+	content.Entry
+	CategoryID *string `json:"category_id"`
+	GistURL    string  `json:"gist_url"`
+	Files      []File  `json:"-"`
+}
+
+// Draft is the input for Create and Save: Markdown is the description.
+type Draft struct {
+	Snippet
+	Markdown string
+	Tags     []string
+}

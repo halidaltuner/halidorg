@@ -46,6 +46,18 @@ func Post(lang, title string, publishedAt int64, minutes int) Card {
 	return Card{Kind: "post", Title: title, Date: Date(publishedAt), Meta: meta}
 }
 
+// Entry is the card of a published entry of a kind with item pages (note,
+// snippet). Untitled notes use their summary, else their slug.
+func Entry(kind, lang, title, summary, slug string, publishedAt int64) Card {
+	if title == "" {
+		title = summary
+	}
+	if title == "" {
+		title = slug
+	}
+	return Card{Kind: kind, Title: title, Date: Date(publishedAt), Meta: "halid.org"}
+}
+
 // Site is the card for pages without their own: home, lists, tags.
 func Site(lang string) Card {
 	parts := make([]string, 0, 4)

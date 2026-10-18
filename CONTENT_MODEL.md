@@ -27,7 +27,7 @@ Every content item with its own page has one row here. Type-specific fields live
 ### Supporting tables
 - `revisions(id, entry_id, body_md, body_html, toc_json, data_json, origin: autosave|manual|publish|import, created_at, note)` consecutive `autosave` rows coalesce (update in place) until a `manual` save
 - `tags(id, slug, name_tr, name_en, tone)` + `entry_tags(entry_id, tag_id)`
-- `categories(id, kind, slug, name_tr, name_en, tone, parent_id, sort)` links, snippets, favs, homelab builds, awesome lists
+- `categories(id, kind, slug, name_tr, name_en, tone, parent_id, sort)` links, snippets, favs, homelab builds, awesome lists (migrations/0006_short_form.sql). `kind` is one of link, snippet, fav, homelab, awesome; `(kind, slug)` is unique; `tone` is one of the DESIGN.md tones. An entry's `category_id` must point at a category of its own kind (checked in Go).
 - `series(id, slug, title_tr, title_en, summary, status)`
 - `links_graph(from_entry_id, to_entry_id, context)` backlinks (migrations/0004_links_graph.sql). The entry.changed job rebuilds an entry's outgoing rows from its published HTML: links to `/{lang}/posts/{slug}` (relative or on the site origin), `context` is the link text. Unlisted and deleted entries have no outgoing rows.
 - `media(id, r2_key, mime, width, height, alt_tr, alt_en, blurhash, created_at, name, bytes)` (name and bytes: migrations/0005_media_meta.sql). Images only (PNG, JPEG, GIF, WebP; no SVG), 10 MB max, R2 key `media/{id}/{file}`, served by the Worker at `/media/...`. An image is usable (cover, Markdown) only once both `alt_tr` and `alt_en` are set; one used as a cover cannot be deleted.
@@ -45,7 +45,7 @@ Every content item with its own page has one row here. Type-specific fields live
 `posts(entry_id, reading_minutes, canonical_url, mermaid bool, comments_enabled bool)`
 
 ### note (TIL)
-`notes(entry_id, source_url nullable, til bool)`
+`notes(entry_id, source_url nullable, til bool)` (0006). Title optional; `source_url` must be absolute https.
 
 ### garden
 `garden_pages(entry_id, maturity: seedling|budding|evergreen, last_tended_at)`
@@ -55,14 +55,14 @@ Every content item with its own page has one row here. Type-specific fields live
 
 ### snippet
 `snippets(entry_id, category_id, gist_url nullable)`
-`snippet_files(snippet_id, filename, language, code, sort)` one or more files, shown as tabs
+`snippet_files(snippet_id, filename, language, code, sort)` one or more files, shown as tabs (0006). A snippet needs at least one file to publish; filenames are unique per snippet and have no slashes. Each revision stores the files in `data_json` (`{"files":[...]}`), so revision diffs and restores include them; the table holds the current files.
 
 ### link
 `links(entry_id, url, domain, favicon_url, category_id, via nullable, archived_url nullable, read_status: unread|read)`
-`title` = link title, `summary` = my comment.
+`title` = link title, `summary` = my comment. `domain` is derived from `url` (without `www.`). No item page: links live on `/{lang}/links`; search results open the link itself (0006).
 
 ### fav
-`favs(entry_id, fav_type: tool|repo|video|product|article|book|place|other, author nullable, url nullable, rating 1-5 nullable, category_id)`
+`favs(entry_id, fav_type: tool|repo|video|product|article|book|place|other, author nullable, url nullable, rating 1-5 nullable, category_id)` (0006). No item page: favs live on `/{lang}/favs`.
 
 ### awesome list
 A `page` with `data_json.list_category_ids`. No separate table.

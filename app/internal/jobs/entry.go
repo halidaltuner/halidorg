@@ -63,6 +63,8 @@ type entryRow struct {
 	Visibility string  `json:"visibility"`
 	Group      string  `json:"translation_group_id"`
 	BodyMD     *string `json:"body_md"`
+	DataJSON   *string `json:"data_json"`
+	Extra      *string `json:"extra"`
 	Tags       *string `json:"tags"`
 	Published  *int64  `json:"published_at"`
 	Minutes    *int    `json:"reading_minutes"`
@@ -73,7 +75,10 @@ type entryRow struct {
 // finds drafts by their latest text). nil when the entry is gone.
 func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
 	res, err := db.Query(ctx, `SELECT e.id, e.kind, e.lang, e.slug, e.title, e.summary, e.status, e.visibility,
-  e.translation_group_id, r.body_md, e.published_at,
+  e.translation_group_id, r.body_md, r.data_json, e.published_at,
+  -- kind fields worth finding: a link's domain and URL, a fav's author
+  CASE e.kind WHEN 'link' THEN (SELECT l.domain || ' ' || l.url FROM links l WHERE l.entry_id = e.id)
+              WHEN 'fav' THEN (SELECT coalesce(f.author, '') || ' ' || f.fav_type FROM favs f WHERE f.entry_id = e.id) END AS extra,
   (SELECT reading_minutes FROM posts WHERE entry_id = e.id) AS reading_minutes,
   (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tags
 FROM entries e
@@ -156,12 +161,18 @@ func (e *EntryJobs) cards(ctx context.Context, c Change, row *entryRow) error {
 			}
 		}
 	}
-	if c.Now != nil && c.Now.Listed && row.Kind == "post" && row.Published != nil {
-		minutes := 0
-		if row.Minutes != nil {
-			minutes = *row.Minutes
+	if c.Now != nil && c.Now.Listed && cardKey(*c.Now) != "" && row.Published != nil {
+		var card og.Card
+		if row.Kind == "post" {
+			minutes := 0
+			if row.Minutes != nil {
+				minutes = *row.Minutes
+			}
+			card = og.Post(row.Lang, row.Title, *row.Published, minutes)
+		} else {
+			card = og.Entry(row.Kind, row.Lang, row.Title, row.Summary, row.Slug, *row.Published)
 		}
-		png, err := og.Render(og.Post(row.Lang, row.Title, *row.Published, minutes))
+		png, err := og.Render(card)
 		if err != nil {
 			return err
 		}
@@ -246,6 +257,22 @@ func (e *EntryJobs) links(ctx context.Context, row *entryRow, listed bool) ([]Re
 	return store.Scan[Ref](res)
 }
 
+type snippetFile struct {
+	Filename string `json:"filename"`
+	Code     string `json:"code"`
+}
+
+// snippetFiles reads the files a snippet revision keeps in data_json
+// (content/snippet.FilesOf). Kept here so jobs does not import kind packages,
+// which import jobs for their admin handlers.
+func snippetFiles(dataJSON string) []snippetFile {
+	var d struct {
+		Files []snippetFile `json:"files"`
+	}
+	_ = json.Unmarshal([]byte(dataJSON), &d)
+	return d.Files
+}
+
 func siblings(ctx context.Context, db store.DB, row *entryRow) ([]Ref, error) {
 	res, err := db.Query(ctx, `SELECT kind, lang, slug FROM entries WHERE translation_group_id = ? AND id <> ?`, row.Group, row.ID)
 	if err != nil {
@@ -270,6 +297,16 @@ func (e *EntryJobs) index(ctx context.Context, id string, row *entryRow) error {
 			return err
 		}
 		text = out.Text
+	}
+	// Kind fields: a snippet's file names and code (from the same revision
+	// as the body), a link's domain and URL, a fav's author and type.
+	if row.Kind == "snippet" && row.DataJSON != nil {
+		for _, f := range snippetFiles(*row.DataJSON) {
+			text += "\n" + f.Filename + "\n" + f.Code
+		}
+	}
+	if row.Extra != nil {
+		text += "\n" + *row.Extra
 	}
 	doc := search.Doc{EntryID: row.ID, Kind: row.Kind, Lang: row.Lang, Status: row.Status, Visibility: row.Visibility,
 		Slug: row.Slug, Title: row.Title, Summary: row.Summary, Body: text, Tags: row.tags()}

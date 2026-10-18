@@ -26,10 +26,30 @@ type Change struct {
 	Linked   []Ref // entries it links to, before or after: their backlinks change
 }
 
-// kindPath is the URL segment of a kind's pages (CONTENT_MODEL.md §5).
+// kindPath is the URL segment of the kinds that have a page per entry
+// (CONTENT_MODEL.md §5).
 var kindPath = map[string]string{
-	"post": "posts",
+	"post":    "posts",
+	"note":    "notes",
+	"snippet": "snippets",
 }
+
+// listPath is the URL segment of each kind's list page and per-kind feeds.
+// Links and favs have no item pages: their list is where they live.
+var listPath = map[string]string{
+	"post":    "posts",
+	"note":    "notes",
+	"snippet": "snippets",
+	"link":    "links",
+	"fav":     "favs",
+}
+
+// ListSegment is the URL segment of a kind's list page, or "".
+func ListSegment(kind string) string { return listPath[kind] }
+
+// ItemSegment is the URL segment of a kind's item pages, or "" when the kind
+// has none.
+func ItemSegment(kind string) string { return kindPath[kind] }
 
 // ItemPath is the public path of one entry, or "" for kinds without pages yet.
 func ItemPath(r Ref) string {
@@ -44,9 +64,11 @@ func ItemPath(r Ref) string {
 // sorted and without duplicates. The purge job re-renders each one; a path
 // that no longer renders is deleted from KV.
 //
-// For a post in lang L: its page, the post list, home, each tag page and tag
-// feed (old and new tags), the language feeds, the sitemap, and the pages of
-// its translations. A slug change also covers the old URL.
+// For an entry of kind K in lang L: its page (kinds with item pages), the
+// same slug in the other languages (the untranslated fallback), K's list
+// page and K's feeds, home (the stream), each tag page and tag feed (old and
+// new tags), the language feeds (posts), the sitemap, and the pages of its
+// translations. A slug change also covers the old URL.
 func Paths(c Change) []string {
 	set := map[string]bool{}
 	add := func(p string) {
@@ -68,13 +90,19 @@ func Paths(c Change) []string {
 				add(ItemPath(o))
 			}
 		}
-		if seg, ok := kindPath[r.Kind]; ok && i18n.IsSupported(r.Lang) {
+		if seg, ok := listPath[r.Kind]; ok && i18n.IsSupported(r.Lang) {
 			l := "/" + r.Lang
 			add(l + "/")
 			add(l + "/" + seg)
-			add(l + "/feed.xml")
-			add(l + "/atom.xml")
-			add(l + "/feed.json")
+			if r.Kind == "post" {
+				add(l + "/feed.xml")
+				add(l + "/atom.xml")
+				add(l + "/feed.json")
+			} else {
+				add(l + "/" + seg + "/feed.xml")
+				add(l + "/" + seg + "/atom.xml")
+				add(l + "/" + seg + "/feed.json")
+			}
 			for _, t := range r.Tags {
 				if content.ValidSlug(t) {
 					add(l + "/tags/" + t)
