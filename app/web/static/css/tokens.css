@@ -114,6 +114,8 @@
   --dk-cyan-hover: #67E8F9;
   --dk-rose: #FB7185;
   --dk-green: #4ADE80;
+  --dk-green-halo: rgba(74, 222, 128, .2); /* the Now pulse dot */
+  --dk-text-soft: #C9D1DE; /* About bio on the dark hero */
   --dk-amber: #FBBF24;
   --dk-indigo: #A5B4FC;
   --dk-aberration-rose: rgba(251, 113, 133, .8);

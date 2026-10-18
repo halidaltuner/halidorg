@@ -35,6 +35,7 @@ describe("entryHref", () => {
 		expect(entryHref({ kind: "fav", lang: "tr", slug: "ddia", url: null })).toBe("/tr/favs#ddia");
 		expect(entryHref({ kind: "project", lang: "en", slug: "x", url: null })).toBe("/en/projects/x");
 		expect(entryHref({ kind: "homelab", lang: "en", slug: "rack", url: null })).toBe("/en/projects/rack");
+		expect(entryHref({ kind: "page", lang: "tr", slug: "now", url: null })).toBe("/tr/now");
 		expect(entryHref({ kind: "buildlog", lang: "en", slug: "x", url: null })).toBe("");
 	});
 });

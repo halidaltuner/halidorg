@@ -408,7 +408,7 @@ func (h *Handlers) sitemapRows(ctx context.Context) ([]smRow, error) {
 	// A build log lives under its project: its "slug" here is the path
 	// below /{lang}/projects/ (project/log/slug).
 	res, err := h.db.Query(ctx, `SELECT kind, lang, slug, translation_group_id, updated_at FROM entries
-WHERE kind IN ('post', 'note', 'snippet', 'project') AND status = 'published' AND visibility = 'public'
+WHERE kind IN ('post', 'note', 'snippet', 'project', 'page') AND status = 'published' AND visibility = 'public'
 UNION ALL
 SELECT 'project', e.lang, pe.slug || '/log/' || e.slug, e.translation_group_id, e.updated_at
 FROM entries e JOIN buildlogs b ON b.entry_id = e.id JOIN entries pe ON pe.id = b.project_entry_id
@@ -479,7 +479,12 @@ JOIN gh_repos g ON g.full_name = a.repo WHERE g.gone = 0 ORDER BY 1 LIMIT 1000`)
 // itemSegments are the kinds with a page per entry and their URL segment.
 var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects"}
 
-func itemPath(r smRow) string { return "/" + r.Lang + "/" + itemSegments[r.Kind] + "/" + r.Slug }
+func itemPath(r smRow) string {
+	if r.Kind == "page" { // About and Now sit at the language root
+		return "/" + r.Lang + "/" + r.Slug
+	}
+	return "/" + r.Lang + "/" + itemSegments[r.Kind] + "/" + r.Slug
+}
 
 func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.sitemapRows(r.Context())

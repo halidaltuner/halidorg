@@ -1,0 +1,11 @@
+{{define "content"}}<main class="list-page nw-archive">
+<header class="list-head">
+<a class="mono back" href="/{{.Lang}}/now">← {{tr .Lang "nav.now"}}</a>
+<h1>{{tr .Lang "now.archive_title"}}</h1>
+</header>
+{{- if .Versions}}
+<ol class="nw-versions">{{range .Versions}}<li><a href="{{.Href}}"><time class="mono" datetime="{{.Date}}">{{.Date}}</time>{{with .Place}}<span>{{.}}</span>{{end}}</a></li>{{end}}</ol>
+{{- else}}
+<p class="empty">{{tr .Lang "now.archive_empty"}}</p>
+{{- end}}
+</main>{{end}}

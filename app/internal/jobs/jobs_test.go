@@ -50,7 +50,7 @@ func TestPaths(t *testing.T) {
 	// page; a slug change moves its build logs too.
 	proj := Paths(Change{Now: &Ref{Kind: "project", Lang: "en", Slug: "rack", Listed: true, Homelab: true, Logs: []string{"brackets"}},
 		Prev: &Ref{Kind: "project", Lang: "en", Slug: "rack-old", Listed: true, Homelab: true, Logs: []string{"brackets"}}})
-	if want := []string{"/en/", "/en/homelab", "/en/projects", "/en/projects/atom.xml", "/en/projects/feed.json", "/en/projects/feed.xml",
+	if want := []string{"/en/", "/en/about", "/en/homelab", "/en/projects", "/en/projects/atom.xml", "/en/projects/feed.json", "/en/projects/feed.xml",
 		"/en/projects/rack", "/en/projects/rack-old", "/en/projects/rack-old/log/brackets", "/en/projects/rack/log/brackets",
 		"/en/stream", "/sitemap.xml", "/tr/projects/rack", "/tr/projects/rack-old"}; !reflect.DeepEqual(proj, want) {
 		t.Errorf("project paths =\n%v\nwant\n%v", proj, want)
@@ -68,6 +68,13 @@ func TestPaths(t *testing.T) {
 	moved := Paths(Change{Now: &Ref{Kind: "note", Lang: "en", Slug: "til", Listed: true, Month: "2026-10"}, Prev: &Ref{Kind: "note", Lang: "en", Slug: "til", Listed: true, Month: "2026-09"}})
 	if !contains(moved, "/en/stream/2026-10") || !contains(moved, "/en/stream/2026-09") {
 		t.Errorf("month paths %v", moved)
+	}
+	// Now: its page, the other language's, the archive list and the day of
+	// its latest version, About (the now card), the sitemap.
+	nowPaths := Paths(Change{Now: &Ref{Kind: "page", Lang: "en", Slug: "now", Listed: true, Version: "2026-10-13"},
+		Prev: &Ref{Kind: "page", Lang: "en", Slug: "now", Listed: true, Version: "2026-10-01"}})
+	if want := []string{"/en/about", "/en/now", "/en/now/archive", "/en/now/archive/2026-10-01", "/en/now/archive/2026-10-13", "/sitemap.xml", "/tr/now"}; !reflect.DeepEqual(nowPaths, want) {
+		t.Errorf("now paths =\n%v\nwant\n%v", nowPaths, want)
 	}
 	// Kinds without pages yet contribute nothing.
 	if got := Paths(Change{Now: &Ref{Kind: "garden", Lang: "en", Slug: "x"}}); len(got) != 0 {

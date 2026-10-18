@@ -56,15 +56,20 @@ func (m Item) Alt(lang string) string {
 }
 
 // allowed are the accepted types, sniffed from the bytes, never taken from
-// the client. SVG is excluded: it can carry script.
+// the client. SVG is excluded: it can carry script. PDF is for documents
+// such as the CV (About); the Worker serves it as a download.
 var allowed = map[string]string{
 	"image/png": ".png", "image/jpeg": ".jpg", "image/gif": ".gif", "image/webp": ".webp",
+	"application/pdf": ".pdf",
 }
+
+// IsImage reports whether the item is an image (not a document).
+func (m Item) IsImage() bool { return strings.HasPrefix(m.Mime, "image/") }
 
 // Errors the admin shows to the user.
 var (
 	ErrTooLarge = errors.New("media: file too large")
-	ErrType     = errors.New("media: not a PNG, JPEG, GIF or WebP image")
+	ErrType     = errors.New("media: not a PNG, JPEG, GIF or WebP image, or a PDF")
 	ErrInUse    = errors.New("media: used as a cover")
 	ErrNotReady = errors.New("media: alt text missing")
 )
@@ -93,10 +98,12 @@ func (r *Repo) Upload(ctx context.Context, name string, data []byte) (Item, erro
 		return Item{}, ErrType
 	}
 	it := Item{ID: content.NewID(), Mime: mime, Name: cleanName(name), Bytes: int64(len(data)), CreatedAt: content.Clock().Unix()}
-	if cfg, _, err := image.DecodeConfig(bytes.NewReader(data)); err == nil {
+	if mime != "application/pdf" {
+		cfg, _, err := image.DecodeConfig(bytes.NewReader(data))
+		if err != nil {
+			return Item{}, ErrType
+		}
 		it.Width, it.Height = &cfg.Width, &cfg.Height
-	} else {
-		return Item{}, ErrType
 	}
 	it.R2Key = "media/" + it.ID + "/" + fileName(it.Name, ext)
 	if err := r.blob.Put(ctx, it.R2Key, data, mime); err != nil {
@@ -125,7 +132,7 @@ func fileName(name, ext string) string {
 	base := strings.TrimSuffix(name, path.Ext(name))
 	s := content.Slugify(base)
 	if s == "" {
-		s = "image"
+		s = "file"
 	}
 	if len(s) > 60 {
 		s = strings.TrimRight(s[:60], "-")
@@ -145,9 +152,10 @@ func (r *Repo) List(ctx context.Context, limit int) ([]Item, error) {
 	return store.Scan[Item](res)
 }
 
-// Ready lists items with both alt texts, for pickers.
+// Ready lists images with both alt texts, for pickers.
 func (r *Repo) Ready(ctx context.Context) ([]Item, error) {
-	res, err := r.db.Query(ctx, `SELECT `+columns+` FROM media WHERE trim(alt_tr) <> '' AND trim(alt_en) <> '' ORDER BY created_at DESC LIMIT 200`)
+	res, err := r.db.Query(ctx, `SELECT `+columns+` FROM media WHERE mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> ''
+ORDER BY created_at DESC LIMIT 200`)
 	if err != nil {
 		return nil, err
 	}
@@ -182,16 +190,19 @@ func (r *Repo) SetAlt(ctx context.Context, id, tr, en string) (Item, error) {
 	return r.Get(ctx, id)
 }
 
-// Delete removes an item that no entry uses as its cover and no project
-// shows in its gallery. Markdown that embeds the URL is not tracked; the
-// admin warns about that.
+// Delete removes an item that no entry uses as its cover, no project shows
+// in its gallery and no page (About, Now) names in its current or published
+// version. Markdown that embeds the URL is not tracked; the admin warns
+// about that.
 func (r *Repo) Delete(ctx context.Context, id string) error {
 	it, err := r.Get(ctx, id)
 	if err != nil {
 		return err
 	}
 	res, err := r.db.Query(ctx, `SELECT (SELECT COUNT(*) FROM entries WHERE cover_media_id = ?)
-  + (SELECT COUNT(*) FROM project_gallery WHERE media_id = ?) AS n`, id, id)
+  + (SELECT COUNT(*) FROM project_gallery WHERE media_id = ?)
+  + (SELECT COUNT(*) FROM entries e JOIN revisions r ON r.id IN (e.current_revision_id, e.published_revision_id)
+     WHERE e.kind = 'page' AND instr(r.data_json, ?) > 0) AS n`, id, id, id)
 	if err != nil {
 		return err
 	}
@@ -207,11 +218,14 @@ func (r *Repo) Delete(ctx context.Context, id string) error {
 }
 
 // CheckCover is what entry saves call for cover_media_id: the item must
-// exist and have both alt texts.
+// be an image and have both alt texts.
 func (r *Repo) CheckCover(ctx context.Context, id string) error {
 	it, err := r.Get(ctx, id)
 	if err != nil {
 		return err
+	}
+	if !it.IsImage() {
+		return ErrType
 	}
 	if !it.Ready() {
 		return ErrNotReady

@@ -19,6 +19,7 @@ import (
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
+	pages "halid.org/engine/internal/content/page"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/snippet"
@@ -65,6 +66,7 @@ type Handlers struct {
 	favRepo     *fav.Repo
 	projectRepo *project.Repo
 	logRepo     *buildlog.Repo
+	pageRepo    *pages.Repo
 	origin      string
 	tmpl        map[string]*template.Template
 }
@@ -73,7 +75,7 @@ type Handlers struct {
 func New(db store.DB) (*Handlers, error) {
 	h := &Handlers{db: db, posts: post.NewRepo(db), snippetRepo: snippet.NewRepo(db), noteRepo: note.NewRepo(db),
 		linkRepo: link.NewRepo(db), favRepo: fav.NewRepo(db), projectRepo: project.NewRepo(db), logRepo: buildlog.NewRepo(db),
-		origin: origin(), tmpl: map[string]*template.Template{}}
+		pageRepo: pages.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
 		"home":          "templates/public/home.html",
 		"post":          "templates/post/show.html",
@@ -92,6 +94,9 @@ func New(db store.DB) (*Handlers, error) {
 		"homelab":       "templates/project/homelab.html",
 		"stream":        "templates/public/stream.html",
 		"github":        "templates/github/index.html",
+		"about":         "templates/page/about.html",
+		"now":           "templates/page/now.html",
+		"now-archive":   "templates/page/now_archive.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
@@ -141,6 +146,10 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/stream", func(w http.ResponseWriter, r *http.Request) { h.streamPage(w, r, lang, "") })
 		mux.HandleFunc("GET /"+lang+"/stream/{month}", func(w http.ResponseWriter, r *http.Request) { h.streamPage(w, r, lang, r.PathValue("month")) })
 		mux.HandleFunc("GET /"+lang+"/github", func(w http.ResponseWriter, r *http.Request) { h.github(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/about", func(w http.ResponseWriter, r *http.Request) { h.about(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/now", func(w http.ResponseWriter, r *http.Request) { h.now(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/now/archive", func(w http.ResponseWriter, r *http.Request) { h.nowArchive(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/now/archive/{day}", func(w http.ResponseWriter, r *http.Request) { h.nowVersion(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/projects/{slug}", func(w http.ResponseWriter, r *http.Request) { h.project(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/projects/{slug}/log/{log}", func(w http.ResponseWriter, r *http.Request) { h.buildlog(w, r, lang) })
 	}

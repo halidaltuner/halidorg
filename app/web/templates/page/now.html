@@ -1,0 +1,47 @@
+{{define "content"}}<section class="nw-hero dark">
+<div class="nw-hero-in">
+<div class="nw-head">
+<span class="eyebrow mono"><span class="pulse" aria-hidden="true"></span>{{tr .Lang "nav.now"}}</span>
+<p class="nw-updated mono">{{.Updated}}</p>
+<p class="nw-meta mono">{{.Date}}{{with .Place}} · {{.}}{{end}}</p>
+</div>
+{{- if .Version}}<a class="mono" href="{{.Current}}">{{tr .Lang "now.current"}} →</a>{{else}}{{with .Archive}}<a class="mono" href="/{{$.Lang}}/now/archive">{{.}} →</a>{{end}}{{end}}
+</div>
+</section>
+<main class="nw-page">
+{{- if .Version}}<p class="nw-banner mono"><a href="/{{.Lang}}/now/archive">← {{.Archive}}</a></p>{{end}}
+{{- with .Building}}
+<section class="nw-sec">
+<h2><span class="glyph k-project mono" aria-hidden="true">◆</span>{{tr $.Lang "now.building"}}</h2>
+<div class="nw-builds">{{range .}}{{if .Href}}<a class="nw-build" href="{{.Href}}">{{else}}<div class="nw-build">{{end}}
+<div class="nw-build-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
+<div class="nw-build-body tone-{{.Tone}}"><span class="t">{{.Title}}</span>{{with .Note}}<span class="n">{{.}}</span>{{end}}
+<div class="nw-progress"><div class="mono"><span>{{.Stage}}</span><span>{{.Pct}}%</span></div><div class="bar"><span style="width:{{.Pct}}%"></span></div></div></div>
+{{if .Href}}</a>{{else}}</div>{{end}}{{end}}</div>
+</section>
+{{- end}}
+{{- with .Reading}}
+<section class="nw-sec">
+<h2><span class="glyph k-snippet mono" aria-hidden="true">≡</span>{{tr $.Lang "now.reading"}}</h2>
+<div class="nw-books">{{range .}}<div class="nw-book tone-{{.Tone}}">
+<div class="nw-book-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt "radius" 1}}{{else}}{{template "cover" dict "tone" .Tone "radius" 1}}{{end}}</div>
+<span class="t">{{.Title}}</span>{{with .Author}}<span class="by">{{.}}</span>{{end}}
+<div class="nw-line"><div class="bar"><span style="width:{{.Pct}}%"></span></div><span class="mono">{{.Pct}}%</span></div>
+</div>{{end}}</div>
+</section>
+{{- end}}
+{{- with .Learning}}
+<section class="nw-sec">
+<h2><span class="glyph k-note mono" aria-hidden="true">↗</span>{{tr $.Lang "now.learning"}}</h2>
+<div class="nw-learn">{{range .}}<div class="nw-skill tone-{{.Tone}}">
+<div class="h"><span class="t">{{.Title}}</span><span class="lv mono">{{.LevelLabel}}</span></div>
+{{with .Note}}<span class="n">{{.}}</span>{{end}}
+<div class="cells" role="img" aria-label="{{.Level}}/10">{{range .Cells}}<span{{if .}} class="on"{{end}}></span>{{end}}</div>
+{{if .Hours}}<span class="hrs mono">{{printf (tr $.Lang "now.logged") .Hours}}</span>{{end}}
+</div>{{end}}</div>
+</section>
+{{- end}}
+{{- with .NotDoing}}
+<section class="nw-not"><span class="x mono">✕ {{tr $.Lang "now.not_doing"}}</span>{{range .}}<span class="i">{{.}}</span>{{end}}</section>
+{{- end}}
+</main>{{end}}

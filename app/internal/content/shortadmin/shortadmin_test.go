@@ -16,6 +16,7 @@ import (
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
+	"halid.org/engine/internal/content/page"
 	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/content/snippet"
@@ -39,7 +40,7 @@ func newSite(t *testing.T) site {
 	j := jobs.New(s.DB, s.Queue)
 	mux := http.NewServeMux()
 	for _, f := range []func(store.DB, *admin.UI, *auth.Auth, *jobs.Jobs) (*shortadmin.Admin, error){
-		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor,
+		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor, page.NewEditor,
 	} {
 		e, err := f(s.DB, u, a, j)
 		if err != nil {
@@ -314,5 +315,78 @@ func TestProjectEditor(t *testing.T) {
 	}
 	if _, err := buildlog.NewRepo(st.s.DB).Get(ctx, lid); err == nil {
 		t.Error("build log outlived its project")
+	}
+}
+
+func TestPageEditor(t *testing.T) {
+	st := newSite(t)
+	ctx := context.Background()
+
+	// A new page picks its template first; ?template= presets it.
+	body := st.do(st.fresh, "GET", "/admin/pages/new", nil).Body.String()
+	must(t, body, `name="template" value="about"`, `name="template" value="now"`, `Pick the template and save`)
+	if strings.Contains(body, `name="build_title"`) || strings.Contains(body, `name="markdown"`) {
+		t.Error("sections before a template is chosen")
+	}
+	body = st.do(st.fresh, "GET", "/admin/pages/new?template=now", nil).Body.String()
+	must(t, body, `name="template" value="now" checked`, `name="title" value="Now"`, `name="build_title"`, `name="learn_level"`, `name="not_text"`)
+	if strings.Contains(body, `name="markdown"`) {
+		t.Error("Now has no body")
+	}
+	f := url.Values{"title": {"Now"}, "lang": {"en"}, "template": {"now"}, "place": {"istanbul"},
+		"build_title": {"admin editor", ""}, "build_note": {"", ""}, "build_stage": {"in progress", ""}, "build_pct": {"65", ""},
+		"build_href": {"/en/projects/site", ""}, "build_cover": {"", ""}, "build_tone": {"green", ""}, "build_order": {"0", "1"},
+		"learn_title": {"Zig", ""}, "learn_note": {"", ""}, "learn_level": {"11", ""}, "learn_hours": {"26", ""}, "learn_tone": {"indigo", ""}, "learn_order": {"0", "1"},
+		"not_text": {"side projects"}, "not_order": {"0"}, "action": {"save"}}
+	rec := st.do(st.fresh, "POST", "/admin/pages", f)
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("level 11 %d", rec.Code)
+	}
+	must(t, rec.Body.String(), `Learning 1: level is 1 to 10`, `value="11"`)
+	f.Set("learn_level", "3")
+	id := idOf(t, st.do(st.fresh, "POST", "/admin/pages", f), "/admin/pages")
+	p, err := page.NewRepo(st.s.DB).Get(ctx, id)
+	if err != nil || p.Slug != "now" || p.Template != page.Now || p.Data.Place != "istanbul" || len(p.Data.Building) != 1 ||
+		p.Data.Building[0].Pct != 65 || len(p.Data.Learning) != 1 || p.Data.Learning[0].Level != 3 || len(p.Data.NotDoing) != 1 {
+		t.Fatalf("page %+v %v", p, err)
+	}
+	body = st.do(st.fresh, "GET", "/admin/pages/"+id, nil).Body.String()
+	must(t, body, `name="build_title" value="admin editor"`, `<option value="green" selected>green</option>`, `name="learn_level" value="3"`)
+	if strings.Contains(body, `name="template" value="about"`) {
+		t.Error("template offered again on edit")
+	}
+	// A second Now in the same language is refused.
+	if rec := st.do(st.fresh, "POST", "/admin/pages", f); rec.Code != http.StatusUnprocessableEntity {
+		t.Errorf("second Now %d", rec.Code)
+	} else {
+		must(t, rec.Body.String(), `This language already has this page.`)
+	}
+
+	// Publish, then a saved edit waits for the next publish.
+	f.Set("action", "publish")
+	if rec := st.do(st.fresh, "POST", "/admin/pages/"+id+"/publish", f); rec.Code != http.StatusSeeOther {
+		t.Fatalf("publish %d %s", rec.Code, rec.Body.String())
+	}
+	f.Set("action", "save")
+	f.Set("place", "ankara")
+	st.do(st.fresh, "POST", "/admin/pages/"+id, f)
+	must(t, st.do(st.fresh, "GET", "/admin/pages/"+id, nil).Body.String(), `href="/en/now"`, `changes not live`)
+
+	// About has a body, the CTA and CV fields.
+	body = st.do(st.fresh, "GET", "/admin/pages/new?template=about", nil).Body.String()
+	must(t, body, `name="markdown"`, `name="cta_label"`, `name="skill_items"`, `name="job_role"`, `<select name="cv">`)
+	f = url.Values{"title": {"About"}, "lang": {"en"}, "template": {"about"}, "name": {"Halid"}, "markdown": {"Backend engineer."},
+		"cta_label": {"say hello", ""}, "cta_url": {"javascript:alert(1)", ""}, "cta_order": {"0", "1"},
+		"skill_group": {"languages"}, "skill_items": {"Go, SQL, "}, "skill_tone": {"cyan"}, "skill_order": {"0"}, "action": {"save"}}
+	rec = st.do(st.fresh, "POST", "/admin/pages", f)
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("javascript cta %d", rec.Code)
+	}
+	must(t, rec.Body.String(), `Buttons 1: a label and an https, mailto: or /site URL`)
+	f.Set("cta_url", "mailto:me@halid.org")
+	aid := idOf(t, st.do(st.fresh, "POST", "/admin/pages", f), "/admin/pages")
+	a, err := page.NewRepo(st.s.DB).Get(ctx, aid)
+	if err != nil || len(a.Data.Skills) != 1 || len(a.Data.Skills[0].Items) != 2 || a.Data.Name != "Halid" || a.Data.Place != "" {
+		t.Fatalf("about %+v %v", a, err)
 	}
 }

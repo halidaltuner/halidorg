@@ -92,6 +92,7 @@ export function entryHref(e: Pick<Entry, "kind" | "lang" | "slug" | "url">): str
 	if (seg) return `/${e.lang}/${seg}/${e.slug}`;
 	if (e.kind === "link") return e.url ?? "";
 	if (e.kind === "fav") return `/${e.lang}/favs#${e.slug}`;
+	if (e.kind === "page") return `/${e.lang}/${e.slug}`; // About, Now
 	return "";
 }
 

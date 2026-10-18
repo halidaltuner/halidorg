@@ -1,0 +1,33 @@
+{{define "content"}}<section class="ab-hero dark">
+<div class="ab-hero-in">
+<div class="ab-copy">
+<span class="eyebrow mono">// {{tr .Lang "about.eyebrow"}}</span>
+<h1>{{tr .Lang "about.hi"}}{{with .Name}} <span class="ab-name mono">{{.}}</span>{{end}}.</h1>
+<div class="ab-bio">{{.Bio}}</div>
+{{- with .CTAs}}
+<div class="home-ctas">{{range .}}<a class="{{if .Primary}}cta-primary{{else}}cta-outline{{end}}" href="{{.Href}}"{{if .Download}} download{{end}}>{{.Label}}</a>{{end}}</div>
+{{- end}}
+</div>
+{{- with .Portrait}}
+<div class="ab-portrait"><span class="ab-frame r" aria-hidden="true"></span><span class="ab-frame c" aria-hidden="true"></span><img src="{{.URL}}" alt="{{.Alt}}" decoding="async"></div>
+{{- end}}
+</div>
+</section>
+<main class="ab-page">
+{{- with .Skills}}
+<section class="ab-skills" aria-label="{{tr $.Lang "about.skills"}}">{{range .}}<div class="ab-skill tone-{{or .Tone "cyan"}}"><span class="h mono">{{.Group}}</span><div class="ab-pills">{{range .Items}}<span>{{.}}</span>{{end}}</div></div>{{end}}</section>
+{{- end}}
+{{- if or .Jobs .Cards}}
+<section class="ab-cols">
+{{- with .Jobs}}
+<div class="ab-exp">
+<h2>{{tr $.Lang "about.experience"}}</h2>
+<ol class="ab-timeline">{{range .}}<li class="tone-{{or .Tone "cyan"}}"><span class="dot" aria-hidden="true"></span><div><span class="when mono">{{.When}}</span><span class="role">{{.Role}}{{with .Org}} <span class="org">· {{.}}</span>{{end}}</span>{{with .Note}}<span class="note">{{.}}</span>{{end}}</div></li>{{end}}</ol>
+</div>
+{{- end}}
+{{- with .Cards}}
+<nav class="ab-cards" aria-label="{{tr $.Lang "home.sections"}}">{{range .}}<a class="ab-card tone-{{.Tone}}" href="{{.Href}}"><span><span class="l mono"><span aria-hidden="true">{{.Glyph}}</span> {{.Label}}</span><span class="t">{{.Text}}</span></span><span class="a" aria-hidden="true">→</span></a>{{end}}</nav>
+{{- end}}
+</section>
+{{- end}}
+</main>{{end}}

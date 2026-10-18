@@ -18,6 +18,7 @@ import (
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
+	"halid.org/engine/internal/content/page"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/shortadmin"
@@ -119,7 +120,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	postAdmin.Register(mux)
 	link.NewAdmin(stores.DB, authn, runner).Register(mux)
 	for _, editor := range []func(store.DB, *admin.UI, *auth.Auth, *jobs.Jobs) (*shortadmin.Admin, error){
-		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor,
+		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor, page.NewEditor,
 	} {
 		e, err := editor(stores.DB, adminUI, authn, runner)
 		if err != nil {
@@ -146,6 +147,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	// delivery; GITHUB_TOKEN is the fallback. Without one the job ends at
 	// once and /admin/github says why.
 	github.NewSync(stores.DB, os.Getenv("GITHUB_TOKEN"), runner).Register(runner)
+	page.RegisterDaily(runner)
 	ghAdmin, err := github.NewAdmin(stores.DB, adminUI, authn, runner)
 	if err != nil {
 		return nil, err

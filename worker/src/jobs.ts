@@ -62,6 +62,7 @@ ON CONFLICT (path) DO UPDATE SET hits = hits + 1, last_seen_at = excluded.last_s
 /** Cron schedules and the job each one enqueues (wrangler.jsonc triggers). */
 export const SCHEDULES: Record<string, string> = {
 	"17 */6 * * *": "github.sync",
+	"7 0 * * *": "now.daily",
 };
 
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";

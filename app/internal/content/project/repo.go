@@ -209,7 +209,7 @@ func (r *Repo) check(ctx context.Context, p Project) error {
 	for i, m := range images {
 		args[i] = m
 	}
-	res, err := r.db.Query(ctx, `SELECT COUNT(*) AS n FROM media WHERE trim(alt_tr) <> '' AND trim(alt_en) <> ''
+	res, err := r.db.Query(ctx, `SELECT COUNT(*) AS n FROM media WHERE mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> ''
   AND id IN (?`+strings.Repeat(", ?", len(args)-1)+`)`, args...)
 	if err != nil {
 		return err

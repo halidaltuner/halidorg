@@ -102,22 +102,23 @@ Every link category is an awesome list at `/{lang}/awesome/{category}` (Phase 2.
 `radar_editions(id, label, published_at)` labels like `2026-10`
 
 ### page (singletons and free pages)
-`pages(entry_id, template: now|about|uses|awesome|generic)`. Structured sections live in `revisions.data_json`, validated by a Go schema per template.
+`pages(entry_id, template: about|now)` (migrations/0010_pages.sql). The slug is the template, so `UNIQUE (kind, lang, slug)` keeps one About and one Now per language. Structured sections live in `revisions.data_json` (Go struct `page.Data`, validated per template) and go live on publish like the body. `uses` and `generic` join when they get pages.
+
+`page_versions(entry_id, revision_id, published_at)` records every publish; `/now/archive` lists the versions before the live one, one per day (the last of the day), each at `/now/archive/{YYYY-MM-DD}` (noindex).
 
 **now** `data_json`
 ```json
 {
-  "place": "Ankara",
-  "building": [{ "title": "", "note": "", "stage": "", "pct": 60, "tone": "green", "href": "/en/projects/x", "cover_media_id": null }],
-  "reading":  [{ "book_entry_id": "", "pct": 40 }],
+  "place": "istanbul",
+  "building": [{ "title": "", "note": "", "stage": "", "pct": 60, "tone": "green", "href": "/en/projects/x", "cover": "media id" }],
+  "reading":  [{ "title": "", "author": "", "cover": "media id", "pct": 40, "tone": "orange" }],
   "learning": [{ "title": "", "note": "", "level": 4, "hours": 20, "tone": "indigo" }],
   "not_doing": ["", ""]
 }
 ```
-Weather in the hero is fetched at render time and cached; it is not stored.
-`/now/archive` lists past published revisions.
+No weather (decided 2026-10-18). Books are typed in the Now form; the reading list (5.5) may replace them with book entries. "Updated N days ago" counts from the latest version; the `now.daily` cron job re-renders `/{lang}/now` every day at 00:07 UTC.
 
-**about** `data_json`: `bio_md`, `portrait_media_id`, `cv_media_id`, `skills: [{group, tone, items[]}]`, `experience: [{org, role, from, to, note, tone}]`, `ctas: [{label, url}]`.
+**about** `data_json`: `name` (set in mono in the heading), `portrait` (image), `cv` (a PDF in media), `ctas: [{label, url}]` (https, `mailto:` or a site path; the first is primary, the CV button follows it), `skills: [{group, tone, items[]}]`, `experience: [{from, to, role, org, note, tone}]`. The body is the bio. The link cards beside the timeline come from the live sections (projects, homelab, now), not from data.
 
 ## 3. Gallery data (no entry, no detail page)
 

@@ -32,7 +32,7 @@ Phase 0 spike findings. Full list in `prompts/_constraints.md`, details in `docs
 - Every state-changing admin route is wrapped in `admin.Guard` (CSRF, `http.CrossOriginProtection`) inside `auth.RequireSession`. Publish checks `auth.Recent` itself after saving, so re-auth never drops typed text; delete uses `auth.RequireRecentAuth`.
 - Kind admin pages build on `admin.UI` (shell, render, fragments) in `internal/content/<kind>/handlers_admin.go`. Short kinds (note, snippet, link, fav) describe themselves as a `shortadmin.Kind`; `internal/content/shortadmin` owns their list, editor and save/publish/delete flow. Tests that drive a kind's repo from package `jobs` live in package `jobs_test`: kinds import `jobs` to enqueue.
 - KV pages carry the deploy SHA that rendered them (`PageMeta.deploy`). The Worker serves a page from an older deploy and re-renders it in the background (`X-Cache: STALE`), and `scripts/refresh-edge.sh` touches every page after each deploy. Template and CSS changes therefore reach unchanged content without a purge.
-- Public R2 objects (`/og/*`, `/media/*`) are served by the Worker (`worker/src/r2public.ts`), never by the container; the Content-Type comes from the key's extension, which the app picks after sniffing the bytes. Media is images only, no SVG.
+- Public R2 objects (`/og/*`, `/media/*`) are served by the Worker (`worker/src/r2public.ts`), never by the container; the Content-Type comes from the key's extension, which the app picks after sniffing the bytes. Media is images and PDFs (the CV, served as a download), no SVG.
 - Admin JS vendors (htmx, CodeMirror 6) are built by `scripts/build-editor.sh` from pinned versions in `editor/package.json` and committed under `app/web/static/vendor`.
 
 ## Conventions

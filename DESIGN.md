@@ -242,3 +242,10 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - `/{lang}/github` (derive): the projects header pattern (◆ green eyebrow), the Projects GitHub section without its heading (the page title says it), then every activity row by month in the stream card. On Projects the section heading links to it.
 - Palette: `pr:` finds software projects, `h:` homelab builds (⌁ dot in `--kind-homelab`).
 - Build logs have their own OG card ("build log" in the project dot's green), keyed by the log's slug (`og/{lang}/logs/{slug}.png`), so a project slug change does not orphan it. The projects feeds carry build logs, titled "project: log".
+
+## 26. Implementation notes (Phase 5.1)
+- About follows its prototype: dark hero with the grid texture, "Hi, I'm **Name**." (the name in mono with the aberration shadow), bio at 20px in `--dk-text-soft`, the CTA buttons (cv.pdf second, as a download), and the 4:5 portrait with the rose and cyan offset frames, left out without a portrait. Skill tiles in their tone tint with white pills; the experience timeline with tone dots on a 2px rule; link cards in tone tints for the sections that have pages (projects, homelab & diy, now). Certificates and talks cards join with their pages.
+- Now follows its prototype without the weather: green pulse dot, "updated N days ago" at 48px mono (36px on a phone), date and place, "N earlier versions →". Building cards (140px cover, progress bar in the tone ink), reading covers 2:3 with the 4/6px offset shadow (two per row on a phone), learning cards with the 10-cell meter, the dashed rose "not doing" strip (several items separated by "·"). Cards keep their width when there is only one (`auto-fill`).
+- `/now/archive` (derive): list header with a back link, versions as dated rows in a card at 860px. A version page is the Now page with "version of {date}" and a "current page →" link.
+- `/admin/pages` (derive): the shared editor; a new page picks About or Now first, then shows that template's sections as rows (dashboard density, note fields on their own line).
+

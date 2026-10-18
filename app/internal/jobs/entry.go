@@ -77,6 +77,7 @@ type entryRow struct {
 	Logs       *string `json:"logs"`
 	Published  *int64  `json:"published_at"`
 	Minutes    *int    `json:"reading_minutes"`
+	Version    *string `json:"version_day"`
 }
 
 // load returns the entry with the body search should see: the published
@@ -96,6 +97,7 @@ func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
   (SELECT pe.slug FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id) AS parent,
   (SELECT group_concat(le.slug, ' ') FROM buildlogs b JOIN entries le ON le.id = b.entry_id WHERE b.project_entry_id = e.id) AS logs,
   (SELECT reading_minutes FROM posts WHERE entry_id = e.id) AS reading_minutes,
+  (SELECT strftime('%Y-%m-%d', max(published_at), 'unixepoch') FROM page_versions WHERE entry_id = e.id) AS version_day,
   -- a link's category and its parent: both awesome pages list it
   (SELECT c.slug || coalesce(' ' || p.slug, '') FROM links l JOIN categories c ON c.id = l.category_id
      LEFT JOIN categories p ON p.id = c.parent_id WHERE l.entry_id = e.id) AS categories,
@@ -129,6 +131,9 @@ func (r *entryRow) ref() Ref {
 	ref.Homelab = r.Homelab != nil && *r.Homelab == 1
 	if r.Published != nil {
 		ref.Month = time.Unix(*r.Published, 0).UTC().Format("2006-01")
+	}
+	if r.Version != nil {
+		ref.Version = *r.Version
 	}
 	if r.Parent != nil {
 		ref.Parent = *r.Parent

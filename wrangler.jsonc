@@ -57,7 +57,7 @@
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-local" }],
 
   // Cron (Phase 4.4): enqueue jobs, never call the container (worker/src/jobs.ts SCHEDULES).
-  "triggers": { "crons": ["17 */6 * * *"] },
+  "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
 
   "vars": {
     "APP_ENV": "local",
@@ -110,7 +110,7 @@
         ]
       },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
-      "triggers": { "crons": ["17 */6 * * *"] },
+      "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
       "vars": {
         "APP_ENV": "staging",
         "PUBLIC_ORIGIN": "https://staging.halid.org"
@@ -164,7 +164,7 @@
         ]
       },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-prod" }],
-      "triggers": { "crons": ["17 */6 * * *"] },
+      "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
       "vars": {
         "APP_ENV": "prod",
         // Admin login on prod needs this origin and its own OAuth client (Phase 3).
