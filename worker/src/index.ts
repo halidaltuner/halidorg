@@ -90,8 +90,14 @@ export default {
 	},
 } satisfies ExportedHandler<Env, JobMessage>;
 
+// The container learns the current deploy from every request: its own
+// DEPLOY_SHA env var is fixed when its Durable Object starts and lags behind
+// deploys that do not restart it. Any client-sent value is overwritten.
 function origin(req: Request, env: Env): Promise<Response> {
-	return getContainer(env.APP).fetch(req);
+	const fwd = new Request(req);
+	if (env.DEPLOY_SHA) fwd.headers.set("X-Deploy-Sha", env.DEPLOY_SHA);
+	else fwd.headers.delete("X-Deploy-Sha");
+	return getContainer(env.APP).fetch(fwd);
 }
 
 // Strip validators so the container returns a full 200 we can store.

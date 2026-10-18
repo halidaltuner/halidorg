@@ -21,10 +21,9 @@ import (
 // and the 52px top bar, shared by every admin page. Content kinds build their
 // admin pages on it (internal/content/<kind>/handlers_admin.go).
 type UI struct {
-	db     store.DB
-	env    string
-	deploy string
-	loc    *time.Location
+	db  store.DB
+	env string
+	loc *time.Location
 }
 
 // NewUI reads APP_ENV, DEPLOY_SHA and ADMIN_TZ (default Europe/Istanbul).
@@ -34,7 +33,7 @@ func NewUI(db store.DB) *UI {
 		slog.Error("ADMIN_TZ", "err", err)
 		loc = time.UTC
 	}
-	return &UI{db: db, env: ui.Env(), deploy: ui.Deploy(), loc: loc}
+	return &UI{db: db, env: ui.Env(), loc: loc}
 }
 
 func envOr(k, def string) string {
@@ -125,7 +124,7 @@ func (u *UI) Shell(r *http.Request, title, active string) Shell {
 		email = s.Email
 	}
 	return Shell{
-		Lang: lang, Title: title, Env: env, Deploy: u.deploy, Email: email, Side: side,
+		Lang: lang, Title: title, Env: env, Deploy: ui.Deploy(), Email: email, Side: side,
 		Switch: i18n.Switcher(lang, samePage(r)),
 	}
 }

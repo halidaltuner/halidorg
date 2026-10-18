@@ -2,6 +2,8 @@ package ui
 
 import (
 	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 )
@@ -132,5 +134,25 @@ func TestDictRejectsOddArgs(t *testing.T) {
 	}
 	if _, err := dict(1, 2); err == nil {
 		t.Error("want error")
+	}
+}
+
+func TestDeployHeader(t *testing.T) {
+	before := DeploySHA()
+	t.Cleanup(func() { deploySHA.Store(before) })
+	serve := func(sha string) {
+		req := httptest.NewRequest("GET", "/", nil)
+		req.Header.Set("X-Deploy-Sha", sha)
+		DeployHeader(http.NotFoundHandler()).ServeHTTP(httptest.NewRecorder(), req)
+	}
+	serve("8c1d3b768056eed540e884fc712ec7bfbbe9e81f")
+	if DeploySHA() != "8c1d3b768056eed540e884fc712ec7bfbbe9e81f" || Deploy() != "8c1d3b7" {
+		t.Fatalf("deploy = %q / %q", DeploySHA(), Deploy())
+	}
+	for _, bad := range []string{"", "<script>", "not-a-sha", "ABCDEF1"} {
+		serve(bad)
+		if DeploySHA() != "8c1d3b768056eed540e884fc712ec7bfbbe9e81f" {
+			t.Errorf("%q replaced the deploy", bad)
+		}
 	}
 }

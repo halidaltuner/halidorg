@@ -26,7 +26,6 @@ type Handlers struct {
 	searchDB store.DB
 	jobs     *jobs.Jobs
 	env      string // local, staging or prod; prod hides the env badge
-	deploy   string // short commit, empty outside CI deploys
 	login    *template.Template
 	dash     *template.Template
 	searchT  *template.Template
@@ -46,7 +45,7 @@ func New(a *auth.Auth, u *UI, db, searchDB store.DB, j *jobs.Jobs) (*Handlers, e
 	if err != nil {
 		return nil, err
 	}
-	return &Handlers{auth: a, ui: u, db: db, searchDB: searchDB, jobs: j, env: ui.Env(), deploy: ui.Deploy(),
+	return &Handlers{auth: a, ui: u, db: db, searchDB: searchDB, jobs: j, env: ui.Env(),
 		login: login, dash: dash, searchT: searchT}, nil
 }
 
@@ -85,7 +84,7 @@ func (h *Handlers) loginPage(w http.ResponseWriter, r *http.Request) {
 func (h *Handlers) renderLogin(w http.ResponseWriter, r *http.Request, status int, flash *auth.Flash) {
 	lang := i18n.FromRequest(r)
 	h.render(w, status, h.login, loginPage{
-		Lang: lang, Env: h.env, Deploy: h.deploy,
+		Lang: lang, Env: h.env, Deploy: ui.Deploy(),
 		Next: auth.SafeNext(r.URL.Query().Get("next")), Dark: true, Flash: flash,
 		Switch: i18n.Switcher(lang, samePage(r)),
 	})
