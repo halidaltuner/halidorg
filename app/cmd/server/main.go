@@ -25,6 +25,7 @@ import (
 	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/fetch"
+	"halid.org/engine/internal/github"
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/public"
@@ -141,6 +142,15 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	setAdmin.Register(mux)
+	// GitHub sync (Phase 4.4): the Worker sends the token with each job
+	// delivery; GITHUB_TOKEN is the fallback. Without one the job ends at
+	// once and /admin/github says why.
+	github.NewSync(stores.DB, os.Getenv("GITHUB_TOKEN"), runner).Register(runner)
+	ghAdmin, err := github.NewAdmin(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	ghAdmin.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

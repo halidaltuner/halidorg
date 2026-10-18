@@ -13,12 +13,39 @@
 <h2 class="mono">{{.Name}}</h2>
 {{- with .Tagline}}<p>{{.}}</p>{{end}}
 {{- with .Pills}}<div class="pj-pills">{{range .}}<span class="mono">{{.}}</span>{{end}}</div>{{end}}
-<div class="pj-card-foot mono"><span class="pj-details">{{tr $.Lang "projects.details"}} →</span></div>
+<div class="pj-card-foot mono">{{with .Stars}}<span>★ {{.}}</span>{{end}}{{with .Activity}}<span>{{.}}</span>{{end}}<span class="pj-details">{{tr $.Lang "projects.details"}} →</span></div>
 </div>
 </a>
 {{- end}}
 </div>
 {{- else}}
 <p class="empty">{{tr .Lang "projects.empty"}}</p>
+{{- end}}
+{{- with .GitHub}}
+<section class="gh">
+<div class="gh-head"><h2>{{tr $.Lang "github.title"}}</h2>{{if .Weeks}}<span class="mono">{{printf (tr $.Lang "github.total") (thousands .Total)}}</span>{{end}}</div>
+{{- if .Weeks}}
+<div class="gh-strip">
+<div class="gh-bars">{{range .Weeks}}<span class="w{{.Level}}" style="height:{{.Height}}%" title="{{.Title}}"></span>{{end}}</div>
+<div class="gh-months mono"><span>{{index .Labels 0}}</span><span>{{index .Labels 1}}</span><span>{{index .Labels 2}}</span></div>
+</div>
+{{- end}}
+{{- with .Langs}}
+<div class="gh-langs">
+<div class="gh-langbar">{{range .}}<span class="l{{.Slot}}" style="width:{{.Percent}}%"></span>{{end}}</div>
+<div class="gh-legend mono">{{range .}}<span><i class="l{{.Slot}}" aria-hidden="true"></i>{{.Name}} {{.Percent}}%</span>{{end}}</div>
+</div>
+{{- end}}
+{{- if or .Pinned .Releases}}
+<div class="gh-cols">
+{{- with .Pinned}}
+<div class="gh-repos">{{range .}}<a class="gh-repo" href="{{.URL}}"><span class="n mono">{{.Name}}</span>{{with .Description}}<span class="d">{{.}}</span>{{end}}<span class="m mono">{{with .Language}}{{.}} · {{end}}★ {{.Stars}}</span></a>{{end}}</div>
+{{- end}}
+{{- with .Releases}}
+<div class="gh-releases"><h3 class="mono">{{tr $.Lang "github.releases"}}</h3>{{range .}}<a class="gh-rel" href="{{.URL}}"><span class="t mono">{{.Title}}</span><span class="dt mono">{{.Date}}</span>{{with .Note}}<span class="nt">{{.}}</span>{{end}}</a>{{end}}</div>
+{{- end}}
+</div>
+{{- end}}
+</section>
 {{- end}}
 </main>{{end}}

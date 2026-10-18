@@ -231,3 +231,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Home: the tile row under the hero shows only sections with a page (projects: live software projects, homelab: builds), on an `auto-fill` grid so two tiles keep the width they will have with six. The hero gains the outline "projects →" CTA.
 - `/admin/settings` (derive) holds the homelab stats for now; a save queues `pages.changed` for `/{lang}/homelab`.
 
+## 24. Implementation notes (Phase 4.4)
+- Projects GitHub section follows the prototype: header with the 52-week total, the strip (week bars at `--gh-1..3` by thirds of the busiest week, min 8% high, first/middle/last month under it), the language bar (top four in `--accent`, `--info`, `--warning`, `--success`, the rest as "other" in `--border`), pinned repos (up to six, two columns) and the four latest releases. It is left out until the first sync. On a phone the header wraps and the repo grid is one column.
+- Project cards linked to a repo show "★ stars" and "pushed 2h ago" in the foot, as the prototype.
+- `/admin/github` (derive): last sync (status, time, error; a missing token says how to add it), "run now", and a repo table with pin/unpin and the project link.
+

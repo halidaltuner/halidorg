@@ -10,6 +10,7 @@ import (
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/project"
+	"halid.org/engine/internal/github"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/store"
 )
@@ -110,11 +111,15 @@ type projectCard struct {
 	Href, Name, Tagline, Status, StatusTone, Tone string
 	Pills                                         []string
 	Cover                                         *image
+	Repo                                          string // github_repo, for the stars
+	Stars                                         *int
+	Activity                                      string
 }
 
 type projectsPage struct {
 	page
-	Cards []projectCard
+	Cards  []projectCard
+	GitHub *github.Section // nil before the first sync
 }
 
 func (h *Handlers) projects(w http.ResponseWriter, r *http.Request, lang string) {
@@ -156,7 +161,31 @@ func (h *Handlers) projects(w http.ResponseWriter, r *http.Request, lang string)
 				c.Cover = &im
 			}
 		}
+		c.Repo = x.GitHubRepo
 		p.Cards = append(p.Cards, c)
+	}
+	// Stars and activity from the GitHub sync (4.4); cards without a linked
+	// repo, or before the first sync, show neither.
+	var repos []string
+	for _, c := range p.Cards {
+		if c.Repo != "" {
+			repos = append(repos, c.Repo)
+		}
+	}
+	stats, err := github.Stats(ctx, h.db, lang, repos, content.Clock())
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	for i, c := range p.Cards {
+		if st, ok := stats[strings.ToLower(c.Repo)]; ok {
+			stars := st.Stars
+			p.Cards[i].Stars, p.Cards[i].Activity = &stars, st.Activity
+		}
+	}
+	if p.GitHub, err = github.Load(ctx, h.db, lang); err != nil {
+		h.fail(w, r, err)
+		return
 	}
 	h.render(w, r, "projects", p)
 }

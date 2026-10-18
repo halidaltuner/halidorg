@@ -134,11 +134,12 @@ Weather in the hero is fetched at render time and cached; it is not stored.
 ## 4. Synced / derived data
 
 ### GitHub
-- `gh_repos(id, name, description, stars, forks, language, topics_json, pushed_at, archived, pinned bool, project_entry_id nullable)`
-- `gh_activity(id, type, repo, title, url, occurred_at)`
-- `gh_weekly(week_start, contributions)` 52-week strip (3 intensity buckets computed at render)
-- `gh_languages(repo_id, language, bytes)`
-- Synced every 6h via GraphQL, token in Worker secrets.
+The token owner's public data, synced every 6h (migrations/0009_github.sql, `internal/github`). The sync owns these tables.
+- `gh_repos(id GitHub node id, full_name owner/name unique, name, description, url, stars, forks, language, topics_json, pushed_at, created_at, archived, fork, gone, pinned, pin_sort, synced_at)`. Repos are upserted, never deleted: one a complete sync no longer sees is marked `gone` and leaves the public pages. `pinned` comes from the GitHub profile on the first sync only (setting `github_pins_seeded`); after that it is set at `/admin/github`. Projects link to a repo by `projects.github_repo` (owner/name, any case), set on the project or at `/admin/github`.
+- `gh_languages(repo_id, language, bytes)` replaced per repo on each sync; the language bar sums non-fork, non-gone repos.
+- `gh_weekly(week_start, contributions)` 52-week strip (3 intensity buckets computed at render), replaced when the calendar was read.
+- `gh_activity(id, type release|repo, repo, title, note, url, occurred_at)` notable activity: published releases (`release:{node id}`, the note is the first line of the description) and new non-fork repos (`repo:{node id}`). Ids are stable, so a re-sync adds nothing twice.
+- Synced via GraphQL (`viewer`: pins, contribution calendar, public owned repos, 100 per page, up to 5 pages). The cron Worker enqueues `github.sync` at `17 */6 * * *`; `/admin/github` "run now" enqueues it too. The token is the Worker secret `GITHUB_TOKEN`, sent with each job delivery. Rate limits and network errors retry; a partial answer writes what came and fails the run so `job_runs` shows it. After a sync it queues `pages.changed` for `/{lang}/projects` and linked project pages.
 
 ### Stream
 A D1 view unioning published `entries` + `gh_activity` + `radar_history`, cursor-paginated, filterable by kind (`?kind=`).

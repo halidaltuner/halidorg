@@ -3,7 +3,7 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { handleBridge } from "./bridge";
 import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta, renderedBy } from "./cache";
-import { consume, type JobMessage, logNotFound } from "./jobs";
+import { consume, enqueueScheduled, type JobMessage, logNotFound } from "./jobs";
 import { serveR2Public } from "./r2public";
 import { serveSearch } from "./search";
 
@@ -35,6 +35,9 @@ export class App extends Container<Env> {
 			GOOGLE_CLIENT_ID: env.GOOGLE_CLIENT_ID ?? "",
 			GOOGLE_CLIENT_SECRET: env.GOOGLE_CLIENT_SECRET ?? "",
 			SESSION_SECRET: env.SESSION_SECRET ?? "",
+			// Fallback only: a token set later arrives with each job delivery
+			// (consume), since this env lags until the Durable Object restarts.
+			GITHUB_TOKEN: env.GITHUB_TOKEN ?? "",
 		};
 	}
 }
@@ -90,17 +93,24 @@ export default {
 	},
 
 	async queue(batch, env): Promise<void> {
-		await consume(batch, (req) => origin(req, env));
+		await consume(batch, (req) => origin(req, env, true), env.GITHUB_TOKEN);
+	},
+
+	// Cron (Phase 4.4): enqueue only, never call the container directly.
+	async scheduled(controller, env): Promise<void> {
+		await enqueueScheduled(controller.cron, env, Date.now());
 	},
 } satisfies ExportedHandler<Env, JobMessage>;
 
 // The container learns the current deploy from every request: its own
 // DEPLOY_SHA env var is fixed when its Durable Object starts and lags behind
 // deploys that do not restart it. Any client-sent value is overwritten.
-function origin(req: Request, env: Env): Promise<Response> {
+function origin(req: Request, env: Env, job = false): Promise<Response> {
 	const fwd = new Request(req);
 	if (env.DEPLOY_SHA) fwd.headers.set("X-Deploy-Sha", env.DEPLOY_SHA);
 	else fwd.headers.delete("X-Deploy-Sha");
+	// Only job deliveries carry the GitHub token (consume).
+	if (!job) fwd.headers.delete("X-GitHub-Token");
 	return getContainer(env.APP).fetch(fwd);
 }
 

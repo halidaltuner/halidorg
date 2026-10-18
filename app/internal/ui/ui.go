@@ -170,9 +170,10 @@ func Env() string {
 func Funcs() template.FuncMap {
 	return template.FuncMap{
 		"tr": i18n.T, "dict": dict, "date": Date, "minutes": Minutes, "asset": web.Asset,
-		"langs": func() []string { return i18n.Supported },
-		"add":   func(a, b int) int { return a + b },
-		"sub":   func(a, b int) int { return a - b },
+		"langs":     func() []string { return i18n.Supported },
+		"add":       func(a, b int) int { return a + b },
+		"sub":       func(a, b int) int { return a - b },
+		"thousands": Thousands,
 		// deref reads an optional string field (a nullable column) in templates.
 		"deref": func(p *string) string {
 			if p == nil {
@@ -235,4 +236,16 @@ var Partials = []string{
 // Parse parses files from web.Templates together with Partials and Funcs.
 func Parse(name string, files ...string) (*template.Template, error) {
 	return template.New(name).Funcs(Funcs()).ParseFS(web.Templates, append(files, Partials...)...)
+}
+
+// Thousands writes n with comma separators: 1,284 (design/Projects.dc.html).
+func Thousands(n int) string {
+	s := strconv.Itoa(n)
+	if n < 0 {
+		return "-" + Thousands(-n)
+	}
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
 }

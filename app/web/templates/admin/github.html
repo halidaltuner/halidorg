@@ -1,0 +1,32 @@
+{{define "main"}}
+<div class="adm-head"><h1>GitHub</h1>
+<form method="post" action="/admin/github/sync"><button type="submit" class="adm-btn solid">{{tr .Lang "admin.gh.run"}}</button></form>
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{- if .NoToken}}<p class="adm-error" role="alert">{{tr .Lang "admin.gh.no_token"}}</p>{{end}}
+<section class="adm-panel">
+<h2>{{tr .Lang "admin.gh.last"}}</h2>
+<p class="gh-last mono"><span>{{.Last}}</span>{{with .LastState}} <span class="adm-st s-{{if eq . "done"}}published{{else if eq . "dead"}}archived{{else}}draft{{end}}">{{.}}</span>{{end}}</p>
+{{- with .LastError}}<p class="gh-err mono">{{.}}</p>{{end}}
+</section>
+<section class="adm-panel">
+<h2>{{tr .Lang "github.repos"}} <span class="n">{{len .Repos}}</span></h2>
+{{- if .Repos}}
+<table class="adm-table gh-table">
+<tbody>
+{{- range .Repos}}{{$r := .}}
+<tr{{if .Gone}} class="gh-gone"{{end}}>
+<td><a href="{{.URL}}" class="mono">{{.FullName}}</a>{{if .Gone}} <span class="mono muted">· {{tr $.Lang "admin.gh.gone"}}</span>{{end}}</td>
+<td class="mono muted">{{.Language}}</td>
+<td class="mono muted">★ {{.Stars}}</td>
+<td><form method="post" action="/admin/github/repos/{{.ID}}/pin">{{if .Pinned}}<input type="hidden" name="pinned" value="0"><button type="submit" class="adm-btn"><span class="adm-st s-published">{{tr $.Lang "admin.gh.pinned"}}</span> {{tr $.Lang "admin.gh.unpin"}}</button>{{else}}<input type="hidden" name="pinned" value="1"><button type="submit" class="adm-btn link">{{tr $.Lang "admin.gh.pin"}}</button>{{end}}</form></td>
+<td><form class="gh-link" method="post" action="/admin/github/repos/{{.ID}}/link"><select name="project" aria-label="{{tr $.Lang "admin.gh.link"}}"><option value="">{{tr $.Lang "admin.gh.no_project"}}</option>{{range $.Projects}}<option value="{{.ID}}"{{if eq .ID $r.Project}} selected{{end}}>{{.Label}}</option>{{end}}</select><button type="submit" class="adm-btn">{{tr $.Lang "admin.tax.save"}}</button></form></td>
+</tr>
+{{- end}}
+</tbody>
+</table>
+{{- else}}
+<p class="adm-empty">{{tr .Lang "admin.gh.empty"}}</p>
+{{- end}}
+</section>
+{{end}}

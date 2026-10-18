@@ -79,6 +79,7 @@ The API token used by CI needs **Account: Queues: Edit** to deploy a consumer.
 | `GOOGLE_CLIENT_ID` | OAuth client id (section 3) |
 | `GOOGLE_CLIENT_SECRET` | OAuth client secret |
 | `SESSION_SECRET` | at least 32 random bytes: `openssl rand -base64 48` |
+| `GITHUB_TOKEN` | GitHub sync (Phase 4.4): a fine-grained token on the GitHub account, repository access "Public repositories (read-only)", no other permissions. Optional: without it the sync job ends at once and `/admin/github` says so. |
 
 `wrangler secret put` reads the value from a prompt, so it never lands in shell history:
 
@@ -86,7 +87,10 @@ The API token used by CI needs **Account: Queues: Edit** to deploy a consumer.
 npx wrangler secret put GOOGLE_CLIENT_ID --env staging -c ../wrangler.jsonc
 npx wrangler secret put GOOGLE_CLIENT_SECRET --env staging -c ../wrangler.jsonc
 npx wrangler secret put SESSION_SECRET --env staging -c ../wrangler.jsonc
+npx wrangler secret put GITHUB_TOKEN --env staging -c ../wrangler.jsonc
 ```
+
+The Worker hands most secrets to the container when its Durable Object starts, so a secret added or rotated later waits for a restart (docs/spike-phase0.md). `GITHUB_TOKEN` does not: the Worker sends it with each job delivery, so it takes effect at the next sync ("run now" on `/admin/github`).
 
 Prod gets the same three with `--env prod` once its OAuth client exists (Phase 3). Use a different `SESSION_SECRET` per env: it keys the session ids, so sharing it would let a staging row hash match prod.
 
