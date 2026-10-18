@@ -23,6 +23,8 @@
 <link rel="stylesheet" href="/static/css/app.css">
 <script src="/static/js/header.js" defer></script>
 <script src="/static/js/code.js" defer></script>
+{{if .Search}}<script src="/static/js/palette.js" defer></script>
+{{end}}
 {{range .Head.Scripts}}<script src="{{.}}" defer></script>
 {{end}}</head>
 <body>

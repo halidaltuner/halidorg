@@ -17,16 +17,22 @@ func newMux(t *testing.T) *http.ServeMux {
 }
 
 func newSite(t *testing.T) (*http.ServeMux, store.DB) {
+	mux, db, _ := newSiteSearch(t)
+	return mux, db
+}
+
+func newSiteSearch(t *testing.T) (*http.ServeMux, store.DB, store.DB) {
 	t.Helper()
 	t.Setenv("PUBLIC_ORIGIN", "https://halid.org")
 	db := storetest.NewDB(t)
-	h, err := New(db)
+	sdb := storetest.NewSearchDB(t)
+	h, err := New(db, sdb)
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	h.Register(mux)
-	return mux, db
+	return mux, db, sdb
 }
 
 func TestRootRedirectsByAcceptLanguage(t *testing.T) {

@@ -44,7 +44,8 @@ type Chrome struct {
 	More   []NavItem
 	Switch []i18n.Option
 	Footer Footer
-	// Search shows the ⌘K button; off until the command palette ships.
+	// Search loads the command palette (palette.js), which shows the ⌘K
+	// button; without JS the button stays hidden.
 	Search bool
 }
 
@@ -70,6 +71,7 @@ func NewChrome(lang, active string, all bool, switchTo func(string) string) Chro
 		Nav:    items(nav, lang, active, all),
 		More:   items(more, lang, active, all),
 		Switch: i18n.Switcher(lang, switchTo),
+		Search: true,
 		Footer: Footer{
 			Links: []Link{
 				{Label: "rss", Href: "/" + lang + "/feed.xml"},

@@ -172,3 +172,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Media library (derive): a dashed drop zone (cyan tint while dragging), a grid of cards with the image on the striped placeholder, TR and EN alt fields, a "ready to use" or "alt text missing" pill, copy Markdown (disabled until both alts exist) and a two-click delete. Uploads show one progress bar per file.
 - Revisions (derive): a 320px timeline with old/new radios and a side-by-side line diff. Removed lines use `--tone-rose-tint`, added lines `--tone-green-tint`; unchanged runs fold to "n unchanged lines". Restore appears only for revisions that are not current.
 - The editor's cover picker lists only images with both alt texts; the drop zone image falls back to the OG card.
+
+## 15. Implementation notes (command palette)
+- The palette matches `Header.dc.html`: overlay at 32% of `--text`, 620px panel 12vh from the top, mono input with a rose `>`, rows with kind dot, title and kind, and a hints footer. Results come from `GET /x/search` (FTS5 prefix search, ADR-010) instead of the prototype's client-side subsequence match; results in the page language come first, others are marked with their language.
+- The header button is hidden until `palette.js` runs: the palette needs JS. The no-JS search page arrives with full-site search (ROADMAP Phase 4).

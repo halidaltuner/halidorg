@@ -72,7 +72,7 @@ func run() error {
 // routes builds the full mux. ServeMux panics on conflicting patterns, so
 // main_test.go calls this to catch them before a deploy does.
 func routes(stores store.Stores) (*http.ServeMux, error) {
-	pub, err := public.New(stores.DB)
+	pub, err := public.New(stores.DB, stores.Search)
 	if err != nil {
 		return nil, err
 	}
