@@ -107,16 +107,17 @@ flowchart LR
 /worker            edge worker (router, cache, bridge, cron)
 /app               Go application
   /cmd/server
-  /internal/content   per-kind repositories + validation
-  /internal/render    markdown, highlight, mermaid, OG images
-  /internal/admin     handlers + templates
+  /internal/content   per-kind repositories, validation, admin handlers (<kind>/handlers_admin.go)
+  /internal/render    markdown, highlight, mermaid, OG images (render/og)
+  /internal/admin     shell (admin.UI), sign-in, dashboard, admin search, CSRF guard
   /internal/public    handlers + templates
   /internal/jobs      render, purge, github, webmention, posse
   /internal/importer  Ghost and others
   /web/templates      partials/ (header, footer, cover, palette), public/, admin/, <kind>/
-  /web/static         css/tokens.css, css/app.css, fonts/ (self-hosted woff2), js/ islands
+  /web/static         css/tokens.css, css/app.css, fonts/ (self-hosted woff2), js/ islands, vendor/ (htmx, CodeMirror build)
+/editor            pinned npm sources for web/static/vendor (scripts/build-editor.sh)
 /design            Claude Design handoff (.dc.html prototypes + README), reference only
-/migrations        D1 SQL migrations
+/migrations        D1 SQL migrations (migrations-search/ for the SEARCH database)
 /docs              this folder
 wrangler.jsonc
 Dockerfile

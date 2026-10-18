@@ -29,7 +29,7 @@ Every content item with its own page has one row here. Type-specific fields live
 - `tags(id, slug, name_tr, name_en, tone)` + `entry_tags(entry_id, tag_id)`
 - `categories(id, kind, slug, name_tr, name_en, tone, parent_id, sort)` links, snippets, favs, homelab builds, awesome lists
 - `series(id, slug, title_tr, title_en, summary, status)`
-- `links_graph(from_entry_id, to_entry_id, context)` backlinks, rebuilt on render
+- `links_graph(from_entry_id, to_entry_id, context)` backlinks (migrations/0004_links_graph.sql). The entry.changed job rebuilds an entry's outgoing rows from its published HTML: links to `/{lang}/posts/{slug}` (relative or on the site origin), `context` is the link text. Unlisted and deleted entries have no outgoing rows.
 - `media(id, r2_key, mime, width, height, alt_tr, alt_en, blurhash, created_at)`
 - `redirects(from_path, to_path, code)` importer + slug changes
 - `not_found_log(path, hits, last_seen_at)` feeds the dashboard 404 panel

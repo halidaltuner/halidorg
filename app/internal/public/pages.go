@@ -162,6 +162,12 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 	h.render(w, r, "list", p)
 }
 
+// sections maps entry kinds to their public URL segment.
+var sections = map[string]string{"post": "posts"}
+
+// glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
+var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "★", "project": "◆"}
+
 // --- Post -------------------------------------------------------------------
 
 type postPage struct {
@@ -176,6 +182,11 @@ type postPage struct {
 	Untranslated bool
 	OtherURL     string
 	Tone         string
+	Backlinks    []backlink
+}
+
+type backlink struct {
+	Href, Title, Context, Lang, Glyph string
 }
 
 type translationLink struct {
@@ -233,6 +244,11 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 		h.fail(w, r, err)
 		return
 	}
+	bls, err := content.Backlinks(r.Context(), h.db, p.ID, true)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
 
 	// Where each language lives: the post itself, its translations, or the
 	// fallback page that shows the banner.
@@ -256,6 +272,11 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 		Untranslated: untranslated,
 		OtherURL:     where[p.Lang],
 		Tone:         tone(p.Entry),
+	}
+	for _, b := range bls {
+		if seg, ok := sections[b.Kind]; ok {
+			pg.Backlinks = append(pg.Backlinks, backlink{Href: "/" + b.Lang + "/" + seg + "/" + b.Slug, Title: b.Title, Context: b.Context, Lang: b.Lang, Glyph: glyphs[b.Kind]})
+		}
 	}
 	pg.TOC, _ = decodeTOC(rev.TOCJSON)
 	pg.Head.Description = p.Summary

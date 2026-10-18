@@ -1,0 +1,12 @@
+{{define "main"}}
+<div class="adm-head"><h1>{{.Title}}</h1></div>
+<section class="adm-panel adm-narrow">
+<form method="post" action="/admin/posts" class="adm-form">
+{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<label>{{tr .Lang "admin.editor.title"}}<input name="title" value="{{.Form.Title}}" autofocus required></label>
+<label>{{tr .Lang "admin.editor.slug"}}<input name="slug" value="{{.Form.Slug}}" pattern="[a-z0-9\-]{1,80}" placeholder="{{tr .Lang "admin.posts.slug_hint"}}" spellcheck="false"></label>
+<label>{{tr .Lang "admin.editor.lang"}}<select name="lang">{{range $l := langs}}<option value="{{$l}}"{{if eq $l $.Form.Lang}} selected{{end}}>{{$l}}</option>{{end}}</select></label>
+<button type="submit" class="adm-btn solid">{{tr .Lang "admin.posts.create"}}</button>
+</form>
+</section>
+{{end}}

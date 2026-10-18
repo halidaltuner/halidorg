@@ -29,6 +29,9 @@ Phase 0 spike findings. Full list in `prompts/_constraints.md`, details in `docs
 - ServeMux patterns can conflict and panic (`GET /static/` vs `/{lang}/{$}`); every route change must pass the `routes()` test in `cmd/server/main_test.go`.
 - Language-prefixed routes register literal prefixes per language (`for _, l := range i18n.Supported { "GET /"+l+"/posts" }`), never `/{lang}/literal`: that overlaps `/lang/{lang}` and ServeMux panics.
 - Every write to an entry enqueues `jobs.TypeEntryChanged` with the pre-write `jobs.RefOf` snapshot; the job renders its OG card, re-renders affected pages into KV (`jobs.Paths`) and re-indexes search. New kinds add their paths in `jobs/purge.go` and their card in `jobs.EntryJobs.cards` (`render/og`).
+- Every state-changing admin route is wrapped in `admin.Guard` (CSRF, `http.CrossOriginProtection`) inside `auth.RequireSession`. Publish checks `auth.Recent` itself after saving, so re-auth never drops typed text; delete uses `auth.RequireRecentAuth`.
+- Kind admin pages build on `admin.UI` (shell, render, fragments) in `internal/content/<kind>/handlers_admin.go`. Tests that drive a kind's repo from package `jobs` live in package `jobs_test`: kinds import `jobs` to enqueue.
+- Admin JS vendors (htmx, CodeMirror 6) are built by `scripts/build-editor.sh` from pinned versions in `editor/package.json` and committed under `app/web/static/vendor`.
 
 ## Conventions
 - Each content kind: `internal/content/<kind>/` with `model.go`, `repo.go`, `validate.go`, `handlers_admin.go`, `handlers_public.go`, templates under `web/templates/<kind>/`

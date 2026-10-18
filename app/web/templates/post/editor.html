@@ -1,0 +1,114 @@
+{{define "title"}}{{if .Post.Title}}{{.Post.Title}}{{else}}{{.Post.Slug}}{{end}} · {{tr .Lang "admin.editor.label"}}{{end}}
+{{define "content"}}<div class="ed">
+<header class="ed-top">
+<a class="ed-back mono" href="/admin/posts">← {{tr .Lang "admin.nav.posts"}}</a>
+<span class="ed-title" id="ed-title">{{if .Post.Title}}{{.Post.Title}}{{else}}{{tr .Lang "admin.untitled"}}{{end}}</span>
+<span class="ed-status s-{{.Status}}">{{tr .Lang (print "admin.status." .Status)}}</span>
+{{template "save-state" .}}
+{{with .Env}}<span class="adm-env">{{.}}</span>{{else}}<span class="ed-spacer"></span>{{end}}
+<button type="submit" form="editor" class="ed-btn" name="origin" value="manual" data-save
+ hx-post="/admin/posts/{{.Post.ID}}" hx-include="#editor" hx-vals='{"origin":"manual"}' hx-target="#save-state" hx-swap="outerHTML">{{tr .Lang "admin.editor.save"}}<kbd>⌘S</kbd></button>
+<button type="submit" form="editor" class="ed-btn primary" formaction="/admin/posts/{{.Post.ID}}/publish" data-publish
+ hx-post="/admin/posts/{{.Post.ID}}/publish" hx-include="#editor" hx-target="#save-state" hx-swap="outerHTML">{{tr .Lang "admin.editor.publish"}}<kbd>⌘⇧P</kbd></button>
+</header>
+{{- if .Reauthed}}
+<form class="ed-banner" method="post" action="/admin/posts/{{.Post.ID}}/publish">
+<span>{{tr .Lang "admin.editor.reauthed"}}</span>
+<input type="hidden" name="now" value="1">
+<button type="submit" class="ed-btn primary">{{tr .Lang "admin.editor.publish_now"}}</button>
+</form>
+{{- end}}
+<form id="editor" class="ed-cols" method="post" action="/admin/posts/{{.Post.ID}}"
+ hx-post="/admin/posts/{{.Post.ID}}" hx-trigger="input delay:800ms" hx-vals='{"origin":"autosave"}' hx-target="#save-state" hx-swap="outerHTML" hx-sync="this:queue last">
+<input type="hidden" name="lang" id="ed-lang" value="{{.Post.Lang}}">
+<div class="ed-md">
+<div class="ed-bar mono"><span>{{tr .Lang "admin.editor.markdown"}} · {{.Post.Lang}}</span><span><span id="ed-words">{{.Words}}</span> {{tr .Lang "admin.editor.words"}}</span></div>
+<input class="ed-title-in" name="title" value="{{.Post.Title}}" placeholder="{{tr .Lang "admin.editor.title"}}" aria-label="{{tr .Lang "admin.editor.title"}}" autocomplete="off">
+<div class="ed-src"><textarea id="md" name="markdown" spellcheck="false" aria-label="{{tr .Lang "admin.editor.markdown"}}" placeholder="{{tr .Lang "admin.editor.md_placeholder"}}">{{.Markdown}}</textarea></div>
+</div>
+<div class="ed-preview">
+<div class="ed-bar-plain mono">{{tr .Lang "admin.editor.preview"}}</div>
+<div class="prose ed-prose" id="preview" lang="{{.Post.Lang}}" hx-post="/admin/preview" hx-trigger="input from:#md delay:300ms, input from:.ed-title-in delay:300ms" hx-include="#md, #ed-lang, .ed-title-in" hx-target="this" hx-swap="innerHTML" hx-sync="this:replace">{{if .Post.Title}}<h1 class="ed-prev-title">{{.Post.Title}}</h1>{{end}}{{.Preview}}</div>
+</div>
+<aside class="ed-side">
+<div id="ed-errors" class="ed-errors"{{if not .Errors}} hidden{{end}}>{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}</div>
+<div class="ed-sec">
+<span class="ed-label">{{tr .Lang "admin.editor.kind"}}</span>
+<div class="ed-kinds"><span class="on">post</span><span aria-disabled="true">note</span><span aria-disabled="true">snippet</span></div>
+<label class="ed-label" for="ed-slug">{{tr .Lang "admin.editor.slug"}}</label>
+<input id="ed-slug" name="slug" value="{{.Post.Slug}}" spellcheck="false" pattern="[a-z0-9\-]{1,80}" required>
+<label class="ed-label" for="ed-series">{{tr .Lang "admin.editor.series"}}</label>
+<div class="ed-series">
+<select id="ed-series" name="series"><option value="">{{tr .Lang "admin.editor.no_series"}}</option>{{range .Series}}<option value="{{.ID}}"{{if .Selected}} selected{{end}}>{{.Title}}</option>{{end}}</select>
+<input name="series_order" value="{{with .Post.SeriesOrder}}{{.}}{{end}}" inputmode="numeric" size="2" aria-label="{{tr .Lang "admin.editor.series_order"}}" placeholder="#">
+</div>
+</div>
+<div class="ed-sec">
+<label class="ed-label" for="ed-tags">{{tr .Lang "admin.editor.tags"}}</label>
+<div class="ed-chips" id="ed-chips" hidden></div>
+<input id="ed-tags" name="tags" value="{{.TagsValue}}" placeholder="{{tr .Lang "admin.editor.tags_hint"}}" spellcheck="false" data-add="{{tr .Lang "admin.editor.add_tag"}}" data-remove="{{tr .Lang "admin.editor.remove_tag"}}">
+</div>
+<div class="ed-sec">
+<span class="ed-label">{{tr .Lang "admin.editor.cover"}}</span>
+{{- if .CoverURL}}<img class="ed-cover" src="{{.CoverURL}}" alt="" width="1200" height="630" loading="lazy" onerror="this.remove()">{{end}}
+<div class="ed-drop{{if .CoverURL}} small{{end}}">{{tr .Lang "admin.editor.cover_drop"}}</div>
+</div>
+<div class="ed-sec">
+<label class="ed-label" for="ed-seo">{{tr .Lang "admin.editor.seo"}} · <span id="ed-seo-n">{{.SEOLen}}</span>/160</label>
+<textarea id="ed-seo" name="summary" rows="3" maxlength="160">{{.Post.Summary}}</textarea>
+</div>
+<div class="ed-sec">
+<span class="ed-label">{{tr .Lang "admin.editor.translation"}}</span>
+{{- range .Others}}
+<div class="ed-tr"><span>{{.Lang}}</span>{{if .Href}}<a class="mono" href="{{.Href}}">{{.Status}} →</a>{{else}}<span class="mono warn">{{tr $.Lang "admin.editor.missing"}}</span>{{end}}</div>
+{{- if not .Href}}<button type="submit" class="ed-link" form="ed-translate-{{.Lang}}">{{printf (tr $.Lang "admin.editor.create_tr") .Lang}} →</button>{{end}}
+{{- end}}
+</div>
+<div class="ed-sec">
+<span class="ed-label">{{tr .Lang "admin.editor.revisions"}} · <span id="ed-revcount">{{.RevCount}}</span></span>
+{{template "revisions" .}}
+</div>
+<div class="ed-sec">
+<details class="ed-delete"{{if .OpenDelete}} open{{end}}>
+<summary class="adm-btn danger">{{tr .Lang "admin.delete.button"}}</summary>
+<div class="ed-confirm">
+{{with .DeleteErr}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+{{- if .Backlinks}}
+<span>{{printf (tr .Lang "admin.delete.backlinks") .Backlinks}} <code>{{.Post.Slug}}</code></span>
+<input name="confirm" form="ed-delete" autocomplete="off" spellcheck="false" aria-label="{{tr .Lang "admin.delete.type_slug"}}" data-confirm="{{.Post.Slug}}">
+{{- else}}
+<span>{{tr .Lang "admin.delete.sure"}}</span>
+{{- end}}
+{{- if eq .Status "published"}}
+<label class="ed-label" for="ed-redirect">{{tr .Lang "admin.delete.redirect_to"}}</label>
+<input id="ed-redirect" name="redirect_to" form="ed-delete" placeholder="/{{.Post.Lang}}/posts/…" spellcheck="false">
+{{- end}}
+<div class="ed-confirm-row">
+<button type="submit" class="ed-btn danger" form="ed-delete"{{if .Backlinks}} data-needs-confirm{{end}}>{{tr .Lang "admin.delete.confirm"}}</button>
+<button type="button" class="adm-btn" data-cancel hidden>{{tr .Lang "admin.delete.cancel"}}</button>
+</div>
+</div>
+</details>
+</div>
+</aside>
+</form>
+{{- range .Others}}{{if not .Href}}
+<form id="ed-translate-{{.Lang}}" method="post" action="/admin/posts/{{$.Post.ID}}/translate" hidden><input type="hidden" name="lang" value="{{.Lang}}"></form>
+{{- end}}{{end}}
+<form id="ed-delete" method="post" action="/admin/posts/{{.Post.ID}}/delete" hidden></form>
+</div>
+<script src="/static/vendor/htmx.min.js" defer></script>
+<script src="/static/js/code.js" defer></script>
+<script type="module" src="/static/js/editor.js"></script>
+{{end}}
+
+{{define "save-state"}}<span class="ed-saved mono" id="save-state" role="status">{{.SaveLabel}}</span>{{end}}
+
+{{define "revisions"}}<div class="ed-revs" id="ed-revs">{{range .Revisions}}<div><span>{{.At}}</span><span class="muted">{{.Origin}}</span></div>{{end}}</div>{{end}}
+
+{{define "saved"}}{{template "save-state" .}}
+<span class="ed-title" id="ed-title" hx-swap-oob="true">{{.Title}}</span>
+<div id="ed-errors" class="ed-errors" hx-swap-oob="true"{{if not .Errors}} hidden{{end}}>{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}</div>
+<span id="ed-revcount" hx-swap-oob="true">{{.RevCount}}</span>
+<div class="ed-revs" id="ed-revs" hx-swap-oob="true">{{range .Revisions}}<div><span>{{.At}}</span><span class="muted">{{.Origin}}</span></div>{{end}}</div>
+{{end}}

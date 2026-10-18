@@ -23,6 +23,7 @@ type Change struct {
 	Now      *Ref
 	Prev     *Ref
 	Siblings []Ref
+	Linked   []Ref // entries it links to, before or after: their backlinks change
 }
 
 // kindPath is the URL segment of a kind's pages (CONTENT_MODEL.md §5).
@@ -84,6 +85,9 @@ func Paths(c Change) []string {
 		}
 	}
 	for _, s := range c.Siblings {
+		add(ItemPath(s))
+	}
+	for _, s := range c.Linked {
 		add(ItemPath(s))
 	}
 	out := make([]string, 0, len(set))

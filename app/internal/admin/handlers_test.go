@@ -1,35 +1,36 @@
 package admin
 
 import (
-	"context"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"halid.org/engine/internal/auth"
+	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/store/storetest"
 )
 
-type noDB struct{}
-
-func (noDB) Query(context.Context, string, ...any) (store.Result, error) { return store.Result{}, nil }
-func (noDB) Batch(context.Context, ...store.Stmt) ([]store.Result, error) {
-	return nil, errors.New("unused")
+func newMux(t *testing.T, cfg auth.Config) *http.ServeMux {
+	mux, _, _ := newSite(t, cfg)
+	return mux
 }
 
-func newMux(t *testing.T, cfg auth.Config) *http.ServeMux {
+// newSite builds the admin routes over SQLite stores.
+func newSite(t *testing.T, cfg auth.Config) (*http.ServeMux, store.Stores, *auth.Auth) {
 	t.Helper()
 	t.Setenv("APP_ENV", "staging")
 	t.Setenv("DEPLOY_SHA", "a3f91c2deadbeef")
-	h, err := New(auth.New(cfg, noDB{}))
+	s := storetest.Stores(t)
+	a := auth.New(cfg, s.DB)
+	h, err := New(a, NewUI(s.DB), s.DB, s.Search, jobs.New(s.DB, s.Queue))
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	h.Register(mux)
-	return mux
+	return mux, s, a
 }
 
 func serve(mux *http.ServeMux, method, target string) *httptest.ResponseRecorder {

@@ -1,0 +1,18 @@
+{{define "main"}}
+<div class="adm-head">
+<h1>{{.Title}}</h1>
+<a class="adm-btn solid" href="/admin/posts/new">{{tr .Lang "admin.posts.new"}}</a>
+</div>
+<section class="adm-panel">
+<table class="adm-table">
+<thead><tr><th>{{tr .Lang "admin.posts.col_title"}}</th><th>{{tr .Lang "admin.posts.col_lang"}}</th><th>{{tr .Lang "admin.posts.col_status"}}</th><th>{{tr .Lang "admin.posts.col_updated"}}</th></tr></thead>
+<tbody>
+{{- range .Rows}}
+<tr><td><a href="{{.Href}}">{{.Title}}</a></td><td class="mono">{{.Lang}}</td><td class="mono">{{.Status}}</td><td class="mono muted">{{.Updated}}</td></tr>
+{{- else}}
+<tr><td colspan="4" class="adm-empty">{{tr $.Lang "admin.posts.empty"}}</td></tr>
+{{- end}}
+</tbody>
+</table>
+</section>
+{{end}}

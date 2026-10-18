@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"halid.org/engine/internal/content"
@@ -32,12 +33,14 @@ type EntryJobs struct {
 	search store.DB
 	blob   store.Blob
 	warm   *Warmer
+	origin string // PUBLIC_ORIGIN: absolute links on it count as internal
 }
 
 // NewEntryJobs wires the handler; register it with jobs.Handle. blob is
 // where OG cards go (R2).
 func NewEntryJobs(db, searchDB store.DB, blob store.Blob, warm *Warmer) *EntryJobs {
-	return &EntryJobs{db: db, search: searchDB, blob: blob, warm: warm}
+	return &EntryJobs{db: db, search: searchDB, blob: blob, warm: warm,
+		origin: strings.TrimRight(os.Getenv("PUBLIC_ORIGIN"), "/")}
 }
 
 // Register adds the entry handlers to j.
@@ -126,6 +129,11 @@ func (e *EntryJobs) changed(ctx context.Context, raw json.RawMessage) error {
 			return err
 		}
 		c.Siblings = sibs
+		linked, err := e.links(ctx, row, c.Now.Listed)
+		if err != nil {
+			return err
+		}
+		c.Linked = linked
 	}
 	// Cards first: the pages warmed next point og:image at them.
 	if err := e.cards(ctx, c, row); err != nil {
@@ -189,6 +197,53 @@ func (e *EntryJobs) siteCards(ctx context.Context) error {
 		}
 	}
 	return nil
+}
+
+// links rebuilds the entry's outgoing rows in links_graph from its published
+// HTML and returns the entries it linked to before or links to now: their
+// backlink lists change, so their pages are re-rendered too.
+func (e *EntryJobs) links(ctx context.Context, row *entryRow, listed bool) ([]Ref, error) {
+	before, err := content.LinkTargets(ctx, e.db, row.ID)
+	if err != nil {
+		return nil, err
+	}
+	var found []content.Link
+	if listed {
+		res, err := e.db.Query(ctx, `SELECT r.body_html FROM entries e JOIN revisions r ON r.id = e.published_revision_id WHERE e.id = ?`, row.ID)
+		if err != nil {
+			return nil, err
+		}
+		bodies, err := store.Scan[struct {
+			HTML string `json:"body_html"`
+		}](res)
+		if err != nil {
+			return nil, err
+		}
+		if len(bodies) == 1 {
+			found = content.ExtractLinks(bodies[0].HTML, e.origin)
+		}
+	}
+	if _, err := e.db.Batch(ctx, content.SetLinksStmts(row.ID, found)...); err != nil {
+		return nil, err
+	}
+	after, err := content.LinkTargets(ctx, e.db, row.ID)
+	if err != nil {
+		return nil, err
+	}
+	ids := append(before, after...)
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	q := `SELECT kind, lang, slug FROM entries WHERE id IN (?` + strings.Repeat(", ?", len(ids)-1) + `)`
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	res, err := e.db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[Ref](res)
 }
 
 func siblings(ctx context.Context, db store.DB, row *entryRow) ([]Ref, error) {

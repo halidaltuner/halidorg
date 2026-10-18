@@ -1,0 +1,13 @@
+{{define "main"}}
+<div class="adm-head"><h1>{{tr .Lang "admin.search.title"}}</h1></div>
+<section class="adm-panel adm-search-page">{{template "search-results" .}}</section>
+{{end}}
+
+{{define "search-results"}}
+{{- if .Hits}}<ul class="adm-hits">
+{{- range .Hits}}
+<li>{{template "entry-row" .}}</li>
+{{- end}}
+</ul>
+{{- else if .Query}}<p class="adm-empty">{{tr .Lang "admin.search.none"}}</p>{{end}}
+{{- end}}

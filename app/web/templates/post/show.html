@@ -27,8 +27,12 @@
 {{- with .Next}}<a class="next" href="/{{.Lang}}/posts/{{.Slug}}"><span class="mono">{{add $.Series.Index 1}}/{{$.Series.Total}} →</span><span>{{.Title}}</span></a>{{end}}
 </nav>{{end}}{{end}}
 <section class="backlinks" id="backlinks">
-<h3 class="mono">{{tr .Lang "post.backlinks"}} · 0</h3>
+<h3 class="mono">{{tr .Lang "post.backlinks"}} · {{len .Backlinks}}</h3>
+{{- range .Backlinks}}
+<a href="{{.Href}}"{{if ne .Lang $.Lang}} hreflang="{{.Lang}}"{{end}}{{with .Context}} title="{{.}}"{{end}}>{{.Glyph}} {{.Title}}</a>
+{{- else}}
 <p>{{tr .Lang "post.backlinks_empty"}}</p>
+{{- end}}
 </section>
 </article>
 </div>{{end}}
