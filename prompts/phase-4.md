@@ -1,6 +1,6 @@
 # Phase 4 prompts: projects, homelab, GitHub
 
-Prerequisite: Phase 3 exit check is all "done" (site is live).
+Prerequisite: Phase 2 exit check is all "done". Phase 3 (launch) is deferred to the end (ROADMAP.md), so checks that say prod run against staging.
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
 Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 

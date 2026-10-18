@@ -1,6 +1,7 @@
 # Roadmap
 
 Each phase ends with something deployable. Sizes are relative (S/M/L), not dates.
+Order: 0, 1, 2, 4, 5, 6, 7, 8, 9, then 3 (launch). Until Phase 3 runs, the site lives on staging and exit checks that say "prod" run against staging.
 Screens marked **(designed)** have a high-fidelity prototype in `/design`; build pixel-close. Screens marked **(derive)** are not designed: build from the design system in DESIGN.md, then review.
 
 ## Phase 0: Spike and foundations (M)
@@ -59,15 +60,6 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 
 **Exit:** links, favs and snippets added from phone in under 30 seconds.
 
-## Phase 3: Ghost importer and launch (M)
-- [ ] Ghost JSON + images importer with dry-run report; import + redirects admin **(derive)**
-- [ ] 301 redirects for old URLs, 404 report on dashboard
-- [ ] Real content swap: replace all prototype placeholders (bio, tagline, names)
-- [ ] Production cutover: DNS, OAuth client for prod, backups
-- [ ] Remove Ghost
-
-**Exit:** halid.org runs on the new engine, no broken inbound links.
-
 ## Phase 4: Projects, homelab, GitHub (M)
 - [ ] `project` with `project_type` software|homelab, facts, stack, parts, gallery; `buildlog`
 - [ ] Projects **(designed)** with GitHub section (52-week strip, language bar, pinned repos, releases)
@@ -107,6 +99,16 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] Jobs page with retry (`retry n/3`), based on the dashboard failed-jobs panel **(derive)**; settings **(derive)**
 - [ ] Re-render-all job for renderer upgrades
 - [ ] Cloudflare Web Analytics
+
+## Phase 3: Ghost importer and launch (M)
+Deferred: runs last, after Phase 9. The number stays so prompts and tags keep their names.
+- [ ] Ghost JSON + images importer with dry-run report; import + redirects admin **(derive)**
+- [ ] 301 redirects for old URLs, 404 report on dashboard
+- [ ] Real content swap: replace all prototype placeholders (bio, tagline, names)
+- [ ] Production cutover: DNS, OAuth client for prod, backups
+- [ ] Remove Ghost
+
+**Exit:** halid.org runs on the new engine, no broken inbound links.
 
 ## Backlog
 - Comments (webmentions only)

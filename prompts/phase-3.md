@@ -1,6 +1,6 @@
 # Phase 3 prompts: Ghost importer and launch
 
-Prerequisite: Phase 2 exit check is all "done". Have a fresh Ghost JSON export and the content/images folder ready.
+Prerequisite: Phase 9 exit check is done (Phase 3 was moved to the end, ROADMAP.md). Have a fresh Ghost JSON export and the content/images folder ready.
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
 Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
