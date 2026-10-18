@@ -110,6 +110,8 @@ flowchart LR
   /internal/content   per-kind repositories, validation, admin handlers (<kind>/handlers_admin.go)
   /internal/render    markdown, highlight, mermaid, OG images (render/og)
   /internal/admin     shell (admin.UI), sign-in, dashboard, admin search, CSRF guard
+  /internal/media     media library: upload to R2, alt text, served by the Worker at /media/*
+  /internal/diff      Myers line diff for the revisions view
   /internal/public    handlers + templates
   /internal/jobs      render, purge, github, webmention, posse
   /internal/importer  Ghost and others

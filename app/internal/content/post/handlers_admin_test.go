@@ -13,6 +13,7 @@ import (
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/jobs"
+	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/store/storetest"
 )
@@ -30,7 +31,7 @@ func newAdminSite(t *testing.T) site {
 	t.Setenv("APP_ENV", "staging")
 	s := storetest.Stores(t)
 	a := auth.New(auth.Config{SessionSecret: strings.Repeat("k", 32)}, s.DB)
-	h, err := NewAdmin(s.DB, admin.NewUI(s.DB), a, jobs.New(s.DB, s.Queue))
+	h, err := NewAdmin(s.DB, admin.NewUI(s.DB), a, jobs.New(s.DB, s.Queue), media.NewRepo(s.DB, s.Blob))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -287,5 +288,120 @@ func TestPreviewAndList(t *testing.T) {
 	must(t, st.do(st.fresh, "GET", "/admin/posts", nil, false).Body.String(), ">Listed</a>", `aria-current="page"><span>posts</span>`)
 	if rec := st.do(nil, "GET", "/admin/posts", nil, false); rec.Code != http.StatusSeeOther {
 		t.Errorf("posts without session: %d", rec.Code)
+	}
+}
+
+func TestEntryListFiltersAndBulk(t *testing.T) {
+	st := newAdminSite(t)
+	ctx := context.Background()
+	a := st.newPost(t, "Alpha")
+	st.do(st.fresh, "POST", "/admin/posts/"+a, editorForm("Alpha", "alpha", "Text."), false)
+	b := st.newPost(t, "Beta")
+	st.do(st.fresh, "POST", "/admin/posts/"+b, editorForm("Beta", "beta", "Text."), false)
+	rec := st.do(st.fresh, "POST", "/admin/posts", url.Values{"title": {"Gamma tr"}, "lang": {"tr"}}, false)
+	if rec.Code != http.StatusSeeOther {
+		t.Fatal(rec.Code)
+	}
+
+	// Filters narrow the table; the translation column shows the other language.
+	body := st.do(st.fresh, "GET", "/admin/posts?lang=tr", nil, false).Body.String()
+	if !strings.Contains(body, ">Gamma tr</a>") || strings.Contains(body, ">Alpha</a>") {
+		t.Fatalf("lang filter:\n%s", body)
+	}
+	must(t, st.do(st.fresh, "GET", "/admin/posts?tag=htmx", nil, false).Body.String(), ">Alpha</a>", ">Beta</a>", "tr ✕")
+
+	// Bulk publish with a stale sign-in: re-auth first.
+	form := url.Values{"action": {"publish"}, "id": {a, b}, "back": {"?status=draft"}}
+	if rec := st.do(st.stale, "POST", "/admin/posts/bulk", form, false); rec.Code != http.StatusSeeOther || !strings.HasPrefix(rec.Header().Get("Location"), "/admin/reauth") {
+		t.Fatalf("stale bulk %d %q", rec.Code, rec.Header().Get("Location"))
+	}
+	rec = st.do(st.fresh, "POST", "/admin/posts/bulk", form, false)
+	if rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/admin/posts?status=draft&done=publish" {
+		t.Fatalf("bulk publish %d %q", rec.Code, rec.Header().Get("Location"))
+	}
+	repo := NewRepo(st.s.DB)
+	for _, id := range []string{a, b} {
+		if p, _ := repo.Get(ctx, id); p.Status != content.Published {
+			t.Errorf("%s not published", id)
+		}
+	}
+	must(t, st.do(st.fresh, "GET", "/admin/posts?status=published&done=publish", nil, false).Body.String(), "The selected posts were published.", `class="adm-st s-published"`)
+
+	// Archive takes them off the site.
+	if rec := st.do(st.fresh, "POST", "/admin/posts/bulk", url.Values{"action": {"archive"}, "id": {a}}, false); rec.Code != http.StatusSeeOther {
+		t.Fatalf("archive %d", rec.Code)
+	}
+	if p, _ := repo.Get(ctx, a); p.Status != content.Archived {
+		t.Errorf("not archived: %s", p.Status)
+	}
+	if _, err := repo.GetPublished(ctx, "en", "alpha"); err == nil {
+		t.Error("archived post still public")
+	}
+	// Nothing selected: the list comes back with an error.
+	if rec := st.do(st.fresh, "POST", "/admin/posts/bulk", url.Values{"action": {"publish"}}, false); rec.Code != http.StatusUnprocessableEntity {
+		t.Errorf("empty bulk %d", rec.Code)
+	}
+}
+
+func TestCoverMustHaveAltText(t *testing.T) {
+	st := newAdminSite(t)
+	ctx := context.Background()
+	id := st.newPost(t, "Covered")
+	if _, err := st.s.DB.Query(ctx, `INSERT INTO media (id, r2_key, mime, created_at) VALUES ('M1', 'media/M1/a.png', 'image/png', 1)`); err != nil {
+		t.Fatal(err)
+	}
+	f := editorForm("Covered", "covered", "x")
+	f.Set("cover", "M1")
+	rec := st.do(st.fresh, "POST", "/admin/posts/"+id, f, false)
+	if rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "cover image is missing or has no alt text") {
+		t.Fatalf("cover without alt %d", rec.Code)
+	}
+	if _, err := st.s.DB.Query(ctx, `UPDATE media SET alt_tr = 'a', alt_en = 'a' WHERE id = 'M1'`); err != nil {
+		t.Fatal(err)
+	}
+	if rec := st.do(st.fresh, "POST", "/admin/posts/"+id, f, false); rec.Code != http.StatusSeeOther {
+		t.Fatalf("cover with alt %d", rec.Code)
+	}
+	p, _ := NewRepo(st.s.DB).Get(ctx, id)
+	if p.CoverMediaID == nil || *p.CoverMediaID != "M1" {
+		t.Fatalf("cover not saved: %v", p.CoverMediaID)
+	}
+	must(t, st.do(st.fresh, "GET", "/admin/posts/"+id, nil, false).Body.String(), `<img class="ed-cover" src="/media/M1/a.png"`, `<option value="M1" selected>`)
+}
+
+func TestRevisionsDiffAndRestore(t *testing.T) {
+	st := newAdminSite(t)
+	ctx := context.Background()
+	id := st.newPost(t, "History")
+	for _, md := range []string{"one\ntwo\nthree", "one\nTWO\nthree\nfour"} {
+		st.do(st.fresh, "POST", "/admin/posts/"+id, editorForm("History", "history", md), false)
+	}
+	revs, _ := content.Revisions(ctx, st.s.DB, id, 10)
+	if len(revs) != 3 {
+		t.Fatalf("revisions %d", len(revs))
+	}
+	// Default view: newest against the one before it.
+	body := st.do(st.fresh, "GET", "/admin/posts/"+id+"/revisions", nil, false).Body.String()
+	must(t, body, `<span class="ok">+2</span> <span class="bad">−1</span>`, `<tr class="chg"><td class="ln">2</td><td class="l">two</td><td class="ln">2</td><td class="r">TWO</td></tr>`,
+		`<tr class="add"><td class="ln"></td><td class="l"></td><td class="ln">4</td><td class="r">four</td></tr>`)
+	if strings.Contains(body, "restore this revision") {
+		t.Error("restore offered for the current revision")
+	}
+	// Restore the middle one: a new manual revision with a note.
+	old := revs[1].ID
+	must(t, st.do(st.fresh, "GET", "/admin/posts/"+id+"/revisions?b="+old, nil, false).Body.String(), "restore this revision")
+	if rec := st.do(st.fresh, "POST", "/admin/posts/"+id+"/revisions/"+old+"/restore", url.Values{}, false); rec.Code != http.StatusSeeOther {
+		t.Fatalf("restore %d", rec.Code)
+	}
+	revs, _ = content.Revisions(ctx, st.s.DB, id, 10)
+	cur, _ := content.GetRevision(ctx, st.s.DB, revs[0].ID)
+	if len(revs) != 4 || cur.BodyMD != "one\ntwo\nthree" || !strings.HasPrefix(cur.Note, "restored from ") || cur.Origin != content.OriginManual {
+		t.Fatalf("after restore %d revs, current %+v", len(revs), cur)
+	}
+	// A revision of another post is not restorable here.
+	other := st.newPost(t, "Other")
+	orevs, _ := content.Revisions(ctx, st.s.DB, other, 1)
+	if rec := st.do(st.fresh, "POST", "/admin/posts/"+id+"/revisions/"+orevs[0].ID+"/restore", url.Values{}, false); rec.Code != http.StatusNotFound {
+		t.Errorf("foreign revision %d", rec.Code)
 	}
 }

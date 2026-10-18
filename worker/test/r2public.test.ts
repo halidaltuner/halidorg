@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { type OGEnv, serveOG } from "../src/og";
+import { type R2PublicEnv, serveR2Public } from "../src/r2public";
 
-function env(objects: Record<string, string>): OGEnv {
+function env(objects: Record<string, string>): R2PublicEnv {
 	return {
 		MEDIA: {
 			get: async (k: string) =>
 				k in objects ? { body: new TextEncoder().encode(objects[k]), httpEtag: `"${k}"` } : null,
 		},
-	} as unknown as OGEnv;
+	} as unknown as R2PublicEnv;
 }
 
 const req = (path: string, init?: RequestInit) => new Request("https://halid.org" + path, init);
-const serve = (r: Request, e: OGEnv) => serveOG(r, new URL(r.url), e);
+const serve = (r: Request, e: R2PublicEnv) => serveR2Public(r, new URL(r.url), e);
 
-describe("serveOG", () => {
+describe("serveR2Public", () => {
 	const e = env({ "og/en/posts/htmx.png": "png", "og/tr/site-abc123.png": "site" });
 
 	it("ignores other paths", async () => {
@@ -42,6 +42,18 @@ describe("serveOG", () => {
 	it("404s missing cards and keys outside og/", async () => {
 		for (const p of ["/og/en/posts/nope.png", "/og/en/../x.png", "/og/en/posts/x.jpg", "/og/EN/posts/x.png"]) {
 			expect((await serve(req(p), e))!.status, p).toBe(404);
+		}
+	});
+
+	it("serves media by key with the type from the extension", async () => {
+		const m = env({ "media/01JABCDEFGHJKMNPQRSTVWXYZ0/photo.webp": "img" });
+		const res = (await serve(req("/media/01JABCDEFGHJKMNPQRSTVWXYZ0/photo.webp"), m))!;
+		expect(res.status).toBe(200);
+		expect(res.headers.get("Content-Type")).toBe("image/webp");
+		expect(res.headers.get("Cache-Control")).toContain("immutable");
+		expect(res.headers.get("Content-Security-Policy")).toContain("sandbox");
+		for (const p of ["/media/x/photo.webp", "/media/01JABCDEFGHJKMNPQRSTVWXYZ0/photo.svg", "/media/01JABCDEFGHJKMNPQRSTVWXYZ0/a/b.png"]) {
+			expect((await serve(req(p), m))!.status, p).toBe(404);
 		}
 	});
 

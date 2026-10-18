@@ -17,6 +17,7 @@ import (
 	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/jobs"
+	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/public"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/styleguide"
@@ -97,11 +98,17 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	pub.Register(mux)
 	feeds.New(stores.DB).Register(mux)
 	adm.Register(mux)
-	postAdmin, err := post.NewAdmin(stores.DB, adminUI, authn, runner)
+	mediaRepo := media.NewRepo(stores.DB, stores.Blob)
+	postAdmin, err := post.NewAdmin(stores.DB, adminUI, authn, runner, mediaRepo)
 	if err != nil {
 		return nil, err
 	}
 	postAdmin.Register(mux)
+	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
+	if err != nil {
+		return nil, err
+	}
+	mediaAdmin.Register(mux)
 	sg.Register(mux)
 
 	// Background jobs (Phase 1.3). The warmer renders through this same mux,
