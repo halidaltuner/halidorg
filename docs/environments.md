@@ -112,7 +112,7 @@ Re-auth is unverified against Google: whether `max_age=0` makes Google ask for t
 
 ## 4. CI
 
-`.github/workflows/ci.yml` runs on pull requests; `deploy.yml` deploys staging on `main` and prod on a `v*` tag, applying D1 migrations before `wrangler deploy`.
+`.github/workflows/ci.yml` runs on pull requests; `deploy.yml` deploys staging on `main`, applying D1 migrations before `wrangler deploy`. Prod deploys only from a manual run (Actions → deploy → Run workflow → `prod`); halid.org stays on its "coming soon" page until the project is done. `v*` tags mark milestones (`v0.1.0` = Phase 1) and deploy nothing.
 
 Repository secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
 
