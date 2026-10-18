@@ -18,7 +18,7 @@
 </aside>
 <div class="adm-body">
 <header class="adm-top">
-<a class="adm-plus" href="/admin/posts/new" title="{{tr .Lang "admin.new_post"}}" aria-label="{{tr .Lang "admin.new_post"}}">+</a>
+<a class="adm-plus" href="/admin/quick" title="{{tr .Lang "qc.title"}}" aria-label="{{tr .Lang "qc.title"}}">+</a>
 <form class="adm-search" method="get" action="/admin/search" role="search">
 <input type="search" name="q" value="{{.Query}}" placeholder="{{tr .Lang "admin.search.placeholder"}}" aria-label="{{tr .Lang "admin.search.label"}}" autocomplete="off"
  hx-get="/admin/search" hx-trigger="input changed delay:250ms, search" hx-target="#adm-search-results" hx-swap="innerHTML" data-hotkey="k">
