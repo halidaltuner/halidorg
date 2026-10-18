@@ -14,3 +14,6 @@
 
 {{/* filter-chips: a list page filter (links ?status=, favs ?type=). Each chip is a link for the no-JS path; filter.js filters in place. Args: chips []filterChip, label. */}}
 {{define "filter-chips"}}<nav class="chips" aria-label="{{.label}}">{{range .chips}}<a class="chip tone-navy" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>{{end}}
+
+{{/* bookmarklet: the draggable Quick Capture chip and its hint. Data: .Lang, .Bookmarklet. */}}
+{{define "bookmarklet"}}<span class="bm"><a class="bm-chip mono" href="{{.Bookmarklet}}" title="{{tr .Lang "qc.bm_title"}}" data-bookmarklet data-hint="{{tr .Lang "qc.bm_click"}}">⇱ {{tr .Lang "qc.title"}}</a><span class="bm-hint">{{tr .Lang "qc.bookmarklet"}}</span></span>{{end}}

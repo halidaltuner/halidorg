@@ -12,7 +12,6 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
-	"os"
 	"strings"
 	"time"
 
@@ -37,17 +36,16 @@ type Fetcher interface {
 
 // Handlers serves /admin/quick.
 type Handlers struct {
-	db     store.DB
-	ui     *admin.UI
-	auth   *auth.Auth
-	jobs   *jobs.Jobs
-	fetch  Fetcher
-	links  *link.Repo
-	favs   *fav.Repo
-	notes  *note.Repo
-	origin string
-	page   *template.Template
-	saved  *template.Template
+	db    store.DB
+	ui    *admin.UI
+	auth  *auth.Auth
+	jobs  *jobs.Jobs
+	fetch Fetcher
+	links *link.Repo
+	favs  *fav.Repo
+	notes *note.Repo
+	page  *template.Template
+	saved *template.Template
 }
 
 // New parses the Quick Capture templates.
@@ -60,12 +58,8 @@ func New(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs, f Fetcher) (*Hand
 	if err != nil {
 		return nil, err
 	}
-	origin := strings.TrimRight(os.Getenv("PUBLIC_ORIGIN"), "/")
-	if origin == "" {
-		origin = "http://localhost:8787"
-	}
 	return &Handlers{db: db, ui: u, auth: a, jobs: j, fetch: f, links: link.NewRepo(db), favs: fav.NewRepo(db),
-		notes: note.NewRepo(db), origin: origin, page: page, saved: saved}, nil
+		notes: note.NewRepo(db), page: page, saved: saved}, nil
 }
 
 // Register adds the routes. Saving is a write (admin.Guard in a session);
@@ -109,14 +103,7 @@ type page struct {
 func (h *Handlers) newPage(r *http.Request) page {
 	lang := i18n.FromRequest(r)
 	sh := h.ui.Shell(r, "", "")
-	return page{Lang: lang, Env: sh.Env, Kind: link.Kind, EntryLang: lang, Bookmarklet: bookmarklet(h.origin)}
-}
-
-// bookmarklet opens Quick Capture for the current tab in a phone-sized
-// window. Built here from PUBLIC_ORIGIN only, never from request data.
-func bookmarklet(origin string) template.URL {
-	js := `javascript:(()=>{window.open('` + origin + `/admin/quick?url='+encodeURIComponent(location.href)+'&title='+encodeURIComponent(document.title),'quick','width=420,height=780')})()`
-	return template.URL(js) // a constant script with the origin, see above
+	return page{Lang: lang, Env: sh.Env, Kind: link.Kind, EntryLang: lang, Bookmarklet: admin.Bookmarklet()}
 }
 
 func (p *page) options() {

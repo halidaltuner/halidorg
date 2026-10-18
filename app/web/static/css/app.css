@@ -1205,8 +1205,21 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
   margin-top: var(--sp-12); height: 48px; padding: 0 var(--sp-20); display: inline-grid; place-items: center; border-radius: var(--radius-1);
   border: 1px solid var(--border); background: var(--surface); color: var(--text); text-decoration: none; font-size: var(--fs-16);
 }
-.qc-bookmarklet { margin: 0; font-size: var(--fs-12); color: var(--text-muted); }
-.qc-bookmarklet a { color: var(--link); }
+.qc-bookmarklet { max-width: 390px; }
+/* The bookmarklet chip: dashed like something to pick up and move. */
+.bm { display: inline-flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; }
+.bm-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 var(--sp-12);
+  border: 1px dashed var(--link); border-radius: var(--radius-pill); background: var(--surface);
+  color: var(--link); font-size: var(--fs-13); text-decoration: none; cursor: grab; white-space: nowrap;
+}
+.bm-chip:hover { border-style: solid; }
+.bm-chip:active { cursor: grabbing; }
+.bm-hint { font-size: var(--fs-12); color: var(--text-muted); text-wrap: pretty; }
+.bm-hint.nudge { color: var(--warning); }
+.adm-capture { display: flex; align-items: center; gap: var(--sp-16); flex-wrap: wrap; margin-top: var(--sp-12); }
+.adm-capture > .adm-btn { min-height: 36px; display: inline-flex; align-items: center; text-decoration: none; color: var(--text); }
+@media (hover: none) { .adm-capture .bm { display: none; } }
 @media (max-width: 480px) {
   .qc-page { padding: 0; background: var(--bg); }
   .qc { max-width: none; min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }

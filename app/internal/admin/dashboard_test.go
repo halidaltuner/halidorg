@@ -101,6 +101,8 @@ func TestDashboard(t *testing.T) {
 		"entry.changed #000001", "dead · attempt 4/4 · timeout",
 		"/2019/05/docker-notes/",
 		`/static/vendor/htmx.min.js`,
+		`<a class="adm-btn" href="/admin/quick">+ quick capture</a>`,
+		`<a class="bm-chip mono" href="javascript:`, `data-bookmarklet`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("dashboard missing %q", want)

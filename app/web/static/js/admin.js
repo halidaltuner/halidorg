@@ -16,3 +16,16 @@
 		if (results && !e.target.closest(".adm-search")) results.innerHTML = "";
 	});
 })();
+
+// The Quick Capture bookmarklet is meant to be dragged to the bookmarks bar.
+// Clicked here it would capture this admin page, so it explains instead.
+for (const a of document.querySelectorAll("[data-bookmarklet]")) {
+	a.addEventListener("click", (e) => {
+		e.preventDefault();
+		const hint = a.parentElement.querySelector(".bm-hint");
+		if (hint) {
+			hint.textContent = a.dataset.hint;
+			hint.classList.add("nudge");
+		}
+	});
+}

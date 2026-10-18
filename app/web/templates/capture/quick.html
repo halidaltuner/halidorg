@@ -46,5 +46,6 @@
 <button type="submit" class="qc-publish" name="action" value="publish"{{if not .Fetched}} disabled{{end}}>{{tr .Lang "qc.publish"}}</button>
 </div>
 </form>
-<p class="qc-bookmarklet mono">{{tr .Lang "qc.bookmarklet"}} <a href="{{.Bookmarklet}}">+ quick capture</a></p>
+<div class="qc-bookmarklet">{{template "bookmarklet" .}}</div>
+<script src="{{asset "/static/js/admin.js"}}" defer></script>
 </div>{{end}}
