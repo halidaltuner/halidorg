@@ -40,7 +40,14 @@ async function kvHit(path) {
 	const first = await get(path);
 	const second = await get(path);
 	const a = first.res.headers.get("x-cache"), b = second.res.headers.get("x-cache");
-	check(`KV: ${path} second request is a HIT`, second.res.status === 200 && b === "HIT", `${first.res.status} ${a} → ${second.res.status} ${b}`);
+	let why = "";
+	if (b === "STALE") {
+		// Still stale: what does the container answer for it now? A query
+		// string bypasses KV and goes straight to the origin.
+		const o = await get(path + (path.includes("?") ? "&" : "?") + "_origin=1");
+		why = ` · origin ${o.res.status} build ${o.res.headers.get("x-build-sha") ?? "-"} cc ${o.res.headers.get("cache-control") ?? "-"} ct ${o.res.headers.get("content-type") ?? "-"}`;
+	}
+	check(`KV: ${path} second request is a HIT`, second.res.status === 200 && b === "HIT", `${first.res.status} ${a} → ${second.res.status} ${b}${why}`);
 	// A page stored before the latest deploy still has the old templates:
 	// every public page now loads the palette (Phase 1 PR #5).
 	if (second.res.status === 200) check(`Fresh: ${path} has the current templates (palette.js)`, second.body.includes("/static/js/palette.js"),
