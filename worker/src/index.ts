@@ -2,7 +2,7 @@
 // to the Go container, and bridges the container to D1/KV/R2.
 import { Container, getContainer } from "@cloudflare/containers";
 import { handleBridge } from "./bridge";
-import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, type PageMeta } from "./cache";
+import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta } from "./cache";
 import { consume, type JobMessage, logNotFound } from "./jobs";
 import { serveR2Public } from "./r2public";
 
@@ -55,15 +55,17 @@ export default {
 		const kvMs = Date.now() - t0;
 
 		if (hit.value !== null && hit.metadata) {
+			if (isStale(hit.metadata, env.DEPLOY_SHA)) {
+				// Stale-while-revalidate: the visitor gets the stored page now,
+				// the current templates render it in the background.
+				ctx.waitUntil(refresh(req, key, env).catch(() => {}));
+				return page(req, hit.value, hit.metadata, "STALE", `kv;dur=${kvMs}`);
+			}
 			return page(req, hit.value, hit.metadata, "HIT", `kv;dur=${kvMs}`);
 		}
 
-		// Strip validators so the container returns a full 200 we can store.
-		const fwd = new Request(req);
-		fwd.headers.delete("If-None-Match");
-		fwd.headers.delete("If-Modified-Since");
 		const t1 = Date.now();
-		const res = await origin(fwd, env);
+		const res = await origin(forStore(req), env);
 		const timing = `kv;dur=${kvMs}, origin;dur=${Date.now() - t1}`;
 
 		if (res.status === 404) {
@@ -78,11 +80,7 @@ export default {
 		}
 
 		const body = await res.arrayBuffer();
-		const meta: PageMeta = {
-			etag: res.headers.get("ETag") ?? "",
-			contentType: res.headers.get("Content-Type") ?? "text/html; charset=utf-8",
-			storedAt: Math.floor(Date.now() / 1000),
-		};
+		const meta = metaOf(res, env);
 		ctx.waitUntil(env.PAGES.put(key, body, { metadata: meta }));
 		return page(req, body, meta, "MISS", timing);
 	},
@@ -96,7 +94,38 @@ function origin(req: Request, env: Env): Promise<Response> {
 	return getContainer(env.APP).fetch(req);
 }
 
-function page(req: Request, body: ArrayBuffer, meta: PageMeta, cache: "HIT" | "MISS", timing: string): Response {
+// Strip validators so the container returns a full 200 we can store.
+function forStore(req: Request): Request {
+	const fwd = new Request(req);
+	fwd.headers.delete("If-None-Match");
+	fwd.headers.delete("If-Modified-Since");
+	return fwd;
+}
+
+function metaOf(res: Response, env: Env): PageMeta {
+	return {
+		etag: res.headers.get("ETag") ?? "",
+		contentType: res.headers.get("Content-Type") ?? "text/html; charset=utf-8",
+		storedAt: Math.floor(Date.now() / 1000),
+		deploy: env.DEPLOY_SHA,
+	};
+}
+
+/**
+ * Re-renders a stale page with the current deploy. A page that is gone
+ * (404, 410, or a redirect now) leaves KV; a failing container leaves the
+ * stale copy in place for the next try.
+ */
+export async function refresh(req: Request, key: string, env: Env): Promise<void> {
+	const res = await origin(forStore(req), env);
+	if (isCacheableResponse(res)) {
+		await env.PAGES.put(key, await res.arrayBuffer(), { metadata: metaOf(res, env) });
+	} else if (res.status === 404 || res.status === 410 || (res.status >= 300 && res.status < 400)) {
+		await env.PAGES.delete(key);
+	}
+}
+
+function page(req: Request, body: ArrayBuffer, meta: PageMeta, cache: "HIT" | "MISS" | "STALE", timing: string): Response {
 	const headers = new Headers({
 		"Content-Type": meta.contentType,
 		"Cache-Control": "public, max-age=0, must-revalidate",

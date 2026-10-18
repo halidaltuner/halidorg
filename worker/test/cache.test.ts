@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse } from "../src/cache";
+import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta } from "../src/cache";
 
 const req = (path: string, init?: RequestInit) => new Request(`https://halid.org${path}`, init);
 const html = (headers: Record<string, string>, status = 200) =>
@@ -54,5 +54,18 @@ describe("etagMatches", () => {
 		expect(etagMatches("*", '"abc"')).toBe(true);
 		expect(etagMatches('"x"', '"abc"')).toBe(false);
 		expect(etagMatches(null, '"abc"')).toBe(false);
+	});
+});
+
+describe("isStale", () => {
+	const meta = (deploy?: string): PageMeta => ({ etag: '"x"', contentType: "text/html", storedAt: 1, deploy });
+	it("is stale when another deploy rendered the page", () => {
+		expect(isStale(meta("old"), "new")).toBe(true);
+		expect(isStale(meta(undefined), "new")).toBe(true); // stored before deploy tags existed
+	});
+	it("is fresh for the current deploy and without a deploy (local dev)", () => {
+		expect(isStale(meta("new"), "new")).toBe(false);
+		expect(isStale(meta("old"), undefined)).toBe(false);
+		expect(isStale(meta("old"), "")).toBe(false);
 	});
 });

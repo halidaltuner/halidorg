@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"time"
 
@@ -19,6 +20,10 @@ type PageMeta struct {
 	ETag        string `json:"etag"`
 	ContentType string `json:"contentType"`
 	StoredAt    int64  `json:"storedAt"`
+	// Deploy is the commit that rendered the page (DEPLOY_SHA). The Worker
+	// treats pages from another deploy as stale and re-renders them in the
+	// background (worker/src/cache.ts isStale).
+	Deploy string `json:"deploy,omitempty"`
 }
 
 // CacheKey mirrors cacheKey in worker/src/cache.ts: page:{lang}:{path}, with
@@ -107,7 +112,7 @@ func (w *Warmer) Warm(ctx context.Context, paths []string) ([]Result, error) {
 			sum := sha256.Sum256(body)
 			etag = `"` + hex.EncodeToString(sum[:8]) + `"`
 		}
-		meta := PageMeta{ETag: etag, ContentType: rec.Header().Get("Content-Type"), StoredAt: w.now().Unix()}
+		meta := PageMeta{ETag: etag, ContentType: rec.Header().Get("Content-Type"), StoredAt: w.now().Unix(), Deploy: os.Getenv("DEPLOY_SHA")}
 		if err := w.kv.Put(ctx, key, body, store.KVPut{Metadata: meta}); err != nil {
 			return out, fmt.Errorf("warm %s: put: %w", p, err)
 		}

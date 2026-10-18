@@ -50,6 +50,17 @@ export interface PageMeta {
 	etag: string;
 	contentType: string;
 	storedAt: number;
+	/** Commit whose templates rendered the page. Pages from an older deploy are stale. */
+	deploy?: string;
+}
+
+/**
+ * A stored page is stale when it was rendered by another deploy than the one
+ * serving now: template and CSS changes must reach pages whose content did
+ * not change. Without a DEPLOY_SHA (local dev) nothing is stale.
+ */
+export function isStale(meta: PageMeta, deploy: string | undefined): boolean {
+	return !!deploy && meta.deploy !== deploy;
 }
 
 /** Weak or strong If-None-Match match against a stored ETag. */

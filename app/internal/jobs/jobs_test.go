@@ -99,6 +99,7 @@ func TestWarmStoresAndDeletes(t *testing.T) {
 		w.Header().Set("ETag", `"abc"`)
 		_, _ = w.Write([]byte("<p>ok</p>"))
 	})
+	t.Setenv("DEPLOY_SHA", "113540ed11ad344faed75867d95c05eff1a8ffb2")
 	w := NewWarmer(mux, kv)
 	res, err := w.Warm(context.Background(), []string{"/en/ok", "/en/gone"})
 	if err != nil {
@@ -110,7 +111,7 @@ func TestWarmStoresAndDeletes(t *testing.T) {
 	if string(kv.Vals["page:en:/en/ok"]) != "<p>ok</p>" {
 		t.Errorf("stored = %q", kv.Vals["page:en:/en/ok"])
 	}
-	if m := kv.Meta["page:en:/en/ok"].(PageMeta); m.ETag != `"abc"` || !strings.HasPrefix(m.ContentType, "text/html") || m.StoredAt == 0 {
+	if m := kv.Meta["page:en:/en/ok"].(PageMeta); m.ETag != `"abc"` || !strings.HasPrefix(m.ContentType, "text/html") || m.StoredAt == 0 || m.Deploy != "113540ed11ad344faed75867d95c05eff1a8ffb2" {
 		t.Errorf("meta = %+v", m)
 	}
 	if _, ok := kv.Vals["page:en:/en/gone"]; ok {
