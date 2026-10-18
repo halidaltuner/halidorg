@@ -66,6 +66,18 @@ type Kind struct {
 	Nav         string
 	Prefill     func(r *http.Request, d Draft)
 	DeleteStmts func(e content.Entry) []store.Stmt
+	// HasBody decides Body per draft (an About page has a bio, Now has
+	// none). Revised marks kinds whose fields live in the revision too, so
+	// they wait for publish like the body (pages).
+	HasBody func(d Draft) bool
+	Revised bool
+}
+
+func (k Kind) body(d Draft) bool {
+	if k.HasBody != nil {
+		return k.HasBody(d)
+	}
+	return k.Body
 }
 
 func (k Kind) nav() string {
@@ -242,7 +254,7 @@ func (h *Admin) page(r *http.Request, d Draft, isNew bool, errs []string) (editP
 		}
 	}
 	p := editPage{Shell: h.ui.Shell(r, title, h.k.nav()), Section: h.k.Section, Kind: h.k.Name, New: isNew,
-		Item: d, Entry: e, Markdown: *d.Text(), TagsValue: strings.Join(*d.TagList(), ", "), Body: h.k.Body,
+		Item: d, Entry: e, Markdown: *d.Text(), TagsValue: strings.Join(*d.TagList(), ", "), Body: h.k.body(d),
 		Errors: errs, Langs: i18n.Supported, Action: h.base()}
 	if !isNew {
 		p.Action = h.base() + "/" + e.ID
@@ -252,7 +264,7 @@ func (h *Admin) page(r *http.Request, d Draft, isNew bool, errs []string) (editP
 			}
 			// Only the body waits for publish; links and favs have none, and
 			// their fields are live on save.
-			p.NotLive = h.k.Body && (e.PublishedRevisionID == nil || e.CurrentRevisionID == nil || *e.PublishedRevisionID != *e.CurrentRevisionID)
+			p.NotLive = (h.k.body(d) || h.k.Revised) && (e.PublishedRevisionID == nil || e.CurrentRevisionID == nil || *e.PublishedRevisionID != *e.CurrentRevisionID)
 		}
 	}
 	if h.k.Options != nil {
@@ -355,9 +367,6 @@ func (h *Admin) read(r *http.Request, d Draft, isNew bool) {
 	if isNew {
 		e.Lang = r.FormValue("lang")
 	}
-	if h.k.Body {
-		*d.Text() = strings.ReplaceAll(r.FormValue("markdown"), "\r\n", "\n")
-	}
 	var tags []string
 	for _, t := range strings.Split(r.FormValue("tags"), ",") {
 		if t = content.NormalizeTag(t); t != "" {
@@ -366,6 +375,10 @@ func (h *Admin) read(r *http.Request, d Draft, isNew bool) {
 	}
 	*d.TagList() = tags
 	h.k.Read(r, d)
+	// After Read: whether there is a body can depend on the kind's fields.
+	if h.k.body(d) {
+		*d.Text() = strings.ReplaceAll(r.FormValue("markdown"), "\r\n", "\n")
+	}
 }
 
 // slugs are the candidates for a new entry without a typed slug: from the

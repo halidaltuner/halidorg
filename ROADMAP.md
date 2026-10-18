@@ -74,7 +74,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] Photos **(designed)**: albums, dense grid with spans, lightbox with EXIF, 500px embed in lightbox only, CSP (ADR-009)
 - [ ] Certificates **(designed)**: issuers, hexagon badges, derived status (active / renew soon / expired)
 - [ ] About **(designed)**: hero, portrait, skills, experience timeline, link cards
-- [ ] Now **(designed)**: building, reading, learning, not doing; weather fetch + cache; `/now/archive` **(derive)**
+- [ ] Now **(designed)**: building, reading, learning, not doing; `/now/archive` **(derive)** (no weather, decided 2026-10-18)
 - [ ] Admin forms for presentations, photos, certificates, now and about `data_json` **(derive)**
 - [ ] `garden`, `runbook`, `series`, `term`, `book` reading list **(derive)**, backlinks + related block
 

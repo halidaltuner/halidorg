@@ -1,7 +1,7 @@
 // Public R2 objects served straight from the edge, never through the
 // container (CLAUDE.md: public pages must not depend on a warm container):
 //   /og/...    OG cards rendered by the entry.changed job (render/og)
-//   /media/... images from the admin media library (internal/media)
+//   /media/... images and PDFs from the admin media library (internal/media)
 //   /favicons/{domain}.{ext} link favicons fetched by the entry.changed job
 
 export interface R2PublicEnv {
@@ -10,7 +10,7 @@ export interface R2PublicEnv {
 
 const KEYS = [
 	/^og\/[a-z]{2}\/(?:[a-z0-9-]+\/)?[a-z0-9-]+\.png$/,
-	/^media\/[0-9A-Z]{26}\/[a-z0-9-]+\.(?:png|jpg|gif|webp)$/,
+	/^media\/[0-9A-Z]{26}\/[a-z0-9-]+\.(?:png|jpg|gif|webp|pdf)$/,
 	/^favicons\/[a-z0-9-]+(?:\.[a-z0-9-]+)+\.(?:png|jpg|gif|webp|ico)$/,
 ];
 
@@ -22,6 +22,7 @@ const TYPES: Record<string, string> = {
 	gif: "image/gif",
 	webp: "image/webp",
 	ico: "image/x-icon",
+	pdf: "application/pdf",
 };
 
 /** Returns the object for /og/, /media/ and /favicons/ paths, or null for other paths. */
@@ -48,6 +49,8 @@ export async function serveR2Public(req: Request, url: URL, env: R2PublicEnv): P
 		"X-Content-Type-Options": "nosniff",
 		"Content-Security-Policy": "default-src 'none'; sandbox",
 	});
+	// Documents (the CV) download rather than open on the main origin.
+	if (ext === "pdf") headers.set("Content-Disposition", `attachment; filename="${key.slice(key.lastIndexOf("/") + 1)}"`);
 	if (req.headers.get("If-None-Match") === obj.httpEtag) return new Response(null, { status: 304, headers });
 	return new Response(req.method === "HEAD" ? null : obj.body, { headers });
 }

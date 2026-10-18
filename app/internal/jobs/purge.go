@@ -32,6 +32,9 @@ type Ref struct {
 	// Month is when it was published (2006-01, UTC): its /stream/{month}
 	// archive page lists it.
 	Month string `json:"month,omitempty"`
+	// Version is a page's latest published version (2006-01-02): the Now
+	// archive has a page per day.
+	Version string `json:"version,omitempty"`
 }
 
 // StreamMonth is the /stream archive page of a month, or "".
@@ -126,6 +129,12 @@ func ItemSegment(kind string) string { return kindPath[kind] }
 // ItemPath is the public path of one entry, or "" for kinds without pages yet.
 // A build log lives under its project: /{lang}/projects/{project}/log/{slug}.
 func ItemPath(r Ref) string {
+	if r.Kind == "page" { // About and Now: the slug is the template
+		if r.Slug == "" || !i18n.IsSupported(r.Lang) {
+			return ""
+		}
+		return "/" + r.Lang + "/" + r.Slug
+	}
 	if r.Kind == "buildlog" {
 		if r.Slug == "" || r.Parent == "" || !i18n.IsSupported(r.Lang) {
 			return ""
@@ -180,6 +189,18 @@ func Paths(c Change) []string {
 		for _, f := range r.Files {
 			add(RawPath(*r, f))
 		}
+		if r.Kind == "page" && i18n.IsSupported(r.Lang) {
+			// Now's archive (the list, the day of each version), About's
+			// "now" card, the sitemap.
+			if r.Slug == "now" {
+				add("/" + r.Lang + "/now/archive")
+				if r.Version != "" {
+					add("/" + r.Lang + "/now/archive/" + r.Version)
+				}
+				add("/" + r.Lang + "/about")
+			}
+			add("/sitemap.xml")
+		}
 		// The same slug under the other languages serves the "not translated
 		// yet" page (public.post), which renders this entry.
 		for _, l := range i18n.Supported {
@@ -213,6 +234,9 @@ func Paths(c Change) []string {
 			add("/sitemap.xml")
 			if r.Kind == "project" && r.Homelab {
 				add(l + "/homelab")
+			}
+			if r.Kind == "project" {
+				add(l + "/about") // its cards count projects and builds
 			}
 			if r.Kind == "link" && len(r.Categories) > 0 {
 				add(l + "/awesome") // the index counts the category's links

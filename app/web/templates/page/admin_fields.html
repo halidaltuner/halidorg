@@ -1,0 +1,69 @@
+{{define "page-tone"}}<select name="{{.name}}" aria-label="{{tr .lang "kind.project.tone"}}"><option value="">{{tr .lang "page.tone_none"}}</option>{{range .tones}}<option value="{{.}}"{{if eq . $.on}} selected{{end}}>{{.}}</option>{{end}}</select>{{end}}
+
+{{define "page-media"}}<select name="{{.name}}" aria-label="{{.label}}">{{range .opts}}<option value="{{.Value}}"{{if eq .Value $.on}} selected{{end}}>{{.Label}}</option>{{end}}</select>{{end}}
+
+{{define "entry-fields"}}{{$o := .Options}}{{$t := .Item.Template}}{{$l := .Lang}}
+{{- if not .Item.ID}}
+<fieldset class="ent-langs"><legend>{{tr .Lang "page.template"}}</legend>
+{{- range $o.Templates}}<label class="check"><input type="radio" name="template" value="{{.Value}}"{{if .On}} checked{{end}} required>{{.Label}}</label>{{end}}
+</fieldset>
+{{- if not $t}}<p class="ent-hint">{{tr .Lang "page.template_hint"}}</p>{{end}}
+{{- end}}
+
+{{- if eq $t "about"}}
+<div class="ent-two">
+<label>{{tr .Lang "page.name"}}<input name="name" value="{{.Item.Data.Name}}" placeholder="{{tr .Lang "page.name_hint"}}"></label>
+<label>{{tr .Lang "page.portrait"}}{{template "page-media" dict "name" "portrait" "opts" $o.Images "on" .Item.Data.Portrait "label" (tr .Lang "page.portrait")}}</label>
+</div>
+<label>{{tr .Lang "page.cv"}}<select name="cv">{{range $o.Docs}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "page.ctas"}}</legend>
+<p class="ent-hint">{{tr .Lang "page.ctas_hint"}}</p>
+{{- range $i, $r := $o.CTAs}}
+<div class="ent-row r-link"><input name="cta_label" value="{{$r.A}}" aria-label="{{tr $l "kind.project.label"}}" placeholder="{{tr $l "kind.project.label"}}"><input name="cta_url" value="{{$r.B}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" aria-label="url" placeholder="https:// · mailto: · /…"><input name="cta_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "page.skills"}}</legend>
+<p class="ent-hint">{{tr .Lang "page.skills_hint"}}</p>
+{{- range $i, $r := $o.Skills}}
+<div class="ent-row r-skill"><input name="skill_group" value="{{$r.A}}" class="mono" aria-label="{{tr $l "page.group"}}" placeholder="{{tr $l "page.group"}}"><input name="skill_items" value="{{$r.B}}" aria-label="{{tr $l "page.items"}}" placeholder="Go, SQL, TypeScript">{{template "page-tone" dict "name" "skill_tone" "tones" $o.Tones "on" $r.Tone "lang" $l}}<input name="skill_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "page.experience"}}</legend>
+{{- range $i, $r := $o.Jobs}}
+<div class="ent-row r-job"><input name="job_from" value="{{$r.A}}" class="mono" aria-label="{{tr $l "page.from"}}" placeholder="2023"><input name="job_to" value="{{$r.B}}" class="mono" aria-label="{{tr $l "page.to"}}" placeholder="{{tr $l "page.to_hint"}}"><input name="job_role" value="{{$r.C}}" aria-label="{{tr $l "page.role"}}" placeholder="{{tr $l "page.role"}}"><input name="job_org" value="{{$r.D}}" aria-label="{{tr $l "page.org"}}" placeholder="{{tr $l "page.org"}}"><input name="job_note" value="{{$r.E}}" class="j-note" aria-label="{{tr $l "page.note"}}" placeholder="{{tr $l "page.note"}}">{{template "page-tone" dict "name" "job_tone" "tones" $o.Tones "on" $r.Tone "lang" $l}}<input name="job_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+{{- end}}
+
+{{- if eq $t "now"}}
+<label>{{tr .Lang "page.place"}}<input name="place" value="{{.Item.Data.Place}}" placeholder="istanbul"></label>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "now.building"}}</legend>
+{{- range $i, $r := $o.Building}}
+<div class="ent-row r-build"><input name="build_title" value="{{$r.A}}" class="j-title" aria-label="{{tr $l "page.title"}}" placeholder="{{tr $l "page.title"}}"><input name="build_note" value="{{$r.B}}" class="j-note" aria-label="{{tr $l "page.note"}}" placeholder="{{tr $l "page.note"}}"><input name="build_stage" value="{{$r.C}}" class="mono" aria-label="{{tr $l "page.stage"}}" placeholder="{{tr $l "page.stage"}}"><input name="build_pct" value="{{$r.D}}" class="mono" inputmode="numeric" aria-label="%" placeholder="%"><input name="build_href" value="{{$r.E}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" aria-label="url" placeholder="/en/projects/…">{{template "page-media" dict "name" "build_cover" "opts" $o.Images "on" $r.F "label" (tr $l "kind.project.cover")}}{{template "page-tone" dict "name" "build_tone" "tones" $o.Tones "on" $r.Tone "lang" $l}}<input name="build_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "now.reading"}}</legend>
+{{- range $i, $r := $o.Reading}}
+<div class="ent-row r-book"><input name="book_title" value="{{$r.A}}" aria-label="{{tr $l "page.title"}}" placeholder="{{tr $l "page.title"}}"><input name="book_author" value="{{$r.B}}" aria-label="{{tr $l "page.author"}}" placeholder="{{tr $l "page.author"}}"><input name="book_pct" value="{{$r.C}}" class="mono" inputmode="numeric" aria-label="%" placeholder="%">{{template "page-media" dict "name" "book_cover" "opts" $o.Images "on" $r.D "label" (tr $l "kind.project.cover")}}{{template "page-tone" dict "name" "book_tone" "tones" $o.Tones "on" $r.Tone "lang" $l}}<input name="book_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "now.learning"}}</legend>
+<p class="ent-hint">{{tr .Lang "page.level_hint"}}</p>
+{{- range $i, $r := $o.Learning}}
+<div class="ent-row r-learn"><input name="learn_title" value="{{$r.A}}" aria-label="{{tr $l "page.title"}}" placeholder="{{tr $l "page.title"}}"><input name="learn_note" value="{{$r.B}}" class="j-note" aria-label="{{tr $l "page.note"}}" placeholder="{{tr $l "page.note"}}"><input name="learn_level" value="{{$r.C}}" class="mono" inputmode="numeric" aria-label="{{tr $l "page.level"}}" placeholder="1-10"><input name="learn_hours" value="{{$r.D}}" class="mono" inputmode="numeric" aria-label="{{tr $l "page.hours"}}" placeholder="{{tr $l "page.hours"}}">{{template "page-tone" dict "name" "learn_tone" "tones" $o.Tones "on" $r.Tone "lang" $l}}<input name="learn_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "now.not_doing"}}</legend>
+{{- range $i, $r := $o.Nots}}
+<div class="ent-row r-not"><input name="not_text" value="{{$r.A}}" aria-label="{{tr $l "now.not_doing"}}"><input name="not_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $l "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+{{- end}}
+{{end}}

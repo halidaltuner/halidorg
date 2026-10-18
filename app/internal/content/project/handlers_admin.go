@@ -142,7 +142,7 @@ func formOptions(ctx context.Context, db store.DB, lang string, p *Draft) (optio
 		return o, err
 	}
 	// Images with both alt texts: the cover and the gallery choose from them.
-	res, err := db.Query(ctx, `SELECT id, name FROM media WHERE trim(alt_tr) <> '' AND trim(alt_en) <> '' ORDER BY created_at DESC LIMIT 200`)
+	res, err := db.Query(ctx, `SELECT id, name FROM media WHERE mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> '' ORDER BY created_at DESC LIMIT 200`)
 	if err != nil {
 		return o, err
 	}

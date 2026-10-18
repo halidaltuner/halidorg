@@ -57,6 +57,15 @@ describe("serveR2Public", () => {
 		}
 	});
 
+	it("serves PDFs as a download", async () => {
+		const m = env({ "media/01JABCDEFGHJKMNPQRSTVWXYZ0/cv.pdf": "%PDF-" });
+		const res = (await serve(req("/media/01JABCDEFGHJKMNPQRSTVWXYZ0/cv.pdf"), m))!;
+		expect(res.headers.get("Content-Type")).toBe("application/pdf");
+		expect(res.headers.get("Content-Disposition")).toBe('attachment; filename="cv.pdf"');
+		const img = (await serve(req("/media/01JABCDEFGHJKMNPQRSTVWXYZ0/photo.webp"), env({ "media/01JABCDEFGHJKMNPQRSTVWXYZ0/photo.webp": "i" })))!;
+		expect(img.headers.get("Content-Disposition")).toBeNull();
+	});
+
 	it("serves favicons for a day, ico included", async () => {
 		const f = env({ "favicons/grugbrain.dev.ico": "ico", "favicons/a.example.com.png": "png" });
 		const res = (await serve(req("/favicons/grugbrain.dev.ico"), f))!;

@@ -5,7 +5,7 @@
 {{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
 <form class="md-drop" method="post" action="/admin/media" enctype="multipart/form-data" data-upload>
 <p><strong>{{tr .Lang "admin.media.drop"}}</strong> <span class="muted">{{printf (tr .Lang "admin.media.limits") .Max}}</span></p>
-<input type="file" name="file" multiple accept="image/png,image/jpeg,image/gif,image/webp" aria-label="{{tr .Lang "admin.media.choose"}}">
+<input type="file" name="file" multiple accept="image/png,image/jpeg,image/gif,image/webp,application/pdf" aria-label="{{tr .Lang "admin.media.choose"}}">
 <button type="submit" class="adm-btn">{{tr .Lang "admin.media.upload"}}</button>
 <ul class="md-progress" aria-live="polite"></ul>
 </form>
@@ -17,7 +17,7 @@
 {{end}}
 
 {{define "media-card"}}<article class="md-card" id="m-{{.Item.ID}}">
-<a class="md-thumb" href="{{.URL}}" target="_blank" rel="noopener"><img src="{{.URL}}" alt="{{.Item.Alt .Lang}}" loading="lazy"{{with .Item.Width}} width="{{.}}"{{end}}{{with .Item.Height}} height="{{.}}"{{end}}></a>
+<a class="md-thumb" href="{{.URL}}" target="_blank" rel="noopener">{{if .Item.IsImage}}<img src="{{.URL}}" alt="{{.Item.Alt .Lang}}" loading="lazy"{{with .Item.Width}} width="{{.}}"{{end}}{{with .Item.Height}} height="{{.}}"{{end}}>{{else}}<span class="md-doc mono">PDF</span>{{end}}</a>
 <div class="md-meta mono"><span class="md-name" title="{{.Item.Name}}">{{.Item.Name}}</span><span class="muted">{{with .Item.Width}}{{.}}×{{end}}{{with .Item.Height}}{{.}} · {{end}}{{.Size}}</span></div>
 {{with .Error}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
 <form class="md-alt" method="post" action="/admin/media/{{.Item.ID}}/alt" hx-post="/admin/media/{{.Item.ID}}/alt" hx-target="#m-{{.Item.ID}}" hx-swap="outerHTML">
@@ -29,7 +29,7 @@
 </div>
 </form>
 <div class="md-row">
-<button type="button" class="adm-btn link" data-copy="![{{.Item.Alt .Lang}}]({{.URL}})"{{if not .Ready}} disabled title="{{tr .Lang "admin.media.alt_missing"}}"{{end}}>{{tr .Lang "admin.media.copy_md"}}</button>
+<button type="button" class="adm-btn link" data-copy="{{if .Item.IsImage}}![{{.Item.Alt .Lang}}]({{.URL}}){{else}}[{{.Item.Alt .Lang}}]({{.URL}}){{end}}"{{if not .Ready}} disabled title="{{tr .Lang "admin.media.alt_missing"}}"{{end}}>{{tr .Lang "admin.media.copy_md"}}</button>
 <form method="post" action="/admin/media/{{.Item.ID}}/delete" hx-post="/admin/media/{{.Item.ID}}/delete" hx-target="#m-{{.Item.ID}}" hx-swap="outerHTML">
 <button type="submit" class="adm-btn danger" data-confirm-text="{{tr .Lang "admin.media.delete_confirm"}}">{{tr .Lang "admin.media.delete"}}</button>
 </form>

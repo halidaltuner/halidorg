@@ -10,8 +10,9 @@ import (
 	"halid.org/engine/internal/store/storetest"
 )
 
-// 4 posts, 3 notes, 2 snippets, 5 links, 4 favs.
-const samplesTotal = 21
+// 4 posts, 3 notes, 2 snippets, 5 links, 4 favs, 2 projects and a build
+// log, an About and a Now page.
+const samplesTotal = 23
 
 func TestSeedIsIdempotent(t *testing.T) {
 	ctx := context.Background()
