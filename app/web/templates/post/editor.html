@@ -49,9 +49,10 @@
 <input id="ed-tags" name="tags" value="{{.TagsValue}}" placeholder="{{tr .Lang "admin.editor.tags_hint"}}" spellcheck="false" data-add="{{tr .Lang "admin.editor.add_tag"}}" data-remove="{{tr .Lang "admin.editor.remove_tag"}}">
 </div>
 <div class="ed-sec">
-<span class="ed-label">{{tr .Lang "admin.editor.cover"}}</span>
-{{- if .CoverURL}}<img class="ed-cover" src="{{.CoverURL}}" alt="" width="1200" height="630" loading="lazy" onerror="this.remove()">{{end}}
-<div class="ed-drop{{if .CoverURL}} small{{end}}">{{tr .Lang "admin.editor.cover_drop"}}</div>
+<label class="ed-label" for="ed-cover">{{tr .Lang "admin.editor.cover"}}</label>
+{{- if .CoverURL}}<img class="ed-cover" src="{{.CoverURL}}" alt="" loading="lazy" onerror="this.remove()">{{else}}<div class="ed-drop">{{tr .Lang "admin.editor.cover_drop"}}</div>{{end}}
+<select id="ed-cover" name="cover"><option value="">{{tr .Lang "admin.editor.no_cover"}}</option>{{range .Covers}}<option value="{{.ID}}"{{if .Selected}} selected{{end}}>{{.Name}}</option>{{end}}</select>
+<a class="ed-small" href="/admin/media" target="_blank" rel="noopener">{{tr .Lang "admin.editor.cover_library"}}</a>
 </div>
 <div class="ed-sec">
 <label class="ed-label" for="ed-seo">{{tr .Lang "admin.editor.seo"}} · <span id="ed-seo-n">{{.SEOLen}}</span>/160</label>
@@ -67,6 +68,7 @@
 <div class="ed-sec">
 <span class="ed-label">{{tr .Lang "admin.editor.revisions"}} · <span id="ed-revcount">{{.RevCount}}</span></span>
 {{template "revisions" .}}
+<a class="ed-small" href="/admin/posts/{{.Post.ID}}/revisions">{{tr .Lang "admin.rev.open"}} →</a>
 </div>
 <div class="ed-sec">
 <details class="ed-delete"{{if .OpenDelete}} open{{end}}>

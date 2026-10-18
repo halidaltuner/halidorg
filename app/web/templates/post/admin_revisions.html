@@ -1,0 +1,50 @@
+{{define "main"}}
+<div class="adm-head">
+<h1>{{tr .Lang "admin.rev.title"}}</h1>
+<a class="mono" href="/admin/posts/{{.Post.ID}}">← {{if .Post.Title}}{{.Post.Title}}{{else}}{{.Post.Slug}}{{end}}</a>
+</div>
+{{- if not .Timeline}}<p class="adm-empty">{{tr .Lang "admin.rev.none"}}</p>{{else}}
+<div class="rv">
+<form class="adm-panel rv-time" method="get" action="/admin/posts/{{.Post.ID}}/revisions">
+<h2>{{tr .Lang "admin.rev.timeline"}}<span class="n mono">{{len .Timeline}}</span></h2>
+<div class="rv-legend mono muted"><span>{{tr .Lang "admin.rev.old"}}</span><span>{{tr .Lang "admin.rev.new"}}</span></div>
+<ol>
+{{- range .Timeline}}
+<li class="{{if .B}}is-b{{end}}{{if .A}} is-a{{end}}">
+<input type="radio" name="a" value="{{.ID}}"{{if .A}} checked{{end}} aria-label="{{tr $.Lang "admin.rev.old"}} {{.At}}">
+<input type="radio" name="b" value="{{.ID}}"{{if .B}} checked{{end}} aria-label="{{tr $.Lang "admin.rev.new"}} {{.At}}">
+<a href="{{.Href}}"><span class="mono">{{.At}}</span> <span class="muted">{{.Origin}}</span></a>
+<span class="rv-tags mono">{{if .Published}}<span class="adm-st s-published">{{tr $.Lang "admin.status.published"}}</span>{{end}}{{if .Current}}<span class="adm-st s-draft">{{tr $.Lang "admin.rev.current"}}</span>{{end}}<span class="muted">{{.Chars}}</span></span>
+{{with .Note}}<span class="rv-note muted">{{.}}</span>{{end}}
+</li>
+{{- end}}
+</ol>
+<div class="rv-actions"><button type="submit" class="adm-btn">{{tr .Lang "admin.rev.compare"}}</button></div>
+</form>
+<section class="adm-panel rv-diff">
+<h2>
+<span>{{if .A}}{{.A.At}} · {{.A.Origin}}{{else}}{{tr .Lang "admin.rev.empty_doc"}}{{end}} → {{.B.At}} · {{.B.Origin}}</span>
+<span class="n mono"><span class="ok">+{{.Added}}</span> <span class="bad">−{{.Removed}}</span></span>
+</h2>
+{{- if not .B.Current}}
+<form class="rv-restore" method="post" action="/admin/posts/{{.Post.ID}}/revisions/{{.B.ID}}/restore">
+<span class="muted">{{tr .Lang "admin.rev.restore_hint"}}</span>
+<button type="submit" class="adm-btn link">{{tr .Lang "admin.rev.restore"}}</button>
+</form>
+{{- end}}
+{{- if .Identical}}<p class="adm-empty">{{tr .Lang "admin.rev.identical"}}</p>{{else}}
+<div class="rv-scroll">
+<table class="rv-table mono">
+<tbody>
+{{- range .Rows}}
+{{- if .Skip}}<tr class="skip"><td colspan="4">{{printf (tr $.Lang "admin.rev.skipped") .Skip}}</td></tr>
+{{- else}}<tr class="{{.Kind}}"><td class="ln">{{if .LNo}}{{.LNo}}{{end}}</td><td class="l">{{.Left}}</td><td class="ln">{{if .RNo}}{{.RNo}}{{end}}</td><td class="r">{{.Right}}</td></tr>{{end}}
+{{- end}}
+</tbody>
+</table>
+</div>
+{{- end}}
+</section>
+</div>
+{{- end}}
+{{end}}

@@ -31,6 +31,7 @@ Phase 0 spike findings. Full list in `prompts/_constraints.md`, details in `docs
 - Every write to an entry enqueues `jobs.TypeEntryChanged` with the pre-write `jobs.RefOf` snapshot; the job renders its OG card, re-renders affected pages into KV (`jobs.Paths`) and re-indexes search. New kinds add their paths in `jobs/purge.go` and their card in `jobs.EntryJobs.cards` (`render/og`).
 - Every state-changing admin route is wrapped in `admin.Guard` (CSRF, `http.CrossOriginProtection`) inside `auth.RequireSession`. Publish checks `auth.Recent` itself after saving, so re-auth never drops typed text; delete uses `auth.RequireRecentAuth`.
 - Kind admin pages build on `admin.UI` (shell, render, fragments) in `internal/content/<kind>/handlers_admin.go`. Tests that drive a kind's repo from package `jobs` live in package `jobs_test`: kinds import `jobs` to enqueue.
+- Public R2 objects (`/og/*`, `/media/*`) are served by the Worker (`worker/src/r2public.ts`), never by the container; the Content-Type comes from the key's extension, which the app picks after sniffing the bytes. Media is images only, no SVG.
 - Admin JS vendors (htmx, CodeMirror 6) are built by `scripts/build-editor.sh` from pinned versions in `editor/package.json` and committed under `app/web/static/vendor`.
 
 ## Conventions

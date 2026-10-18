@@ -19,6 +19,7 @@ import (
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/jobs"
+	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/render"
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
@@ -33,14 +34,16 @@ type Admin struct {
 	ui     *admin.UI
 	auth   *auth.Auth
 	jobs   *jobs.Jobs
+	media  *media.Repo
 	origin string
 	list   *template.Template
 	newT   *template.Template
 	editor *template.Template
+	revs   *template.Template
 }
 
 // NewAdmin parses the post admin templates.
-func NewAdmin(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs) (*Admin, error) {
+func NewAdmin(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs, m *media.Repo) (*Admin, error) {
 	list, err := u.Parse("posts", "templates/admin/dashboard.html", "templates/post/admin_list.html")
 	if err != nil {
 		return nil, err
@@ -49,14 +52,18 @@ func NewAdmin(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs) (*Admin, err
 	if err != nil {
 		return nil, err
 	}
+	revs, err := u.Parse("post-revisions", "templates/admin/dashboard.html", "templates/post/admin_revisions.html")
+	if err != nil {
+		return nil, err
+	}
 	// The editor is full height without the sidebar, so it skips the shell.
 	editor, err := u.ParseBare("post-editor", "templates/post/editor.html")
 	if err != nil {
 		return nil, err
 	}
-	return &Admin{repo: NewRepo(db), db: db, ui: u, auth: a, jobs: j,
+	return &Admin{repo: NewRepo(db), db: db, ui: u, auth: a, jobs: j, media: m,
 		origin: strings.TrimRight(os.Getenv("PUBLIC_ORIGIN"), "/"),
-		list:   list, newT: newT, editor: editor}, nil
+		list:   list, newT: newT, editor: editor, revs: revs}, nil
 }
 
 // Register adds the post admin routes. Writes go through admin.Guard (CSRF);
@@ -66,6 +73,7 @@ func (h *Admin) Register(mux *http.ServeMux) {
 	s := func(f http.HandlerFunc) http.Handler { return h.auth.RequireSession(f) }
 	w := func(f http.HandlerFunc) http.Handler { return admin.Guard(s(f)) }
 	mux.Handle("GET /admin/posts", s(h.listPage))
+	mux.Handle("POST /admin/posts/bulk", admin.Guard(h.auth.RequireSession(h.auth.RequireRecentAuth(http.HandlerFunc(h.bulk)))))
 	mux.Handle("GET /admin/posts/new", s(h.newPage))
 	mux.Handle("POST /admin/posts", w(h.create))
 	mux.Handle("GET /admin/posts/{id}", s(h.edit))
@@ -74,37 +82,11 @@ func (h *Admin) Register(mux *http.ServeMux) {
 	mux.Handle("POST /admin/posts/{id}/translate", w(h.translate))
 	mux.Handle("POST /admin/posts/{id}/delete", admin.Guard(h.auth.RequireSession(h.auth.RequireRecentAuth(http.HandlerFunc(h.delete)))))
 	mux.Handle("POST /admin/preview", w(h.preview))
+	mux.Handle("GET /admin/posts/{id}/revisions", s(h.revisionsPage))
+	mux.Handle("POST /admin/posts/{id}/revisions/{rev}/restore", w(h.restore))
 }
 
 // --- List and new -----------------------------------------------------------
-
-type listRow struct {
-	admin.EntryRow
-	Lang, Status, Updated string
-}
-
-type listPage struct {
-	admin.Shell
-	Rows []listRow
-}
-
-func (h *Admin) listPage(w http.ResponseWriter, r *http.Request) {
-	sh := h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.posts.title"), "posts")
-	posts, err := h.repo.List(r.Context(), ListFilter{Limit: 100})
-	if err != nil {
-		h.fail(w, err)
-		return
-	}
-	now := content.Clock().Unix()
-	p := listPage{Shell: sh}
-	for _, x := range posts {
-		p.Rows = append(p.Rows, listRow{
-			EntryRow: admin.EntryRow{Kind: Kind, Title: title(sh.Lang, x), Href: "/admin/posts/" + x.ID},
-			Lang:     x.Lang, Status: i18n.T(sh.Lang, "admin.status."+x.Status), Updated: admin.Ago(sh.Lang, x.UpdatedAt, now),
-		})
-	}
-	h.ui.Render(w, http.StatusOK, h.list, p)
-}
 
 type newPage struct {
 	admin.Shell
@@ -159,7 +141,8 @@ type editorPage struct {
 	Revisions  []revRow
 	RevCount   int
 	Backlinks  int
-	CoverURL   string
+	CoverURL   string // the chosen cover, else the OG card once published
+	Covers     []coverOpt
 	SEOLen     int
 	Reauthed   bool // back from re-auth on the way to publishing
 	OpenDelete bool
@@ -176,6 +159,11 @@ type otherLang struct {
 }
 
 type revRow struct{ At, Origin string }
+
+type coverOpt struct {
+	ID, Name string
+	Selected bool
+}
 
 func (h *Admin) load(w http.ResponseWriter, r *http.Request) (Post, bool) {
 	p, err := h.repo.Get(r.Context(), r.PathValue("id"))
@@ -255,6 +243,21 @@ func (h *Admin) page(r *http.Request, p Post, md string, tags []string, errs []s
 	if p.Status == content.Published && p.PublishedAt != nil {
 		card := og.Post(p.Lang, p.Title, *p.PublishedAt, p.ReadingMinutes)
 		pg.CoverURL = og.URL(og.EntryKey(p.Lang, "posts", p.Slug), card)
+	}
+	ready, err := h.media.Ready(ctx)
+	if err != nil {
+		return pg, err
+	}
+	for _, m := range ready {
+		sel := p.CoverMediaID != nil && *p.CoverMediaID == m.ID
+		name := m.Name
+		if name == "" {
+			name = m.ID
+		}
+		pg.Covers = append(pg.Covers, coverOpt{ID: m.ID, Name: name, Selected: sel})
+		if sel {
+			pg.CoverURL = m.URL()
+		}
 	}
 	return pg, nil
 }
@@ -379,7 +382,10 @@ func formDraft(r *http.Request, p Post) Draft {
 	d.Slug = strings.TrimSpace(r.FormValue("slug"))
 	d.Summary = strings.TrimSpace(strings.ReplaceAll(r.FormValue("summary"), "\r\n", "\n"))
 	d.Markdown = strings.ReplaceAll(r.FormValue("markdown"), "\r\n", "\n")
-	d.SeriesID, d.SeriesOrder = nil, nil
+	d.SeriesID, d.SeriesOrder, d.CoverMediaID = nil, nil, nil
+	if c := r.FormValue("cover"); c != "" {
+		d.CoverMediaID = &c
+	}
 	if s := r.FormValue("series"); s != "" {
 		d.SeriesID = &s
 		if n, err := strconv.ParseInt(r.FormValue("series_order"), 10, 64); err == nil && n > 0 {
@@ -425,8 +431,18 @@ func (h *Admin) save(w http.ResponseWriter, r *http.Request) {
 	h.saved(w, r, saved, origin)
 }
 
-// write saves d and returns the post as stored.
+// write saves d and returns the post as stored. A cover must be a media
+// item with both alt texts (CONTENT_MODEL.md, media).
 func (h *Admin) write(ctx context.Context, d Draft, origin string) (Post, error) {
+	if d.CoverMediaID != nil {
+		err := h.media.CheckCover(ctx, *d.CoverMediaID)
+		if errors.Is(err, content.ErrNotFound) || errors.Is(err, media.ErrNotReady) {
+			return Post{}, content.ValidationError{"cover": "missing or without alt text"}
+		}
+		if err != nil {
+			return Post{}, err
+		}
+	}
 	if _, _, err := h.repo.Save(ctx, d, origin); err != nil {
 		return Post{}, err
 	}
@@ -703,7 +719,7 @@ func title(lang string, p Post) string {
 // errorList turns validation errors into catalog messages, field by field.
 func errorList(lang string, v content.ValidationError) []string {
 	var out []string
-	for _, f := range []string{"title", "slug", "lang", "summary", "body", "published_at", "series", "canonical_url"} {
+	for _, f := range []string{"title", "slug", "lang", "summary", "body", "published_at", "series", "cover", "canonical_url"} {
 		msg, ok := v[f]
 		if !ok {
 			continue

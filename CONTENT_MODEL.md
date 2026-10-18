@@ -30,7 +30,7 @@ Every content item with its own page has one row here. Type-specific fields live
 - `categories(id, kind, slug, name_tr, name_en, tone, parent_id, sort)` links, snippets, favs, homelab builds, awesome lists
 - `series(id, slug, title_tr, title_en, summary, status)`
 - `links_graph(from_entry_id, to_entry_id, context)` backlinks (migrations/0004_links_graph.sql). The entry.changed job rebuilds an entry's outgoing rows from its published HTML: links to `/{lang}/posts/{slug}` (relative or on the site origin), `context` is the link text. Unlisted and deleted entries have no outgoing rows.
-- `media(id, r2_key, mime, width, height, alt_tr, alt_en, blurhash, created_at)`
+- `media(id, r2_key, mime, width, height, alt_tr, alt_en, blurhash, created_at, name, bytes)` (name and bytes: migrations/0005_media_meta.sql). Images only (PNG, JPEG, GIF, WebP; no SVG), 10 MB max, R2 key `media/{id}/{file}`, served by the Worker at `/media/...`. An image is usable (cover, Markdown) only once both `alt_tr` and `alt_en` are set; one used as a cover cannot be deleted.
 - `redirects(from_path, to_path, code)` importer + slug changes
 - `not_found_log(path, hits, last_seen_at)` feeds the dashboard 404 panel
 - `webmentions(id, target_entry_id, source_url, author, author_avatar, content, type, status, received_at)`

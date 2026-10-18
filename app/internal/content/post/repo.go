@@ -172,6 +172,7 @@ type ListFilter struct {
 	Tag    string // tag slug, optional
 	Limit  int    // default 20, max 100
 	Before *int64 // published_at cursor, exclusive
+	Admin  bool   // every visibility, newest change first
 }
 
 // List returns posts newest first.
@@ -185,7 +186,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]Post, error) {
 	if f.Status != "" {
 		where = append(where, "e.status = ?")
 		args = append(args, f.Status)
-		if f.Status == content.Published {
+		if f.Status == content.Published && !f.Admin {
 			where = append(where, "e.visibility = 'public'")
 		}
 	}
@@ -208,13 +209,30 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]Post, error) {
 	if len(where) > 0 {
 		q += " WHERE " + strings.Join(where, " AND ")
 	}
-	q += " ORDER BY COALESCE(e.published_at, e.updated_at) DESC, e.id DESC LIMIT ?"
+	if f.Admin {
+		q += " ORDER BY e.updated_at DESC, e.id DESC LIMIT ?"
+	} else {
+		q += " ORDER BY COALESCE(e.published_at, e.updated_at) DESC, e.id DESC LIMIT ?"
+	}
 	args = append(args, limit)
 	res, err := r.db.Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
 	return scan(res)
+}
+
+// Archive takes a post off the site but keeps it: lists, feeds and its URL
+// stop showing it (the URL answers 404 until it is published again).
+func (r *Repo) Archive(ctx context.Context, id string) error {
+	res, err := r.db.Query(ctx, `UPDATE entries SET status = 'archived', updated_at = ? WHERE id = ? AND kind = 'post'`, content.Clock().Unix(), id)
+	if err != nil {
+		return err
+	}
+	if res.Changes == 0 {
+		return content.NotFound(Kind, id)
+	}
+	return nil
 }
 
 // Delete removes a post; revisions, tags and the posts row cascade.

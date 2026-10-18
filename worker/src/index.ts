@@ -4,7 +4,7 @@ import { Container, getContainer } from "@cloudflare/containers";
 import { handleBridge } from "./bridge";
 import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, type PageMeta } from "./cache";
 import { consume, type JobMessage, logNotFound } from "./jobs";
-import { serveOG } from "./og";
+import { serveR2Public } from "./r2public";
 
 // Required by outboundByHost: without it the container fails to start.
 export { ContainerProxy } from "@cloudflare/containers";
@@ -45,8 +45,8 @@ export default {
 		if (url.pathname === "/internal" || url.pathname.startsWith("/internal/")) {
 			return new Response("Not Found", { status: 404 });
 		}
-		const card = await serveOG(req, url, env);
-		if (card) return card;
+		const obj = await serveR2Public(req, url, env);
+		if (obj) return obj;
 		if (!isCacheableRequest(req)) return origin(req, env);
 
 		const key = cacheKey(url);

@@ -166,3 +166,9 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Editor additions to the prototype: a title field above the Markdown (the prototype derived the title from a `# heading`, which would print the title twice on the public page) and a slug field in the side panel. The preview shows the title as its h1. The cover drop zone shows the post's OG card when published; uploads come with media (1.7).
 - Every admin form posts without JS. With JS: CodeMirror 6 replaces the textarea and writes back to it, htmx autosaves 800ms after the last input, ⌘S and ⌘⇧P click save and publish, tags become chips.
 - Below 1100px the editor hides the preview; below 760px the columns stack.
+
+## 14. Implementation notes (Phase 1.7)
+- Entry list (derive): filters (status, language, tag) are GET parameters above the table; bulk publish and archive sit in a bar inside the panel and say that they need a recent sign-in. Status pills reuse the editor status colors (draft info, published success, scheduled and archived warning).
+- Media library (derive): a dashed drop zone (cyan tint while dragging), a grid of cards with the image on the striped placeholder, TR and EN alt fields, a "ready to use" or "alt text missing" pill, copy Markdown (disabled until both alts exist) and a two-click delete. Uploads show one progress bar per file.
+- Revisions (derive): a 320px timeline with old/new radios and a side-by-side line diff. Removed lines use `--tone-rose-tint`, added lines `--tone-green-tint`; unchanged runs fold to "n unchanged lines". Restore appears only for revisions that are not current.
+- The editor's cover picker lists only images with both alt texts; the drop zone image falls back to the OG card.
