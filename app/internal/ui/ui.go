@@ -5,9 +5,12 @@ package ui
 import (
 	"errors"
 	"html/template"
+	"net/http"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"halid.org/engine/internal/i18n"
@@ -99,13 +102,43 @@ func items(list []section, lang, active string, all bool) []NavItem {
 	return out
 }
 
-// Deploy is the short commit CI deployed, or empty outside CI deploys.
+// deploySHA is the commit serving now. It starts from DEPLOY_SHA, which the
+// Durable Object sets when the container starts, and follows the Worker's
+// X-Deploy-Sha header (DeployHeader), which is current on every request.
+var deploySHA atomic.Value
+
+var shaRE = regexp.MustCompile(`^[0-9a-f]{7,40}$`)
+
+func init() { deploySHA.Store("") }
+
+// DeploySHA is the full commit CI deployed, or empty outside CI deploys:
+// the Worker's last header, else the env var the container started with.
+func DeploySHA() string {
+	if sha := deploySHA.Load().(string); sha != "" {
+		return sha
+	}
+	return os.Getenv("DEPLOY_SHA")
+}
+
+// Deploy is the short commit for display.
 func Deploy() string {
-	sha := os.Getenv("DEPLOY_SHA")
+	sha := DeploySHA()
 	if len(sha) > 7 {
 		sha = sha[:7]
 	}
 	return sha
+}
+
+// DeployHeader wraps the app: the edge Worker sends its DEPLOY_SHA on every
+// request it forwards (and overwrites any client value), so pages and KV
+// metadata name the deploy that is live, not the one the container started with.
+func DeployHeader(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if sha := r.Header.Get("X-Deploy-Sha"); shaRE.MatchString(sha) && sha != DeploySHA() {
+			deploySHA.Store(sha)
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 // Env is local, staging or prod, from the Worker's APP_ENV.

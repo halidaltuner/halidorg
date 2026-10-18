@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"time"
 
 	"halid.org/engine/internal/i18n"
+	"halid.org/engine/internal/ui"
 	"halid.org/engine/internal/store"
 )
 
@@ -112,7 +112,7 @@ func (w *Warmer) Warm(ctx context.Context, paths []string) ([]Result, error) {
 			sum := sha256.Sum256(body)
 			etag = `"` + hex.EncodeToString(sum[:8]) + `"`
 		}
-		meta := PageMeta{ETag: etag, ContentType: rec.Header().Get("Content-Type"), StoredAt: w.now().Unix(), Deploy: os.Getenv("DEPLOY_SHA")}
+		meta := PageMeta{ETag: etag, ContentType: rec.Header().Get("Content-Type"), StoredAt: w.now().Unix(), Deploy: ui.DeploySHA()}
 		if err := w.kv.Put(ctx, key, body, store.KVPut{Metadata: meta}); err != nil {
 			return out, fmt.Errorf("warm %s: put: %w", p, err)
 		}

@@ -13,6 +13,7 @@ import (
 
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/store/storetest"
+	"halid.org/engine/internal/ui"
 )
 
 func TestPaths(t *testing.T) {
@@ -99,7 +100,10 @@ func TestWarmStoresAndDeletes(t *testing.T) {
 		w.Header().Set("ETag", `"abc"`)
 		_, _ = w.Write([]byte("<p>ok</p>"))
 	})
-	t.Setenv("DEPLOY_SHA", "113540ed11ad344faed75867d95c05eff1a8ffb2")
+	// The Worker's header names the live deploy (ui.DeployHeader).
+	req := httptest.NewRequest("GET", "/", nil)
+	req.Header.Set("X-Deploy-Sha", "113540ed11ad344faed75867d95c05eff1a8ffb2")
+	ui.DeployHeader(http.NotFoundHandler()).ServeHTTP(httptest.NewRecorder(), req)
 	w := NewWarmer(mux, kv)
 	res, err := w.Warm(context.Background(), []string{"/en/ok", "/en/gone"})
 	if err != nil {

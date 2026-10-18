@@ -21,6 +21,7 @@ import (
 	"halid.org/engine/internal/public"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/styleguide"
+	"halid.org/engine/internal/ui"
 	"halid.org/engine/web"
 )
 
@@ -45,7 +46,7 @@ func run() error {
 	}
 	srv := &http.Server{
 		Addr:              ":" + port,
-		Handler:           mux,
+		Handler:           ui.DeployHeader(mux),
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 
