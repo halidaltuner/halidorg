@@ -91,3 +91,26 @@ func FormatDay(v int64) string {
 	}
 	return time.Unix(v, 0).UTC().Format("2006-01-02")
 }
+
+var symbols = map[string]string{"TRY": "₺", "EUR": "€", "USD": "$", "GBP": "£"}
+
+// CompactMoney is an amount for the parts list and the fact strip:
+// "₺27.0k", "₺1.2M", "€149.90", "980 CHF".
+func CompactMoney(minor int64, currency string) string {
+	whole := float64(minor) / 100
+	var s string
+	switch {
+	case whole >= 1e6:
+		s = strconv.FormatFloat(whole/1e6, 'f', 1, 64) + "M"
+	case whole >= 1e3:
+		s = strconv.FormatFloat(whole/1e3, 'f', 1, 64) + "k"
+	case minor%100 != 0:
+		s = strconv.FormatFloat(whole, 'f', 2, 64)
+	default:
+		s = strconv.FormatInt(minor/100, 10)
+	}
+	if sym, ok := symbols[currency]; ok {
+		return sym + s
+	}
+	return s + " " + currency
+}

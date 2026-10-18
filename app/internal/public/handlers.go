@@ -15,10 +15,12 @@ import (
 	"strings"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/render/og"
@@ -61,6 +63,8 @@ type Handlers struct {
 	noteRepo    *note.Repo
 	linkRepo    *link.Repo
 	favRepo     *fav.Repo
+	projectRepo *project.Repo
+	logRepo     *buildlog.Repo
 	origin      string
 	tmpl        map[string]*template.Template
 }
@@ -68,7 +72,7 @@ type Handlers struct {
 // New parses the public templates. It fails at startup rather than per request.
 func New(db store.DB) (*Handlers, error) {
 	h := &Handlers{db: db, posts: post.NewRepo(db), snippetRepo: snippet.NewRepo(db), noteRepo: note.NewRepo(db),
-		linkRepo: link.NewRepo(db), favRepo: fav.NewRepo(db),
+		linkRepo: link.NewRepo(db), favRepo: fav.NewRepo(db), projectRepo: project.NewRepo(db), logRepo: buildlog.NewRepo(db),
 		origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
 		"home":          "templates/public/home.html",
@@ -82,6 +86,9 @@ func New(db store.DB) (*Handlers, error) {
 		"favs":          "templates/fav/index.html",
 		"awesome":       "templates/link/awesome.html",
 		"awesome-index": "templates/link/awesome_index.html",
+		"projects":      "templates/project/index.html",
+		"project":       "templates/project/show.html",
+		"buildlog":      "templates/buildlog/show.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
@@ -126,6 +133,9 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/favs", func(w http.ResponseWriter, r *http.Request) { h.favs(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/awesome", func(w http.ResponseWriter, r *http.Request) { h.awesomeIndex(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/awesome/{category}", func(w http.ResponseWriter, r *http.Request) { h.awesome(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/projects", func(w http.ResponseWriter, r *http.Request) { h.projects(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/projects/{slug}", func(w http.ResponseWriter, r *http.Request) { h.project(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/projects/{slug}/log/{log}", func(w http.ResponseWriter, r *http.Request) { h.buildlog(w, r, lang) })
 	}
 	// Everything else: redirects table, then the styled 404.
 	mux.HandleFunc("GET /", h.fallback)

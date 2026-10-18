@@ -1,0 +1,42 @@
+{{define "content"}}{{$p := .Project}}<main class="pd tone-{{$p.Tone}}">
+<section class="pd-hero">
+<div class="pd-hero-in">
+<div class="pd-intro">
+<a class="pd-back mono" href="{{$p.BackHref}}">← {{$p.Back}}</a>
+{{- if .Untranslated}}
+<div class="banner-untranslated">{{tr .Lang "projects.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
+{{- end}}
+<div class="pd-meta"><span class="pd-status mono">{{$p.Status}}</span>{{with $p.Kind}}<span class="pd-kind mono">{{range $i, $k := .}}{{if $i}} · {{end}}{{$k}}{{end}}</span>{{end}}</div>
+<h1 lang="{{.ArticleLang}}">{{$p.Name}}</h1>
+{{- with $p.Tagline}}<p class="pd-tagline" lang="{{$.ArticleLang}}">{{.}}</p>{{end}}
+{{- with $p.Links}}<div class="pd-links">{{range $i, $l := .}}<a class="pd-btn{{if eq $i 0}} primary{{end}}" href="{{$l.URL}}">{{$l.Label}}</a>{{end}}</div>{{end}}
+</div>
+<div class="pd-cover">{{if $p.Cover}}{{template "cover" dict "tone" $p.Tone "image" $p.Cover.URL "alt" $p.Cover.Alt}}{{else}}{{template "cover" dict "tone" $p.Tone}}{{end}}</div>
+</div>
+</section>
+<div class="pd-wrap">
+{{- with $p.Facts}}
+<dl class="pd-facts">{{range .}}<div><dt class="mono">{{.Key}}</dt><dd>{{.Value}}</dd></div>{{end}}</dl>
+{{- end}}
+<div class="pd-cols">
+<article class="pd-article" lang="{{.ArticleLang}}">
+<div class="prose">{{.Body}}</div>
+{{- with $p.Gallery}}
+<div class="pd-gallery n{{len .}}">{{range .}}<figure>{{template "cover" dict "tone" $p.Tone "image" .URL "alt" .Alt}}</figure>{{end}}</div>
+{{- end}}
+</article>
+<aside class="pd-aside">
+{{- with $p.List}}
+<section class="pd-list"><h3 class="mono">{{$p.ListTitle}}</h3>
+{{- range .}}<div class="pd-row"><span>{{.Name}}</span>{{with .Note}}<span class="mono">{{.}}</span>{{end}}</div>{{end}}
+</section>
+{{- end}}
+{{- with $p.Log}}
+<section class="pd-log" id="log"><h3 class="mono">{{tr $.Lang "projects.log"}}</h3>
+<ol>{{range .}}<li><span class="pd-dot" aria-hidden="true"></span><a href="{{.Href}}"><time class="mono" datetime="{{.Date}}">{{.Date}}</time><span>{{.Title}}</span></a></li>{{end}}</ol>
+</section>
+{{- end}}
+</aside>
+</div>
+</div>
+</main>{{end}}

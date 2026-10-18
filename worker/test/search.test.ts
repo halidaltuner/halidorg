@@ -33,7 +33,8 @@ describe("entryHref", () => {
 		expect(entryHref({ kind: "note", lang: "en", slug: "x", url: null })).toBe("/en/notes/x");
 		expect(entryHref({ kind: "link", lang: "en", slug: "x", url: "https://grugbrain.dev/" })).toBe("https://grugbrain.dev/");
 		expect(entryHref({ kind: "fav", lang: "tr", slug: "ddia", url: null })).toBe("/tr/favs#ddia");
-		expect(entryHref({ kind: "project", lang: "en", slug: "x", url: null })).toBe("");
+		expect(entryHref({ kind: "project", lang: "en", slug: "x", url: null })).toBe("/en/projects/x");
+		expect(entryHref({ kind: "buildlog", lang: "en", slug: "x", url: null })).toBe("");
 	});
 });
 

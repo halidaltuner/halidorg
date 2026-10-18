@@ -24,3 +24,15 @@ func TestMoney(t *testing.T) {
 		t.Errorf("month %v", m)
 	}
 }
+
+func TestCompactMoney(t *testing.T) {
+	for _, c := range []struct {
+		minor int64
+		cur   string
+		want  string
+	}{{4120000, "TRY", "₺41.2k"}, {270000000, "TRY", "₺2.7M"}, {14990, "EUR", "€149.90"}, {98000, "CHF", "980 CHF"}} {
+		if got := CompactMoney(c.minor, c.cur); got != c.want {
+			t.Errorf("CompactMoney(%d, %s) = %q, want %q", c.minor, c.cur, got, c.want)
+		}
+	}
+}

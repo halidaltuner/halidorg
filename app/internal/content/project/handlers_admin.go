@@ -31,7 +31,7 @@ type options struct {
 	Tones                                      []string
 	Tone                                       *string
 	Facts                                      []Fact
-	Stack                                      []string
+	Stack                                      []Tech
 	Parts                                      []partRow
 	Links                                      []Link
 	Gallery                                    []string
@@ -98,8 +98,8 @@ func readForm(req *http.Request, d shortadmin.Draft) {
 		p.Facts = append(p.Facts, Fact{Key: x[0], Value: x[1]})
 	}
 	p.Stack = nil
-	for _, x := range shortadmin.Rows(req, "stack_order", "stack_name") {
-		p.Stack = append(p.Stack, x[0])
+	for _, x := range shortadmin.Rows(req, "stack_order", "stack_name", "stack_role") {
+		p.Stack = append(p.Stack, Tech{Name: x[0], Role: x[1]})
 	}
 	p.Parts = nil
 	for _, x := range shortadmin.Rows(req, "part_order", "part_name", "part_qty", "part_price", "part_currency", "part_url") {
@@ -165,7 +165,7 @@ func formOptions(ctx context.Context, db store.DB, lang string, p *Draft) (optio
 		o.Media = append(o.Media, shortadmin.Option{Value: m.ID, Label: name})
 	}
 	o.Facts = append(append([]Fact(nil), p.Facts...), Fact{}, Fact{})
-	o.Stack = append(append([]string(nil), p.Stack...), "", "")
+	o.Stack = append(append([]Tech(nil), p.Stack...), Tech{}, Tech{})
 	for _, x := range p.Parts {
 		o.Parts = append(o.Parts, partRow{Name: x.Name, Qty: strconv.Itoa(x.Qty), Price: FormatMoney(x.Price), Currency: x.Currency, URL: x.URL})
 	}

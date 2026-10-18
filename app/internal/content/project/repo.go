@@ -77,7 +77,8 @@ func normalize(d *Draft) {
 	d.Facts = facts
 	stack := d.Stack[:0:0]
 	for _, s := range d.Stack {
-		if s = strings.TrimSpace(s); s != "" {
+		s.Name, s.Role = strings.TrimSpace(s.Name), strings.TrimSpace(s.Role)
+		if s.Name != "" || s.Role != "" {
 			stack = append(stack, s)
 		}
 	}
@@ -139,8 +140,8 @@ ON CONFLICT (entry_id) DO UPDATE SET project_type = excluded.project_type, proje
 			Args: []any{id, f.Key, f.Value, f.Sort}})
 	}
 	for i, s := range p.Stack {
-		stmts = append(stmts, store.Stmt{SQL: `INSERT INTO project_stack (project_id, name, sort) VALUES (?, ?, ?)`,
-			Args: []any{id, s, i}})
+		stmts = append(stmts, store.Stmt{SQL: `INSERT INTO project_stack (project_id, name, role, sort) VALUES (?, ?, ?, ?)`,
+			Args: []any{id, s.Name, s.Role, i}})
 	}
 	for _, x := range p.Parts {
 		stmts = append(stmts, store.Stmt{SQL: `INSERT INTO project_parts (project_id, name, qty, price, currency, url, sort) VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -161,7 +162,7 @@ ON CONFLICT (entry_id) DO UPDATE SET project_type = excluded.project_type, proje
 // with the text.
 type data struct {
 	Facts   []Fact   `json:"facts"`
-	Stack   []string `json:"stack"`
+	Stack   []Tech   `json:"stack"`
 	Parts   []Part   `json:"parts"`
 	Links   []Link   `json:"links"`
 	Gallery []string `json:"gallery"`
@@ -361,7 +362,7 @@ func (r *Repo) one(ctx context.Context, where string, args ...any) (Project, err
 func (r *Repo) rows(ctx context.Context, p *Project) error {
 	res, err := r.db.Batch(ctx,
 		store.Stmt{SQL: `SELECT key, value, sort FROM project_facts WHERE project_id = ? ORDER BY sort`, Args: []any{p.ID}},
-		store.Stmt{SQL: `SELECT name FROM project_stack WHERE project_id = ? ORDER BY sort`, Args: []any{p.ID}},
+		store.Stmt{SQL: `SELECT name, role FROM project_stack WHERE project_id = ? ORDER BY sort`, Args: []any{p.ID}},
 		store.Stmt{SQL: `SELECT name, qty, price, currency, coalesce(url, '') AS url, sort FROM project_parts WHERE project_id = ? ORDER BY sort`, Args: []any{p.ID}},
 		store.Stmt{SQL: `SELECT label, url, sort FROM project_links WHERE project_id = ? ORDER BY sort`, Args: []any{p.ID}},
 		store.Stmt{SQL: `SELECT media_id FROM project_gallery WHERE project_id = ? ORDER BY sort`, Args: []any{p.ID}},
@@ -372,15 +373,8 @@ func (r *Repo) rows(ctx context.Context, p *Project) error {
 	if p.Facts, err = store.Scan[Fact](res[0]); err != nil {
 		return err
 	}
-	stack, err := store.Scan[struct {
-		Name string `json:"name"`
-	}](res[1])
-	if err != nil {
+	if p.Stack, err = store.Scan[Tech](res[1]); err != nil {
 		return err
-	}
-	p.Stack = nil
-	for _, s := range stack {
-		p.Stack = append(p.Stack, s.Name)
 	}
 	if p.Parts, err = store.Scan[Part](res[2]); err != nil {
 		return err

@@ -31,7 +31,7 @@
 
 <fieldset class="ent-rows only-software"><legend>{{tr .Lang "entry.row.stack"}}</legend>
 {{- range $i, $s := $o.Stack}}
-<div class="ent-row r-stack"><input name="stack_name" value="{{$s}}" class="mono" autocapitalize="off" aria-label="{{tr $.Lang "entry.row.stack"}}" placeholder="go"><input name="stack_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+<div class="ent-row r-stack"><input name="stack_name" value="{{$s.Name}}" autocapitalize="off" aria-label="{{tr $.Lang "entry.row.stack"}}" placeholder="Go 1.23"><input name="stack_role" value="{{$s.Role}}" class="mono" autocapitalize="off" aria-label="{{tr $.Lang "kind.project.role"}}" placeholder="{{tr $.Lang "kind.project.role"}}"><input name="stack_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
 {{- end}}
 </fieldset>
 
