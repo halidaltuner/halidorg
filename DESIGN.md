@@ -238,6 +238,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 
 ## 25. Implementation notes (Phase 4.5)
 - Stream rows gain projects (◆ green, meta the project status), homelab builds (⌁ orange, meta the status), build logs (meta "build log", in their project's tone) and GitHub activity as project rows (meta "release" or "new repo"), as the Home prototype. Chips add project and homelab.
-- `/{lang}/stream` (derive): list header, the home stream's chips and day-grouped card at 860px. The chips filter on the server so every page is full; "older →" and "← newest" move between pages of 30. Filtered and later pages are noindex. Home's stream ends with a "whole stream →" link.
+- `/{lang}/stream` (derive): list header, the home stream's chips and day-grouped card at 860px. The chips filter on the server. The first page shows the newest 30 rows; "older →" opens month archive pages (`/{lang}/stream/2026-09`, the month muted after the title), each a whole month, linked "← newer" / "older →" to the neighbouring months with rows. Filtered pages are noindex. Home's stream ends with a "whole stream →" link.
 - `/{lang}/github` (derive): the projects header pattern (◆ green eyebrow), the Projects GitHub section without its heading (the page title says it), then every activity row by month in the stream card. On Projects the section heading links to it.
 - Palette: `pr:` finds software projects, `h:` homelab builds (⌁ dot in `--kind-homelab`).
+- Build logs have their own OG card ("build log" in the project dot's green), keyed by the log's slug (`og/{lang}/logs/{slug}.png`), so a project slug change does not orphan it. The projects feeds carry build logs, titled "project: log".

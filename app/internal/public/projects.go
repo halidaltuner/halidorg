@@ -12,6 +12,7 @@ import (
 	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/github"
 	"halid.org/engine/internal/i18n"
+	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
 )
 
@@ -342,6 +343,9 @@ func (h *Handlers) buildlog(w http.ResponseWriter, r *http.Request, lang string)
 	pg.Head.Alternates = nil // a log exists in its project's language only
 	pg.Head.Description = b.Summary
 	pg.Head.OGType = "article"
+	if b.PublishedAt != nil {
+		pg.Head.Image = h.origin + og.URL(og.EntryKey(lang, og.LogSection, slug), og.BuildLog(lang, b.Title, slug, *b.PublishedAt))
+	}
 	p := logPage{page: pg, Project: pr.Title, ProjectHref: base, Date: project.FormatDay(b.LogDate), Title: b.Title,
 		Tone: h.projectTone(ctx, pr), Body: template.HTML(html)}
 	if b.Hours != nil {

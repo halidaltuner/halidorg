@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/i18n"
@@ -126,6 +127,9 @@ func (r *entryRow) ref() Ref {
 		ref.Categories = strings.Fields(*r.Categories)
 	}
 	ref.Homelab = r.Homelab != nil && *r.Homelab == 1
+	if r.Published != nil {
+		ref.Month = time.Unix(*r.Published, 0).UTC().Format("2006-01")
+	}
 	if r.Parent != nil {
 		ref.Parent = *r.Parent
 	}
@@ -205,7 +209,9 @@ func (e *EntryJobs) cards(ctx context.Context, c Change, row *entryRow) error {
 	}
 	if c.Now != nil && c.Now.Listed && cardKey(*c.Now) != "" && row.Published != nil {
 		var card og.Card
-		if row.Kind == "post" {
+		if row.Kind == "buildlog" {
+			card = og.BuildLog(row.Lang, row.Title, row.Slug, *row.Published)
+		} else if row.Kind == "post" {
 			minutes := 0
 			if row.Minutes != nil {
 				minutes = *row.Minutes
@@ -226,6 +232,9 @@ func (e *EntryJobs) cards(ctx context.Context, c Change, row *entryRow) error {
 }
 
 func cardKey(r Ref) string {
+	if r.Kind == "buildlog" && r.Slug != "" && i18n.IsSupported(r.Lang) {
+		return og.EntryKey(r.Lang, og.LogSection, r.Slug)
+	}
 	seg, ok := kindPath[r.Kind]
 	if !ok || r.Slug == "" || !i18n.IsSupported(r.Lang) {
 		return ""

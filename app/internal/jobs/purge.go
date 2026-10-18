@@ -29,6 +29,17 @@ type Ref struct {
 	// Logs are a project's build log slugs: their URLs sit under the
 	// project's, so they move (and are purged) with it.
 	Logs []string `json:"logs,omitempty"`
+	// Month is when it was published (2006-01, UTC): its /stream/{month}
+	// archive page lists it.
+	Month string `json:"month,omitempty"`
+}
+
+// StreamMonth is the /stream archive page of a month, or "".
+func StreamMonth(lang, month string) string {
+	if month == "" || !i18n.IsSupported(lang) {
+		return ""
+	}
+	return "/" + lang + "/stream/" + month
 }
 
 // Change is one entry change: its state now (nil when deleted), its state
@@ -156,10 +167,15 @@ func Paths(c Change) []string {
 			add(ItemPath(Ref{Kind: "buildlog", Lang: r.Lang, Slug: s, Parent: r.Slug}))
 		}
 		if r.Kind == "buildlog" && i18n.IsSupported(r.Lang) {
-			// the project's timeline, and the stream on home and /stream
+			// the project's timeline, the projects feeds (they carry build
+			// logs), and the stream on home and /stream
 			add(ItemPath(Ref{Kind: "project", Lang: r.Lang, Slug: r.Parent}))
+			for _, f := range []string{"/feed.xml", "/atom.xml", "/feed.json"} {
+				add("/" + r.Lang + "/projects" + f)
+			}
 			add("/" + r.Lang + "/")
 			add("/" + r.Lang + "/stream")
+			add(StreamMonth(r.Lang, r.Month))
 		}
 		for _, f := range r.Files {
 			add(RawPath(*r, f))
@@ -177,6 +193,7 @@ func Paths(c Change) []string {
 			l := "/" + r.Lang
 			add(l + "/")
 			add(l + "/stream")
+			add(StreamMonth(r.Lang, r.Month))
 			add(l + "/" + seg)
 			if r.Kind == "post" {
 				add(l + "/feed.xml")

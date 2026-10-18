@@ -654,6 +654,7 @@ body.dark { background: var(--dk-bg); }
 .stream-page .stream { display: flex; flex-direction: column; gap: var(--sp-20); }
 .stream-pager { display: flex; justify-content: space-between; font-size: var(--fs-13); }
 .stream-pager .older { margin-left: auto; }
+.stream-month { font-size: var(--fs-28); font-weight: 500; letter-spacing: 0; color: var(--text-muted); }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: var(--sp-20); }
 .post-card {

@@ -138,6 +138,8 @@ func TestSitemapAndRobots(t *testing.T) {
 		"<loc>https://halid.org/en/posts/first</loc>",
 		`hreflang="tr" href="https://halid.org/tr/posts/ilk"`,
 		"<loc>https://halid.org/tr/posts</loc>",
+		"<loc>https://halid.org/en/stream</loc>",
+		"<loc>https://halid.org/en/stream/20", // the month archive of the published posts
 	} {
 		if !strings.Contains(sm, want) {
 			t.Errorf("sitemap misses %s", want)

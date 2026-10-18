@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sort"
 	"strings"
 	"time"
 
@@ -72,7 +73,8 @@ func (s *Sync) run(ctx context.Context, _ json.RawMessage) error {
 		return werr
 	}
 	paths, perr := s.paths(ctx)
-	if perr == nil && len(paths) > 0 {
+	paths = append(paths, monthPaths(recentMonths(snap, content.Clock()))...)
+	if len(paths) > 0 {
 		for len(paths) > 0 {
 			n := min(len(paths), 50)
 			if e := jobs.EnqueuePages(ctx, s.jobs, paths[:n]...); e != nil {
@@ -111,6 +113,41 @@ WHERE p.github_repo IS NOT NULL AND e.status = 'published' AND e.visibility = 'p
 		out = append(out, "/"+r.Lang+"/projects/"+r.Slug)
 	}
 	return out, err
+}
+
+// recentMonths are the months of the snapshot's activity from the last 90
+// days, and the current month: the /stream archive pages a sync can change.
+// Older months only change when a repo is linked or unlinked (admin).
+func recentMonths(snap Snapshot, now time.Time) []string {
+	set := map[string]bool{now.UTC().Format("2006-01"): true}
+	since := now.AddDate(0, 0, -90)
+	for _, r := range snap.Repos {
+		if r.CreatedAt != nil && r.CreatedAt.After(since) {
+			set[r.CreatedAt.UTC().Format("2006-01")] = true
+		}
+		for _, rel := range r.Releases {
+			if rel.PublishedAt.After(since) {
+				set[rel.PublishedAt.UTC().Format("2006-01")] = true
+			}
+		}
+	}
+	out := make([]string, 0, len(set))
+	for m := range set {
+		out = append(out, m)
+	}
+	sort.Strings(out)
+	return out
+}
+
+// monthPaths are the /stream archive pages of months, in every language.
+func monthPaths(months []string) []string {
+	var out []string
+	for _, l := range i18n.Supported {
+		for _, m := range months {
+			out = append(out, jobs.StreamMonth(l, m))
+		}
+	}
+	return out
 }
 
 func unix(t *time.Time) any {
