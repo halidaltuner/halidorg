@@ -1,6 +1,7 @@
 package render
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"html"
@@ -250,6 +251,17 @@ func langAttr(lang string) string {
 		return ""
 	}
 	return ` class="language-` + html.EscapeString(lang) + `"`
+}
+
+// Highlight returns code as chroma spans (classes styled in app.css), one
+// numbered span per line when lineNumbers is set. Snippet pages use it
+// outside Markdown.
+func Highlight(lang, code string, lineNumbers bool) string {
+	var b bytes.Buffer
+	w := bufio.NewWriter(&b)
+	highlight(w, lang, code, lineNumbers)
+	_ = w.Flush()
+	return b.String()
 }
 
 // highlight writes chroma spans with class names; colors live in app.css.

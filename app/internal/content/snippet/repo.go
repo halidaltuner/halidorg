@@ -212,6 +212,69 @@ func (r *Repo) one(ctx context.Context, where string, args ...any) (Snippet, err
 	return s, err
 }
 
+// Item is a public snippet in a list: the entry, its published files and
+// tag slugs, and its rendered description.
+type Item struct {
+	Snippet
+	HTML string
+	Tags []string
+}
+
+type itemRow struct {
+	row
+	BodyHTML string  `json:"body_html"`
+	DataJSON string  `json:"data_json"`
+	TagList  *string `json:"tag_list"`
+}
+
+// Feed returns published public snippets in lang, newest first, with the
+// files of their published revisions; tag filters when set.
+func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int) ([]Item, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	q := `SELECT ` + content.EntryColumns + `, s.category_id, s.gist_url, rv.body_html, rv.data_json,
+  (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tag_list
+FROM entries e JOIN snippets s ON s.entry_id = e.id JOIN revisions rv ON rv.id = e.published_revision_id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
+	args := []any{lang}
+	if tag != "" {
+		q += ` AND EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.slug = ?)`
+		args = append(args, tag)
+	}
+	q += ` ORDER BY e.published_at DESC, e.id DESC LIMIT ?`
+	args = append(args, limit)
+	res, err := r.db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := store.Scan[itemRow](res)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]Item, len(rows))
+	for i, x := range rows {
+		s := Snippet{Entry: x.Entry, CategoryID: x.CategoryID, Files: FilesOf(x.DataJSON)}
+		if x.GistURL != nil {
+			s.GistURL = *x.GistURL
+		}
+		out[i] = Item{Snippet: s, HTML: x.BodyHTML}
+		if x.TagList != nil {
+			out[i].Tags = strings.Fields(*x.TagList)
+		}
+	}
+	return out, nil
+}
+
+// PublishedHTML is the rendered description of a snippet's published revision.
+func (r *Repo) PublishedHTML(ctx context.Context, s Snippet) (string, error) {
+	if s.PublishedRevisionID == nil {
+		return "", nil
+	}
+	rev, err := content.GetRevision(ctx, r.db, *s.PublishedRevisionID)
+	return rev.BodyHTML, err
+}
+
 // Archive takes a snippet off the site.
 func (r *Repo) Archive(ctx context.Context, id string) error {
 	return content.ArchiveEntry(ctx, r.db, Kind, id)

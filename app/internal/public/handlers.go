@@ -1,5 +1,5 @@
 // Package public serves the public site: home, posts, post lists, tag
-// pages, the language switch and the styled 404/410 pages.
+// pages, notes and snippets, the language switch and the styled 404/410 pages.
 package public
 
 import (
@@ -15,7 +15,9 @@ import (
 	"strings"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
@@ -37,6 +39,7 @@ type Head struct {
 	OGType      string
 	Image       string // absolute og:image URL (render/og)
 	Scripts     []string
+	Feed        string // a section's own feed next to the posts feed: "notes"
 }
 
 type page struct {
@@ -49,18 +52,25 @@ type Handlers struct {
 	db       store.DB
 	searchDB store.DB
 	posts    *post.Repo
-	origin   string
-	tmpl     map[string]*template.Template
+	// note and snippet pages (shortform.go)
+	noteRepo    *note.Repo
+	snippetRepo *snippet.Repo
+	origin      string
+	tmpl        map[string]*template.Template
 }
 
 // New parses the public templates. It fails at startup rather than per request.
 func New(db, searchDB store.DB) (*Handlers, error) {
-	h := &Handlers{db: db, searchDB: searchDB, posts: post.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
+	h := &Handlers{db: db, searchDB: searchDB, posts: post.NewRepo(db),
+		noteRepo: note.NewRepo(db), snippetRepo: snippet.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
-		"home":  "templates/public/home.html",
-		"post":  "templates/post/show.html",
-		"list":  "templates/post/list.html",
-		"error": "templates/public/error.html",
+		"home":     "templates/public/home.html",
+		"post":     "templates/post/show.html",
+		"list":     "templates/post/list.html",
+		"error":    "templates/public/error.html",
+		"snippets": "templates/snippet/show.html",
+		"notes":    "templates/note/list.html",
+		"note":     "templates/note/show.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", file)
 		if err != nil {
@@ -89,6 +99,11 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/{$}", func(w http.ResponseWriter, r *http.Request) { h.home(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/posts", func(w http.ResponseWriter, r *http.Request) { h.list(w, r, lang, "") })
 		mux.HandleFunc("GET /"+lang+"/posts/{slug}", func(w http.ResponseWriter, r *http.Request) { h.post(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/notes", func(w http.ResponseWriter, r *http.Request) { h.notes(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/notes/{slug}", func(w http.ResponseWriter, r *http.Request) { h.note(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/snippets", func(w http.ResponseWriter, r *http.Request) { h.snippets(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/snippets/{slug}", func(w http.ResponseWriter, r *http.Request) { h.snippets(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/snippets/{slug}/raw/{file}", func(w http.ResponseWriter, r *http.Request) { h.snippetRaw(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/tags/{tag}", func(w http.ResponseWriter, r *http.Request) {
 			tag := r.PathValue("tag")
 			if !content.ValidSlug(tag) {

@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"halid.org/engine/internal/i18n"
-	"halid.org/engine/internal/ui"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/ui"
 )
 
 // PageMeta is the KV metadata the edge Worker reads (worker/src/cache.ts).

@@ -1,0 +1,40 @@
+{{/* Snippets (design/Snippets.dc.html): the list on the left, one snippet
+   open on the right. Without JS every file panel shows; code.js turns the
+   file buttons into tabs and enables copy and the line-number toggle. */}}
+{{define "content"}}<main class="snippets-page">
+<aside class="snippets-aside">
+<h1>{{tr .Lang "snippets.title"}}</h1>
+<p class="lead">{{tr .Lang "snippets.lead"}}</p>
+{{- if .List}}
+<nav class="snippet-list" aria-label="{{tr .Lang "snippets.title"}}">
+{{- range .List}}<a href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="t">{{.Title}}</span><span class="m mono">{{.Meta}}</span></a>{{end}}
+</nav>
+{{- end}}
+</aside>
+<section class="snippet-view">
+{{- with .Cur}}
+<div class="snippet-meta mono"><span class="kdot" style="--k: var(--kind-snippet)" aria-hidden="true"></span><span>snippet · {{.Date}}{{range .Tags}} · <a href="{{.Href}}">#{{.Name}}</a>{{end}}</span></div>
+<h2>{{.Title}}</h2>
+{{- if .Desc}}<div class="prose snippet-desc">{{.Desc}}</div>{{end}}
+{{- if .Files}}
+{{- $first := index .Files 0}}
+<figure class="code code-snippet" data-code-group>
+<div class="code-bar">
+<div class="code-tabs" role="tablist" aria-label="{{tr $.Lang "snippets.files"}}">
+{{- range $i, $f := .Files}}<button type="button" class="code-tab" role="tab" id="{{$f.ID}}-tab" aria-controls="{{$f.ID}}" aria-selected="{{if eq $i 0}}true{{else}}false{{end}}" data-lang="{{$f.Lang}}" data-raw="{{$f.Raw}}">{{$f.Name}}</button>{{end}}
+</div>
+<span class="code-tools"><span class="code-lang">{{$first.Lang}}</span>
+<button type="button" class="code-btn code-lines" data-code-lines aria-pressed="true" title="{{tr $.Lang "snippets.lines"}}" aria-label="{{tr $.Lang "snippets.lines"}}" hidden>#</button>
+<a class="code-raw" href="{{$first.Raw}}" data-code-raw>{{tr $.Lang "snippets.raw"}}</a>
+<button type="button" class="code-btn code-copy" data-code-copy data-copied="{{tr $.Lang "snippets.copied"}}" hidden>{{tr $.Lang "snippets.copy"}}</button></span>
+</div>
+{{- range .Files}}
+<pre class="chroma code-panel" role="tabpanel" id="{{.ID}}" aria-labelledby="{{.ID}}-tab" tabindex="0"><code>{{.Code}}</code></pre>
+{{- end}}
+</figure>
+{{- end}}
+{{- else}}
+<p class="empty">{{tr .Lang "snippets.empty"}}</p>
+{{- end}}
+</section>
+</main>{{end}}

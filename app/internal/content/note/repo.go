@@ -2,6 +2,7 @@ package note
 
 import (
 	"context"
+	"strings"
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/render"
@@ -141,25 +142,61 @@ func (r *Repo) one(ctx context.Context, where string, args ...any) (Note, error)
 	return rows[0].note(), nil
 }
 
-// List returns published public notes in lang, newest first.
-func (r *Repo) List(ctx context.Context, lang string, limit int) ([]Note, error) {
+// Published is a public note with its published body and tag slugs.
+type Published struct {
+	Note
+	HTML string
+	Tags []string
+}
+
+type publishedRow struct {
+	row
+	BodyHTML string  `json:"body_html"`
+	TagList  *string `json:"tag_list"`
+}
+
+// Feed returns published public notes in lang, newest first, optionally
+// only those tagged tag.
+func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int) ([]Published, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
-	res, err := r.db.Query(ctx, selectNote+` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
-ORDER BY e.published_at DESC, e.id DESC LIMIT ?`, lang, limit)
+	q := `SELECT ` + content.EntryColumns + `, n.source_url, n.til, rv.body_html,
+  (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tag_list
+FROM entries e JOIN notes n ON n.entry_id = e.id JOIN revisions rv ON rv.id = e.published_revision_id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
+	args := []any{lang}
+	if tag != "" {
+		q += ` AND EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.slug = ?)`
+		args = append(args, tag)
+	}
+	q += ` ORDER BY e.published_at DESC, e.id DESC LIMIT ?`
+	args = append(args, limit)
+	res, err := r.db.Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
-	rows, err := store.Scan[row](res)
+	rows, err := store.Scan[publishedRow](res)
 	if err != nil {
 		return nil, err
 	}
-	out := make([]Note, len(rows))
+	out := make([]Published, len(rows))
 	for i, x := range rows {
-		out[i] = x.note()
+		out[i] = Published{Note: x.note(), HTML: x.BodyHTML}
+		if x.TagList != nil {
+			out[i].Tags = strings.Fields(*x.TagList)
+		}
 	}
 	return out, nil
+}
+
+// PublishedHTML is the rendered body of a note's published revision.
+func (r *Repo) PublishedHTML(ctx context.Context, n Note) (string, error) {
+	if n.PublishedRevisionID == nil {
+		return "", nil
+	}
+	rev, err := content.GetRevision(ctx, r.db, *n.PublishedRevisionID)
+	return rev.BodyHTML, err
 }
 
 // Archive takes a note off the site.

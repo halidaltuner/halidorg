@@ -25,7 +25,7 @@
 <div class="stream-box">
 {{- range .Stream}}
 <div class="stream-day"><div class="stream-date mono">{{.Day}}</div><div class="stream-items">
-{{- range .Items}}<a class="stream-row" href="{{.Href}}"><span class="glyph tone-cyan mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
+{{- range .Items}}<a class="stream-row" href="{{.Href}}"><span class="glyph tone-{{.Tone}} mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
 </div></div>{{end}}
 </div>
 </section>

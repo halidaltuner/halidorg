@@ -259,6 +259,9 @@ func TestShortFormKinds(t *testing.T) {
 	}
 	run(l.ID)
 
+	if ref, err := jobs.RefOf(ctx, s.DB, sn.ID); err != nil || len(ref.Files) != 1 || ref.Files[0] != "main.go" {
+		t.Errorf("snippet ref = %+v, %v", ref, err)
+	}
 	blob := s.Blob.(*storetest.Blob)
 	for _, key := range []string{"og/en/notes/til-fold.png", "og/en/snippets/shutdown.png"} {
 		if _, ok := blob.Objects[key]; !ok {

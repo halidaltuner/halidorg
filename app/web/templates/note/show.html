@@ -1,0 +1,26 @@
+{{/* Note permalink (derive): the post head and prose in a single column,
+   backlinks underneath. */}}
+{{define "content"}}<div class="note-layout">
+<article class="post note" lang="{{.ArticleLang}}">
+<header class="post-head">
+<a class="post-crumb mono" href="/{{.Lang}}/notes">← {{tr .Lang "notes.all"}}</a>
+{{- if .Note.Titled}}<h1>{{.Note.Title}}</h1>{{end}}
+<div class="post-meta mono">
+<span class="glyph tone-indigo" aria-hidden="true">~</span>
+<time>{{.Note.Date}}</time>
+{{- if .Note.TIL}}<span class="tag-pill tone-indigo">{{tr .Lang "notes.til"}}</span>{{end}}
+{{- if .Note.Tags}}<span>{{range .Note.Tags}}<a href="{{.Href}}">#{{.Name}}</a> {{end}}</span>{{end}}
+{{- with .Note.Source}}<a href="{{.}}" rel="noopener">{{tr $.Lang "notes.source"}}: {{$.Note.SourceDomain}} ↗</a>{{end}}
+</div>
+</header>
+<div class="prose{{if not .Note.Titled}} note-untitled{{end}}">{{.Note.Body}}</div>
+<section class="backlinks" id="backlinks">
+<h3 class="mono">{{tr .Lang "post.backlinks"}} · {{len .Backlinks}}</h3>
+{{- range .Backlinks}}
+<a href="{{.Href}}"{{if ne .Lang $.Lang}} hreflang="{{.Lang}}"{{end}}{{with .Context}} title="{{.}}"{{end}}>{{.Glyph}} {{.Title}}</a>
+{{- else}}
+<p>{{tr .Lang "post.backlinks_empty"}}</p>
+{{- end}}
+</section>
+</article>
+</div>{{end}}

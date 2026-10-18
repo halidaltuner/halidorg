@@ -19,6 +19,8 @@
 <meta property="og:image:alt" content="{{$.Head.Title}}">
 <meta name="twitter:card" content="summary_large_image">
 {{end}}<link rel="alternate" type="application/rss+xml" title="{{tr .Lang "feed.posts"}}" href="/{{.Lang}}/feed.xml">
+{{with .Head.Feed}}<link rel="alternate" type="application/rss+xml" title="{{tr $.Lang (print "feed." .)}}" href="/{{$.Lang}}/{{.}}/feed.xml">
+{{end}}
 <link rel="stylesheet" href="/static/css/tokens.css">
 <link rel="stylesheet" href="/static/css/app.css">
 <script src="/static/js/header.js" defer></script>

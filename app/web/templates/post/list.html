@@ -6,7 +6,15 @@
 </header>
 {{- if .Cards}}
 <div class="card-grid">{{range .Cards}}{{template "post-card" .}}{{end}}</div>
-{{- else}}
+{{- else if not .Also}}
 <p class="empty">{{tr .Lang "list.empty"}}</p>
+{{- end}}
+{{- if .Also}}
+<section class="list-also">
+<h2 class="mono">{{tr .Lang "list.also"}}</h2>
+<div class="stream-box"><div class="stream-items">
+{{- range .Also}}<a class="stream-row" href="{{.Href}}"><span class="glyph tone-{{.Tone}} mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
+</div></div>
+</section>
 {{- end}}
 </main>{{end}}

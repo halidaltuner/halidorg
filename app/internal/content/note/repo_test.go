@@ -38,7 +38,7 @@ func TestNoteLifecycle(t *testing.T) {
 	if got, err := r.GetPublished(ctx, "en", "til-1"); err != nil || got.ID != n.ID {
 		t.Fatalf("GetPublished %v", err)
 	}
-	if list, _ := r.List(ctx, "en", 10); len(list) != 1 {
+	if list, _ := r.Feed(ctx, "en", "", 10); len(list) != 1 {
 		t.Fatalf("list %d", len(list))
 	}
 	// Same slug, same language: refused; another language is fine.

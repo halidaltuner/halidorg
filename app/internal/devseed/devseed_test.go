@@ -15,15 +15,15 @@ func TestSeedIsIdempotent(t *testing.T) {
 	if err != nil || n != 4 {
 		t.Fatalf("first seed: %d %v", n, err)
 	}
-	if got := len(s.Queue.(*storetest.Queue).Sent); got != 4 {
-		t.Errorf("queued %d jobs, want 4", got)
+	if got := len(s.Queue.(*storetest.Queue).Sent); got != 6 {
+		t.Errorf("queued %d jobs, want 6 (4 posts, a note, a snippet)", got)
 	}
 	n, err = Seed(context.Background(), s.DB, j)
 	if err != nil || n != 0 {
 		t.Fatalf("second seed: %d %v", n, err)
 	}
 	// Existing samples are re-rendered, not created again.
-	if got := len(s.Queue.(*storetest.Queue).Sent); got != 8 {
-		t.Errorf("queued %d jobs after reseed, want 8", got)
+	if got := len(s.Queue.(*storetest.Queue).Sent); got != 12 {
+		t.Errorf("queued %d jobs after reseed, want 12", got)
 	}
 }

@@ -1,0 +1,25 @@
+{{/* Notes list (derive): list-page header, then each note in full. The
+   glyph tile and meta follow the stream rows; the body is prose. */}}
+{{define "note-item"}}<article class="note-item" lang="{{.Lang}}">
+<a class="glyph tone-indigo mono" href="{{.Note.Href}}" aria-hidden="true" tabindex="-1">~</a>
+<div class="note-main">
+<div class="note-meta mono"><a href="{{.Note.Href}}"><time>{{.Note.Date}}</time></a>
+{{- if .Note.TIL}}<span class="tag-pill tone-indigo">{{tr .UILang "notes.til"}}</span>{{end}}
+{{- range .Note.Tags}}<a href="{{.Href}}">#{{.Name}}</a>{{end}}</div>
+{{- if .Note.Titled}}<h2><a href="{{.Note.Href}}">{{.Note.Title}}</a></h2>{{end}}
+<div class="prose">{{.Note.Body}}</div>
+{{- with .Note.Source}}<a class="note-source mono" href="{{.}}" rel="noopener">{{tr $.UILang "notes.source"}}: {{$.Note.SourceDomain}} ↗</a>{{end}}
+</div>
+</article>{{end}}
+{{define "content"}}<main class="list-page notes-page">
+<header class="list-head">
+<span class="eyebrow mono tone-indigo">~ // {{tr .Lang "nav.notes"}}</span>
+<h1>{{tr .Lang "notes.title"}}</h1>
+<p class="lead">{{tr .Lang "notes.lead"}}</p>
+</header>
+{{- if .Notes}}
+<div class="note-list">{{range .Notes}}{{template "note-item" dict "Note" . "Lang" $.Lang "UILang" $.Lang}}{{end}}</div>
+{{- else}}
+<p class="empty">{{tr .Lang "notes.empty"}}</p>
+{{- end}}
+</main>{{end}}

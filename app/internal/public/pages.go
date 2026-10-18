@@ -83,8 +83,11 @@ type streamDay struct {
 }
 
 type streamItem struct {
-	Kind, Glyph, Title, Href, Meta string
+	Kind, Glyph, Tone, Title, Href, Meta string
 }
+
+// kindTones are the stream glyph tones (design/README.md, kind colors).
+var kindTones = map[string]string{"post": "cyan", "note": "indigo", "snippet": "amber", "link": "navy", "fav": "rose", "project": "green", "homelab": "orange"}
 
 type homePage struct {
 	page
@@ -112,7 +115,7 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
 	}
 	// Stream: posts only until Phase 2 adds the other kinds, grouped by day.
 	for _, c := range cs {
-		it := streamItem{Kind: "post", Glyph: "¶", Title: c.Title, Href: c.Href, Meta: c.Minutes}
+		it := streamItem{Kind: "post", Glyph: "¶", Tone: kindTones["post"], Title: c.Title, Href: c.Href, Meta: c.Minutes}
 		if n := len(p.Stream); n > 0 && p.Stream[n-1].Day == c.Date {
 			p.Stream[n-1].Items = append(p.Stream[n-1].Items, it)
 			continue
@@ -131,6 +134,7 @@ type listPage struct {
 	Tag   string
 	Title string
 	Cards []card
+	Also  []streamItem // tag pages: notes and snippets with the tag
 }
 
 func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string) {
@@ -139,9 +143,16 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 		h.fail(w, r, err)
 		return
 	}
-	if tag != "" && len(items) == 0 {
-		h.notFound(w, r)
-		return
+	var also []streamItem
+	if tag != "" {
+		if also, err = h.taggedShort(r, lang, tag); err != nil {
+			h.fail(w, r, err)
+			return
+		}
+		if len(items) == 0 && len(also) == 0 {
+			h.notFound(w, r)
+			return
+		}
 	}
 	cs, err := h.cards(r, lang, items)
 	if err != nil {
@@ -158,7 +169,7 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 		}
 		path = "/tags/" + tag
 	}
-	p := listPage{page: h.newPage(lang, "posts", title+" · halid.org", path, nil), Tag: tag, Title: title, Cards: cs}
+	p := listPage{page: h.newPage(lang, "posts", title+" · halid.org", path, nil), Tag: tag, Title: title, Cards: cs, Also: also}
 	h.render(w, r, "list", p)
 }
 

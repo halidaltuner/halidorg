@@ -13,7 +13,9 @@ import (
 	"net/http"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
@@ -118,6 +120,9 @@ func Seed(ctx context.Context, db store.DB, j *jobs.Jobs) (int, error) {
 		}
 		return p.TranslationGroupID, nil
 	}
+	if err := seedShort(ctx, db, j); err != nil {
+		return n, err
+	}
 	for _, s := range samples {
 		group, err := create(s, "en", "")
 		if err != nil {
@@ -130,4 +135,52 @@ func Seed(ctx context.Context, db store.DB, j *jobs.Jobs) (int, error) {
 		}
 	}
 	return n, nil
+}
+
+// seedShort adds one sample note and one two-file sample snippet (Phase 2.2)
+// unless they exist, and queues their render jobs.
+func seedShort(ctx context.Context, db store.DB, j *jobs.Jobs) error {
+	enqueue := func(id string) error {
+		if j == nil {
+			return nil
+		}
+		return jobs.Enqueue(ctx, j, id, nil)
+	}
+	notes := note.NewRepo(db)
+	nt, err := notes.GetPublished(ctx, "en", "sample-note")
+	if errors.Is(err, content.ErrNotFound) {
+		nt, err = notes.Create(ctx, note.Draft{
+			Note:     note.Note{Entry: content.Entry{Slug: "sample-note", Lang: "en", Summary: "A sample note without a title"}, TIL: true},
+			Markdown: "This is **sample content** from the dev seed. Notes may have no title; lists show their summary.",
+			Tags:     []string{"meta"},
+		})
+		if err == nil {
+			nt, err = notes.Publish(ctx, nt.ID)
+		}
+	}
+	if err != nil {
+		return err
+	}
+	if err := enqueue(nt.ID); err != nil {
+		return err
+	}
+	snips := snippet.NewRepo(db)
+	sn, err := snips.GetPublished(ctx, "en", "sample-snippet")
+	if errors.Is(err, content.ErrNotFound) {
+		sn, err = snips.Create(ctx, snippet.Draft{
+			Snippet: snippet.Snippet{Entry: content.Entry{Slug: "sample-snippet", Lang: "en", Title: "sample: two files"}, Files: []snippet.File{
+				{Filename: "main.go", Code: "// Sample content from the dev seed.\npackage main\n\nfunc main() {\n\tprintln(\"hello\")\n}\n"},
+				{Filename: "run.sh", Code: "#!/usr/bin/env sh\nset -eu\ngo run .\n"},
+			}},
+			Markdown: "Sample content from the dev seed: a snippet with two files.",
+			Tags:     []string{"meta"},
+		})
+		if err == nil {
+			sn, err = snips.Publish(ctx, sn.ID)
+		}
+	}
+	if err != nil {
+		return err
+	}
+	return enqueue(sn.ID)
 }

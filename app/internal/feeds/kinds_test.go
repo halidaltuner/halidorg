@@ -60,6 +60,17 @@ func TestKindFeeds(t *testing.T) {
 	if code, _, body := get("/en/snippets/atom.xml"); code != 200 || !strings.Contains(body, "halid.org · snippets") {
 		t.Fatalf("empty snippets atom %d", code)
 	}
+	// The sitemap lists the note and the notes/snippets lists, not the link
+	// (links live on their list page, Phase 2.3).
+	_, _, sm := get("/sitemap.xml")
+	for _, want := range []string{"<loc>https://halid.org/en/notes/til-1</loc>", "<loc>https://halid.org/tr/notes</loc>", "<loc>https://halid.org/en/snippets</loc>"} {
+		if !strings.Contains(sm, want) {
+			t.Errorf("sitemap misses %s", want)
+		}
+	}
+	if strings.Contains(sm, "grug") {
+		t.Error("link in the sitemap")
+	}
 	// The language feeds stay posts only.
 	if _, _, body := get("/en/feed.xml"); strings.Contains(body, "til-1") || strings.Contains(body, "grugbrain") {
 		t.Error("short-form entries in the posts feed")

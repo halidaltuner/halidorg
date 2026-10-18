@@ -182,6 +182,7 @@
   --w-default: 1200px;
   --w-post: 1240px;
   --w-now: 1100px;
+  --w-split: 1100px; /* list plus viewer pages: snippets */
   --w-narrow: 860px;
   --w-prose: 68ch;
   /* 68ch of the 18px body face as a fixed length, so blocks with smaller

@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"net/url"
 	"sort"
 
 	"halid.org/engine/internal/content"
@@ -13,7 +14,8 @@ type Ref struct {
 	Lang   string   `json:"lang"`
 	Slug   string   `json:"slug"`
 	Tags   []string `json:"tags,omitempty"`
-	Listed bool     `json:"listed"` // published and public: appears in lists, feeds, sitemap
+	Files  []string `json:"files,omitempty"` // snippet filenames: their raw pages
+	Listed bool     `json:"listed"`          // published and public: appears in lists, feeds, sitemap
 }
 
 // Change is one entry change: its state now (nil when deleted), its state
@@ -24,6 +26,9 @@ type Change struct {
 	Prev     *Ref
 	Siblings []Ref
 	Linked   []Ref // entries it links to, before or after: their backlinks change
+	// Peers are pages that list it next to their own content: every snippet
+	// page shows the snippet list (design/Snippets.dc.html).
+	Peers []Ref
 }
 
 // kindPath is the URL segment of the kinds that have a page per entry
@@ -60,13 +65,18 @@ func ItemPath(r Ref) string {
 	return "/" + r.Lang + "/" + seg + "/" + r.Slug
 }
 
+// RawPath is the public path of one snippet file as plain text (escaped).
+func RawPath(lang, slug, filename string) string {
+	return "/" + lang + "/snippets/" + slug + "/raw/" + url.PathEscape(filename)
+}
+
 // Paths returns every public path whose HTML or feed can change with c,
 // sorted and without duplicates. The purge job re-renders each one; a path
 // that no longer renders is deleted from KV.
 //
 // For an entry of kind K in lang L: its page (kinds with item pages), the
 // same slug in the other languages (the untranslated fallback), K's list
-// page and K's feeds, home (the stream), each tag page and tag feed (old and
+// page and K's feeds, a snippet's raw files, home (the stream), each tag page and tag feed (old and
 // new tags), the language feeds (posts), the sitemap, and the pages of its
 // translations. A slug change also covers the old URL.
 func Paths(c Change) []string {
@@ -81,6 +91,11 @@ func Paths(c Change) []string {
 			continue
 		}
 		add(ItemPath(*r))
+		if r.Kind == "snippet" && ItemPath(*r) != "" {
+			for _, f := range r.Files {
+				add(RawPath(r.Lang, r.Slug, f))
+			}
+		}
 		// The same slug under the other languages serves the "not translated
 		// yet" page (public.post), which renders this entry.
 		for _, l := range i18n.Supported {
@@ -116,6 +131,9 @@ func Paths(c Change) []string {
 		add(ItemPath(s))
 	}
 	for _, s := range c.Linked {
+		add(ItemPath(s))
+	}
+	for _, s := range c.Peers {
 		add(ItemPath(s))
 	}
 	out := make([]string, 0, len(set))

@@ -382,6 +382,7 @@ type smAlt struct {
 }
 
 type smRow struct {
+	Kind      string `json:"kind"`
 	Lang      string `json:"lang"`
 	Slug      string `json:"slug"`
 	Group     string `json:"translation_group_id"`
@@ -389,8 +390,8 @@ type smRow struct {
 }
 
 func (h *Handlers) sitemapRows(ctx context.Context) ([]smRow, error) {
-	res, err := h.db.Query(ctx, `SELECT lang, slug, translation_group_id, updated_at FROM entries
-WHERE kind = 'post' AND status = 'published' AND visibility = 'public' ORDER BY published_at DESC LIMIT 5000`)
+	res, err := h.db.Query(ctx, `SELECT kind, lang, slug, translation_group_id, updated_at FROM entries
+WHERE kind IN ('post', 'note', 'snippet') AND status = 'published' AND visibility = 'public' ORDER BY published_at DESC LIMIT 5000`)
 	if err != nil {
 		return nil, err
 	}
@@ -405,8 +406,8 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
-	// Home and post list exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts"} {
+	// Home and the list pages exist in every language: alternate each other.
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})
@@ -420,8 +421,12 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 		groups[row.Group] = append(groups[row.Group], row)
 	}
 	for _, row := range rows {
-		u := smURL{Loc: h.origin + "/" + row.Lang + "/posts/" + row.Slug, LastMod: time.Unix(row.UpdatedAt, 0).UTC().Format("2006-01-02")}
-		if sibs := groups[row.Group]; len(sibs) > 1 {
+		seg := "posts"
+		if row.Kind != "post" {
+			seg = kindFeeds[row.Kind]
+		}
+		u := smURL{Loc: h.origin + "/" + row.Lang + "/" + seg + "/" + row.Slug, LastMod: time.Unix(row.UpdatedAt, 0).UTC().Format("2006-01-02")}
+		if sibs := groups[row.Group]; row.Kind == "post" && len(sibs) > 1 {
 			for _, s := range sibs {
 				u.Alts = append(u.Alts, smAlt{Rel: "alternate", Hreflang: s.Lang, Href: h.origin + "/" + s.Lang + "/posts/" + s.Slug})
 			}

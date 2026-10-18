@@ -38,6 +38,16 @@ func TestPaths(t *testing.T) {
 	if want := []string{"/en/", "/en/notes", "/en/notes/atom.xml", "/en/notes/feed.json", "/en/notes/feed.xml", "/en/notes/til", "/sitemap.xml", "/tr/notes/til"}; !reflect.DeepEqual(notePaths, want) {
 		t.Errorf("note paths =\n%v\nwant\n%v", notePaths, want)
 	}
+	// A snippet: its raw files (escaped) and the pages that list it.
+	snipPaths := Paths(Change{
+		Now:   &Ref{Kind: "snippet", Lang: "en", Slug: "sh", Files: []string{"main.go", "a b.sql"}, Listed: true},
+		Peers: []Ref{{Kind: "snippet", Lang: "en", Slug: "other"}},
+	})
+	for _, want := range []string{"/en/snippets", "/en/snippets/sh", "/en/snippets/sh/raw/main.go", "/en/snippets/sh/raw/a%20b.sql", "/en/snippets/other", "/en/snippets/feed.xml"} {
+		if !contains(snipPaths, want) {
+			t.Errorf("snippet paths miss %s: %v", want, snipPaths)
+		}
+	}
 	// A link has no page of its own: the list and its feeds.
 	linkPaths := Paths(Change{Now: &Ref{Kind: "link", Lang: "tr", Slug: "grug", Listed: true}})
 	if want := []string{"/sitemap.xml", "/tr/", "/tr/links", "/tr/links/atom.xml", "/tr/links/feed.json", "/tr/links/feed.xml"}; !reflect.DeepEqual(linkPaths, want) {

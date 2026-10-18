@@ -102,8 +102,14 @@ func (r *entryRow) tags() []string {
 }
 
 func (r *entryRow) ref() Ref {
-	return Ref{Kind: r.Kind, Lang: r.Lang, Slug: r.Slug, Tags: r.tags(),
+	ref := Ref{Kind: r.Kind, Lang: r.Lang, Slug: r.Slug, Tags: r.tags(),
 		Listed: r.Status == content.Published && r.Visibility == content.Public}
+	if r.Kind == "snippet" && r.DataJSON != nil {
+		for _, f := range snippetFiles(*r.DataJSON) {
+			ref.Files = append(ref.Files, f.Filename)
+		}
+	}
+	return ref
 }
 
 // RefOf snapshots an entry before a write, for EntryChanged.Prev.
@@ -140,6 +146,11 @@ func (e *EntryJobs) changed(ctx context.Context, raw json.RawMessage) error {
 		}
 		c.Linked = linked
 	}
+	peers, err := peers(ctx, e.db, c)
+	if err != nil {
+		return err
+	}
+	c.Peers = peers
 	// Cards first: the pages warmed next point og:image at them.
 	if err := e.cards(ctx, c, row); err != nil {
 		return err
@@ -271,6 +282,31 @@ func snippetFiles(dataJSON string) []snippetFile {
 	}
 	_ = json.Unmarshal([]byte(dataJSON), &d)
 	return d.Files
+}
+
+// peers are the published snippets in the languages of a snippet change:
+// their pages carry the snippet list, which the change may have altered.
+func peers(ctx context.Context, db store.DB, c Change) ([]Ref, error) {
+	langs := map[string]bool{}
+	for _, r := range []*Ref{c.Now, c.Prev} {
+		if r != nil && r.Kind == "snippet" {
+			langs[r.Lang] = true
+		}
+	}
+	var out []Ref
+	for l := range langs {
+		res, err := db.Query(ctx, `SELECT kind, lang, slug FROM entries
+WHERE kind = 'snippet' AND lang = ? AND status = 'published' AND visibility = 'public' LIMIT 500`, l)
+		if err != nil {
+			return nil, err
+		}
+		rows, err := store.Scan[Ref](res)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, rows...)
+	}
+	return out, nil
 }
 
 func siblings(ctx context.Context, db store.DB, row *entryRow) ([]Ref, error) {
