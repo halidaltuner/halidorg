@@ -1,7 +1,8 @@
-// Package devseed fills local and staging with sample posts so pages can
-// be checked before real content exists. It is a 404 in prod. Seeding is
-// idempotent: posts whose slug already exists are not created again, only
-// re-rendered, so a new renderer (pages, OG cards) can be checked on them.
+// Package devseed fills local and staging with sample posts, notes,
+// snippets, links and favs so pages can be checked before real content
+// exists. It is a 404 in prod. Seeding is idempotent: entries whose slug
+// already exists are not created again, only re-rendered, so a new renderer
+// (pages, OG cards, favicons) can be checked on them.
 package devseed
 
 import (
@@ -31,8 +32,8 @@ func New(db store.DB, j *jobs.Jobs) *Handlers { return &Handlers{db: db, jobs: j
 
 var form = template.Must(template.New("seed").Parse(`<!doctype html><meta charset="utf-8">
 <title>seed</title><link rel="stylesheet" href="/static/css/tokens.css"><link rel="stylesheet" href="/static/css/app.css">
-<main class="admin-stub"><h1>Seed sample posts</h1>
-<p>Adds three sample posts in English and their Turkish translations ({{.Env}}). Existing slugs are skipped.</p>
+<main class="admin-stub"><h1>Seed sample content</h1>
+<p>Adds sample posts (English, with a Turkish translation), notes, snippets, links with categories and favs ({{.Env}}). Existing slugs are skipped and re-rendered.</p>
 {{with .Result}}<p class="mono">{{.}}</p>{{end}}
 <form method="post"><button class="btn" type="submit">Seed</button></form>
 <a href="/admin">← admin</a></main>`))
@@ -51,7 +52,7 @@ func (h *Handlers) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		result = fmt.Sprintf("created %d posts; render jobs queued", n)
+		result = fmt.Sprintf("created %d entries; render jobs queued", n)
 	}
 	_ = form.Execute(w, map[string]string{"Env": h.env, "Result": result})
 }
@@ -85,7 +86,7 @@ var samples = []sample{
 }
 
 // Seed creates the samples that do not exist yet, publishes them and
-// queues render jobs for every sample. It returns how many posts it created.
+// queues render jobs for every sample. It returns how many entries it created.
 func Seed(ctx context.Context, db store.DB, j *jobs.Jobs) (int, error) {
 	repo := post.NewRepo(db)
 	n := 0
@@ -129,5 +130,6 @@ func Seed(ctx context.Context, db store.DB, j *jobs.Jobs) (int, error) {
 			}
 		}
 	}
-	return n, nil
+	short, err := seedShort(ctx, db, j)
+	return n + short, err
 }
