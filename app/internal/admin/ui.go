@@ -91,7 +91,7 @@ var sections = []struct {
 	{"tags", "/admin/tags", "", false, true},
 	{"media", "/admin/media", "", false, true},
 	{"radar", "", "", false, false},
-	{"github", "", "", false, false},
+	{"github", "/admin/github", "", false, true},
 	{"jobs", "", "", false, false},
 	{"redirects", "", "", false, false},
 	{"import", "", "", false, false},

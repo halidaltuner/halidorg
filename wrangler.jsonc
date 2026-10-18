@@ -2,7 +2,7 @@
 // which accepts any resource id. Staging and prod ids were printed by the create
 // commands in docs/environments.md.
 // Bindings and vars are not inherited by envs, so each env repeats them in full.
-// Secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET) go through
+// Secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, SESSION_SECRET, GITHUB_TOKEN) go through
 // `wrangler secret put` or `.dev.vars`, never here.
 {
   "$schema": "./worker/node_modules/wrangler/config-schema.json",
@@ -56,6 +56,9 @@
   },
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-local" }],
 
+  // Cron (Phase 4.4): enqueue jobs, never call the container (worker/src/jobs.ts SCHEDULES).
+  "triggers": { "crons": ["17 */6 * * *"] },
+
   "vars": {
     "APP_ENV": "local",
     "PUBLIC_ORIGIN": "http://localhost:8787"
@@ -107,6 +110,7 @@
         ]
       },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
+      "triggers": { "crons": ["17 */6 * * *"] },
       "vars": {
         "APP_ENV": "staging",
         "PUBLIC_ORIGIN": "https://staging.halid.org"
@@ -160,6 +164,7 @@
         ]
       },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-prod" }],
+      "triggers": { "crons": ["17 */6 * * *"] },
       "vars": {
         "APP_ENV": "prod",
         // Admin login on prod needs this origin and its own OAuth client (Phase 3).

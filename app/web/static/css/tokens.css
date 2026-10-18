@@ -95,6 +95,8 @@
   --text-muted: #5A6578;
   --link: #0E7490;
   --accent: #0891B2;
+  /* GitHub 52-week strip: three intensities (design/README.md, Projects) */
+  --gh-1: #C9E9F1; --gh-2: #67C6DB; --gh-3: #0891B2;
   --accent-2: #E11D48;
   --success: #15803D;
   --warning: #B45309;

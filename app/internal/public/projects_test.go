@@ -4,10 +4,12 @@ import (
 	"context"
 	"strings"
 	"testing"
+	"time"
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/project"
+	"halid.org/engine/internal/github"
 	"halid.org/engine/internal/settings"
 	"halid.org/engine/internal/store"
 )
@@ -31,7 +33,7 @@ func seedProjects(t *testing.T, db store.DB) {
 	cost := int64(2700000)
 	homelab := "01K0000000000000000000HM01"
 	mk(project.Draft{Project: project.Project{Entry: content.Entry{Slug: "site", Lang: "en", Title: "halid.org"}, Type: project.Software,
-		ProjectStatus: "maintained", Tagline: "This site.", KindLine: "go · htmx",
+		ProjectStatus: "maintained", Tagline: "This site.", KindLine: "go · htmx", GitHubRepo: "Halid/Site",
 		Facts: []project.Fact{{Key: "started", Value: "2025-11"}},
 		Stack: []project.Tech{{Name: "Go 1.26", Role: "server"}, {Name: "htmx 2"}},
 		Links: []project.Link{{Label: "github →", URL: "https://github.com/x/y"}, {Label: "changelog", URL: "/en/posts/changelog"}}},
@@ -69,6 +71,9 @@ func TestProjectsPages(t *testing.T) {
 		`<a href="/en/homelab">homelab &amp; diy</a>`,
 		`href="/en/projects/feed.xml"`,
 	)
+	if strings.Contains(body, `class="gh"`) || strings.Contains(body, "★") {
+		t.Error("GitHub section before the first sync")
+	}
 	if strings.Contains(body, "/en/projects/rack") || strings.Contains(body, "draft project") {
 		t.Error("homelab build or draft on the software list")
 	}
@@ -181,5 +186,32 @@ func TestHomelabPageAndTiles(t *testing.T) {
 		`<a class="home-tile tone-green" href="/en/projects"><span class="g mono" aria-hidden="true">◆</span><span class="l">projects</span><span class="n mono">1 active</span></a>`,
 		`<a class="home-tile tone-orange" href="/en/homelab"><span class="g mono" aria-hidden="true">⌁</span><span class="l">homelab &amp; diy</span><span class="n mono">2 builds</span></a>`,
 		`<a class="cta-outline" href="/en/projects">projects →</a>`,
+	)
+}
+
+func TestProjectsGitHubSection(t *testing.T) {
+	mux, db := newSite(t)
+	seedProjects(t, db)
+	clock := content.Clock
+	content.Clock = func() time.Time { return time.Date(2026, 10, 18, 12, 0, 0, 0, time.UTC) }
+	t.Cleanup(func() { content.Clock = clock })
+	pushed := time.Date(2026, 10, 18, 9, 0, 0, 0, time.UTC)
+	created := time.Date(2025, 11, 2, 0, 0, 0, 0, time.UTC)
+	snap := github.Snapshot{Complete: true, Total: 1234, Pinned: []string{"R1"},
+		Weeks: []github.Week{{Start: time.Date(2026, 10, 4, 0, 0, 0, 0, time.UTC), Contributions: 30}, {Start: time.Date(2026, 10, 11, 0, 0, 0, 0, time.UTC), Contributions: 10}},
+		Repos: []github.Repo{{ID: "R1", FullName: "halid/site", Name: "site", Description: "This site.", URL: "https://github.com/halid/site", Stars: 42,
+			Language: "Go", PushedAt: &pushed, CreatedAt: &created, Languages: map[string]int64{"Go": 750, "HTML": 250},
+			Releases: []github.Release{{ID: "V1", Tag: "v0.4.0", URL: "https://github.com/halid/site/releases/v0.4.0", Note: "Webmentions.", PublishedAt: created}}}}}
+	if err := github.Write(context.Background(), db, snap, time.Date(2026, 10, 18, 11, 0, 0, 0, time.UTC)); err != nil {
+		t.Fatal(err)
+	}
+	_, body := get(t, mux, "/en/projects")
+	must(t, body,
+		`<div class="pj-card-foot mono"><span>★ 42</span><span>pushed 3h ago</span>`,
+		`<section class="gh">`, `<span class="mono">40 contributions · last 52 weeks</span>`,
+		`<span class="w3" style="height:100%" title="30 contributions · week of 2026-10-04"></span>`,
+		`<span class="l1" style="width:75%"></span>`, `<i class="l2" aria-hidden="true"></i>HTML 25%`,
+		`<a class="gh-repo" href="https://github.com/halid/site"><span class="n mono">site</span><span class="d">This site.</span><span class="m mono">Go · ★ 42</span></a>`,
+		`<span class="t mono">site v0.4.0</span><span class="dt mono">2025-11-02</span><span class="nt">Webmentions.</span>`,
 	)
 }

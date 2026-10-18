@@ -129,7 +129,7 @@ func (j *Jobs) serve(w http.ResponseWriter, r *http.Request) {
 	if attempt < 1 {
 		attempt = 1
 	}
-	err = j.Run(r.Context(), msg, attempt)
+	err = j.Run(context.WithValue(r.Context(), headerKey{}, r.Header.Clone()), msg, attempt)
 	var perm Permanent
 	if err != nil && !errors.As(err, &perm) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -196,4 +196,16 @@ FROM job_runs WHERE status IN ('failed', 'dead') ORDER BY created_at DESC LIMIT 
 		return nil, err
 	}
 	return store.Scan[RunRow](res)
+}
+
+type headerKey struct{}
+
+// DeliveryHeader is a header of the request that delivered the running job,
+// or "". The Worker puts values there that must not wait for a container
+// restart, such as X-GitHub-Token.
+func DeliveryHeader(ctx context.Context, name string) string {
+	if h, ok := ctx.Value(headerKey{}).(http.Header); ok {
+		return h.Get(name)
+	}
+	return ""
 }

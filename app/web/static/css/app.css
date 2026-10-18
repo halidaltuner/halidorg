@@ -1596,3 +1596,48 @@ html.pal-open { overflow: hidden; }
   .hl-intro h1 { font-size: var(--fs-36); }
   .hl-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: none; }
 }
+
+/* GitHub admin (Phase 4.4, derive) */
+.gh-last { margin: 0; padding: var(--sp-12) var(--sp-16); font-size: var(--fs-13); display: flex; gap: var(--sp-8); align-items: center; }
+.gh-err { margin: 0; padding: 0 var(--sp-16) var(--sp-12); font-size: var(--fs-12); color: var(--accent-2); overflow-wrap: anywhere; }
+.gh-table td { vertical-align: middle; }
+.gh-table a { color: var(--link); text-decoration: none; }
+.gh-gone td { opacity: .55; }
+.gh-link { display: flex; gap: 6px; }
+.adm-head form { margin-left: auto; }
+
+/* Projects: the GitHub section (design/Projects.dc.html), Phase 4.4 */
+.gh { display: flex; flex-direction: column; gap: var(--sp-24); margin-top: var(--sp-40); }
+.gh-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-16); flex-wrap: wrap; }
+.gh-head h2 { margin: 0; font-size: var(--fs-28); font-weight: 600; letter-spacing: -0.01em; }
+.gh-head .mono { font-size: var(--fs-13); color: var(--text-muted); }
+.gh-strip { display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-20); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); }
+.gh-bars { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; height: 40px; align-items: end; }
+.gh-bars span { border-radius: 1px; background: var(--gh-1); }
+.gh-bars .w2 { background: var(--gh-2); }
+.gh-bars .w3 { background: var(--gh-3); }
+.gh-months { display: flex; justify-content: space-between; font-size: var(--fs-11); color: var(--text-muted); }
+.gh-langs { display: flex; flex-direction: column; gap: var(--sp-8); }
+.gh-langbar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--border); }
+.gh-legend { display: flex; gap: var(--sp-16); flex-wrap: wrap; font-size: var(--fs-12); color: var(--text-muted); }
+.gh-legend span { display: flex; align-items: center; gap: 6px; }
+.gh-legend i { width: 8px; height: 8px; border-radius: 2px; }
+.gh .l0 { background: var(--border); }
+.gh .l1 { background: var(--accent); }
+.gh .l2 { background: var(--info); }
+.gh .l3 { background: var(--warning); }
+.gh .l4 { background: var(--success); }
+.gh-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--sp-32); align-items: start; }
+.gh-repos { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-12); }
+.gh-repo { display: flex; flex-direction: column; gap: 6px; padding: var(--sp-16); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); text-decoration: none; color: var(--text); }
+.gh-repo:hover { border-color: var(--accent); color: var(--text); }
+.gh-repo .n { font-size: var(--fs-14); font-weight: 500; color: var(--link); }
+.gh-repo .d { font-size: var(--fs-14); line-height: 1.5; color: var(--text-muted); }
+.gh-repo .m { font-size: var(--fs-12); color: var(--text-muted); }
+.gh-releases { display: flex; flex-direction: column; }
+.gh-releases h3 { margin: 0 0 var(--sp-8); font-size: var(--fs-13); font-weight: 500; color: var(--text-muted); }
+.gh-rel { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px var(--sp-12); padding: var(--sp-12) 0; border-top: 1px solid var(--border); text-decoration: none; color: var(--text); }
+.gh-rel:hover .t { color: var(--link); }
+.gh-rel .t { font-size: var(--fs-14); }
+.gh-rel .dt { font-size: var(--fs-12); color: var(--text-muted); }
+.gh-rel .nt { grid-column: span 2; font-size: var(--fs-14); color: var(--text-muted); }
