@@ -44,3 +44,12 @@ type Homelab struct {
 	Idle   string `json:"idle"`
 	Uptime string `json:"uptime"`
 }
+
+// PhotosKey holds the photos page settings.
+const PhotosKey = "photos"
+
+// Photos is the 500px profile the photos page links to; empty hides the
+// button.
+type Photos struct {
+	Profile string `json:"profile_500px"`
+}

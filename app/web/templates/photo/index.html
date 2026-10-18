@@ -1,0 +1,49 @@
+{{define "content"}}<main class="ph tone-violet" data-filter="album"{{with .Album}} data-filtered="{{.}}"{{end}}>
+<section class="ph-hero">
+<div class="ph-hero-in">
+<div class="ph-intro">
+<span class="ph-eyebrow mono">◐ {{tr .Lang "photo.eyebrow"}}</span>
+<h1>{{tr .Lang "photo.title"}}</h1>
+<p>{{tr .Lang "photo.sub"}}</p>
+</div>
+{{- with .Profile}}<a class="ph-profile" href="{{.}}" rel="noopener">{{tr $.Lang "photo.profile"}} ↗</a>{{end}}
+</div>
+</section>
+<div class="ph-body">
+{{- if .Tiles}}
+{{- if gt (len .Chips) 2}}
+<nav class="chips ph-chips" aria-label="{{tr .Lang "photo.albums"}}">{{range .Chips}}<a class="chip tone-violet" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>
+{{- end}}
+<div class="ph-grid">
+{{- range .Tiles}}
+<figure class="ph-tile r{{.Rows}} c{{.Cols}}" data-filter-value="{{.AlbumKey}}">
+<img src="{{.Image.URL}}" alt="{{.Image.Alt}}" loading="lazy" decoding="async">
+<figcaption><a class="ph-open mono" href="#p-{{.ID}}">{{.Title}} ↗</a></figcaption>
+</figure>
+{{- end}}
+</div>
+{{- range .Tiles}}
+<div class="ph-box" id="p-{{.ID}}" role="dialog" aria-modal="true" aria-label="{{.Title}}">
+<a class="ph-backdrop" href="#" aria-label="{{tr $.Lang "photo.close"}}"></a>
+<div class="ph-panel">
+<div class="ph-large"><img src="{{.Image.URL}}" alt="{{.Image.Alt}}" loading="lazy" decoding="async"></div>
+<div class="ph-info">
+<div class="ph-info-head"><span class="mono">{{.Album}}</span><a class="mono ph-close" href="#">{{tr $.Lang "photo.esc"}} ✕</a></div>
+<h2>{{.Title}}</h2>
+<dl class="ph-exif mono">
+{{- with .Camera}}<dt>{{tr $.Lang "photo.camera"}}</dt><dd>{{.}}</dd>{{end}}
+{{- with .Lens}}<dt>{{tr $.Lang "photo.lens"}}</dt><dd>{{.}}</dd>{{end}}
+{{- with .Exposure}}<dt>{{tr $.Lang "photo.exposure"}}</dt><dd>{{.}}</dd>{{end}}
+{{- with .Place}}<dt>{{tr $.Lang "photo.place"}}</dt><dd>{{.}}</dd>{{end}}
+{{- with .Date}}<dt>{{tr $.Lang "photo.date"}}</dt><dd>{{.}}</dd>{{end}}
+</dl>
+{{- with .URL500px}}<a class="ph-500" href="{{.}}" rel="noopener">{{tr $.Lang "photo.view_500px"}} ↗</a>{{end}}
+</div>
+</div>
+</div>
+{{- end}}
+{{- else}}
+<p class="empty">{{tr .Lang "photo.empty"}}</p>
+{{- end}}
+</div>
+</main>{{end}}

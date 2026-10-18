@@ -1,0 +1,53 @@
+{{define "main"}}
+<div class="adm-head">
+<a class="mono ent-back" href="/admin/photos">← {{tr .Lang "admin.nav.photos"}}</a>
+<h1>{{.Title}}</h1>
+{{- if not .New}}<a class="mono ent-view" href="/{{.Lang}}/photos#p-{{.Photo.ID}}">{{tr .Lang "entry.view"}}</a>{{end}}
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+<section class="adm-panel ent-panel">
+<form class="adm-form ent-form" method="post" action="/admin/photos{{with .Photo.ID}}/{{.}}{{end}}">
+{{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<div class="ent-two">
+<label>{{tr .Lang "admin.photo.image"}}<select name="image">{{range .Images}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label>{{tr .Lang "admin.photo.album"}}<select name="album">{{range .Albums}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "admin.photo.title_tr"}}<input name="title_tr" value="{{.Photo.TitleTR}}" lang="tr"></label>
+<label>{{tr .Lang "admin.photo.title_en"}}<input name="title_en" value="{{.Photo.TitleEN}}" lang="en"></label>
+</div>
+<label>{{tr .Lang "admin.photo.url"}}<input name="url_500px" value="{{.URL}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://500px.com/photo/…"></label>
+<fieldset class="ent-rows"><legend>EXIF</legend>
+<p class="ent-hint">{{tr .Lang "admin.photo.exif_hint"}}</p>
+<div class="ent-two">
+<label>{{tr .Lang "photo.camera"}}<input name="camera" value="{{.Photo.Camera}}" class="mono"></label>
+<label>{{tr .Lang "photo.lens"}}<input name="lens" value="{{.Photo.Lens}}" class="mono"></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "photo.exposure"}}<input name="exposure" value="{{.Photo.Exposure}}" class="mono" placeholder="1/250 · f/8 · ISO 160"></label>
+<label>{{tr .Lang "admin.photo.taken"}}<input type="date" name="taken" value="{{.Taken}}"></label>
+</div>
+<button type="submit" class="adm-btn" name="action" value="exif" formnovalidate>{{tr .Lang "admin.photo.fill_exif"}}</button>
+</fieldset>
+<label>{{tr .Lang "photo.place"}}<input name="place" value="{{.Photo.Place}}"></label>
+<div class="ent-two">
+<label>{{tr .Lang "admin.photo.rows"}}<select name="row_span">{{range .Rows}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label>{{tr .Lang "admin.photo.cols"}}<select name="col_span">{{range .Cols}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "kind.snippet.file_order"}}<input name="sort" value="{{.Sort}}" class="mono" inputmode="numeric"></label>
+<label class="check"><input type="checkbox" name="published" value="1"{{if .Photo.Published}} checked{{end}}>{{tr .Lang "admin.cert.published"}}</label>
+</div>
+<div class="ent-actions"><button type="submit" class="adm-btn solid" name="action" value="save">{{tr .Lang "admin.tax.save"}}</button></div>
+</form>
+</section>
+{{- if not .New}}
+<details class="adm-panel ent-delete">
+<summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>
+<form method="post" action="/admin/photos/{{.Photo.ID}}/delete">
+<p>{{tr .Lang "admin.photo.delete_sure"}}</p>
+<button type="submit" class="adm-btn danger">{{tr .Lang "admin.delete.confirm"}}</button>
+</form>
+</details>
+{{- end}}
+{{end}}

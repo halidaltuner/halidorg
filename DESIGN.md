@@ -254,3 +254,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - About gains the certificates card first: up to five mini hexagons (52px) of active certificates in their issuer tones, and "A, B, C and N more".
 - `/admin/certificates` (derive): the list with issuer, months and status badges (expired muted), the issuers as inline rows below it, and a form per certificate.
 
+## 28. Implementation notes (Phase 5.3)
+- Photos follow the prototype: the violet hero with the "500px profile ↗" button (shown when the setting is set), album chips "name · count" (`?album=`), and the dense grid of 120px rows with tile spans and a dark mono caption "title ↗" on each tile. The prototype's "embedded from 500px" copy says "a selection from my 500px profile": there is no embed.
+- The lightbox is a `:target` dialog per photo (works without JS; `photos.js` adds Esc, focus and scroll lock): the large image beside a dark panel with the album in `--dk-violet`, the title, the EXIF list and a solid violet "view on 500px ↗". On narrow screens the panel stacks under the image. The backdrop is `--dk-scrim`.
+- `/admin/photos` (derive): the list with album, EXIF and spans, albums as inline rows below it, and a form per photo with a "Fill from EXIF" button.
