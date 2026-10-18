@@ -3,7 +3,11 @@
 // Phase 4.1). Build logs are their own kind (content/buildlog).
 package project
 
-import "halid.org/engine/internal/content"
+import (
+	"encoding/json"
+
+	"halid.org/engine/internal/content"
+)
 
 // Kind is the entries.kind of projects.
 const Kind = "project"
@@ -22,6 +26,25 @@ type Fact struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 	Sort  int    `json:"sort"`
+}
+
+// Tech is one row of a software project's "stack" aside: "Go 1.23" with
+// the role "server". It reads the plain strings of revisions saved before
+// roles existed (migrations/0008).
+type Tech struct {
+	Name string `json:"name"`
+	Role string `json:"role"`
+}
+
+// UnmarshalJSON accepts {"name","role"} or a bare name.
+func (t *Tech) UnmarshalJSON(b []byte) error {
+	var name string
+	if err := json.Unmarshal(b, &name); err == nil {
+		*t = Tech{Name: name}
+		return nil
+	}
+	type plain Tech
+	return json.Unmarshal(b, (*plain)(t))
 }
 
 // Part is one line of a homelab build's parts list. Price is for the whole
@@ -59,7 +82,7 @@ type Project struct {
 	TimeSpent     string  `json:"time_spent"`
 
 	Facts   []Fact   `json:"-"`
-	Stack   []string `json:"-"`
+	Stack   []Tech   `json:"-"`
 	Parts   []Part   `json:"-"`
 	Links   []Link   `json:"-"`
 	Gallery []string `json:"-"` // media ids, in order

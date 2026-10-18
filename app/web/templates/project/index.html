@@ -1,0 +1,24 @@
+{{define "content"}}<main class="pj-page">
+<header class="pj-head">
+<span class="pj-eyebrow mono">◆ {{tr .Lang "projects.eyebrow"}}</span>
+<h1>{{tr .Lang "nav.projects"}}</h1>
+<p>{{tr .Lang "projects.intro_before"}}<a href="/{{.Lang}}/homelab">{{tr .Lang "projects.intro_link"}}</a>{{tr .Lang "projects.intro_after"}}</p>
+</header>
+{{- if .Cards}}
+<div class="pj-grid">
+{{- range .Cards}}
+<a class="pj-card" href="{{.Href}}">
+<div class="pj-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}<span class="pj-status st-{{.StatusTone}} mono">{{.Status}}</span></div>
+<div class="pj-card-body">
+<h2 class="mono">{{.Name}}</h2>
+{{- with .Tagline}}<p>{{.}}</p>{{end}}
+{{- with .Pills}}<div class="pj-pills">{{range .}}<span class="mono">{{.}}</span>{{end}}</div>{{end}}
+<div class="pj-card-foot mono"><span class="pj-details">{{tr $.Lang "projects.details"}} →</span></div>
+</div>
+</a>
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "projects.empty"}}</p>
+{{- end}}
+</main>{{end}}

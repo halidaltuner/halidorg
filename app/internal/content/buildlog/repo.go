@@ -133,6 +133,25 @@ func (r *Repo) Get(ctx context.Context, id string) (Buildlog, error) {
 	return rows[0], nil
 }
 
+// GetPublished loads a public build log by language and slug, with the
+// body of its published revision in HTML.
+func (r *Repo) GetPublished(ctx context.Context, lang, slug string) (Buildlog, string, error) {
+	res, err := r.db.Query(ctx, selectLog+` WHERE e.lang = ? AND e.slug = ? AND e.status = 'published' AND e.visibility <> 'private'
+  AND pe.status = 'published' AND pe.visibility <> 'private' LIMIT 1`, lang, slug)
+	if err != nil {
+		return Buildlog{}, "", err
+	}
+	rows, err := store.Scan[Buildlog](res)
+	if err != nil {
+		return Buildlog{}, "", err
+	}
+	if len(rows) == 0 || rows[0].PublishedRevisionID == nil {
+		return Buildlog{}, "", content.NotFound(Kind, lang+"/"+slug)
+	}
+	rev, err := content.GetRevision(ctx, r.db, *rows[0].PublishedRevisionID)
+	return rows[0], rev.BodyHTML, err
+}
+
 // ForProject lists a project's build logs, newest first: every status for
 // the admin, published and public ones otherwise.
 func (r *Repo) ForProject(ctx context.Context, projectID string, admin bool) ([]Buildlog, error) {

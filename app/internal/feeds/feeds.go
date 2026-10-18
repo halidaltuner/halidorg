@@ -72,7 +72,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 
 // kindFeeds are the kinds with their own feeds and the URL segment they sit
 // under. Posts use the language feeds (/{lang}/feed.xml).
-var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs"}
+var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs", "project": "projects"}
 
 // item is one feed entry, whatever its kind.
 type item struct {
@@ -390,9 +390,15 @@ type smRow struct {
 }
 
 func (h *Handlers) sitemapRows(ctx context.Context) ([]smRow, error) {
+	// A build log lives under its project: its "slug" here is the path
+	// below /{lang}/projects/ (project/log/slug).
 	res, err := h.db.Query(ctx, `SELECT kind, lang, slug, translation_group_id, updated_at FROM entries
-WHERE kind IN ('post', 'note', 'snippet') AND status = 'published' AND visibility = 'public'
-ORDER BY published_at DESC LIMIT 5000`)
+WHERE kind IN ('post', 'note', 'snippet', 'project') AND status = 'published' AND visibility = 'public'
+UNION ALL
+SELECT 'project', e.lang, pe.slug || '/log/' || e.slug, e.translation_group_id, e.updated_at
+FROM entries e JOIN buildlogs b ON b.entry_id = e.id JOIN entries pe ON pe.id = b.project_entry_id
+WHERE e.status = 'published' AND e.visibility = 'public' AND pe.status = 'published' AND pe.visibility = 'public'
+LIMIT 5000`)
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +423,7 @@ ORDER BY 1, 2`)
 }
 
 // itemSegments are the kinds with a page per entry and their URL segment.
-var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets"}
+var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects"}
 
 func itemPath(r smRow) string { return "/" + r.Lang + "/" + itemSegments[r.Kind] + "/" + r.Slug }
 
@@ -430,7 +436,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})

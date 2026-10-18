@@ -27,7 +27,7 @@ func TestHomelabRowsAndRevisions(t *testing.T) {
 
 	var v content.ValidationError
 	// A homelab build needs a category and cannot have a stack.
-	_, err = r.Create(ctx, Draft{Project: Project{Entry: content.Entry{Slug: "rack", Lang: "en", Title: "rack"}, Type: Homelab, Stack: []string{"go"}}})
+	_, err = r.Create(ctx, Draft{Project: Project{Entry: content.Entry{Slug: "rack", Lang: "en", Title: "rack"}, Type: Homelab, Stack: []Tech{{Name: "go"}}}})
 	if !errors.As(err, &v) || v["category"] == "" || v["stack"] == "" {
 		t.Fatalf("homelab without category / with stack: %v", err)
 	}
@@ -94,7 +94,7 @@ func TestHomelabRowsAndRevisions(t *testing.T) {
 
 	// Lists: admin sees drafts, the public list only published ones.
 	if _, err := r.Create(ctx, Draft{Project: Project{Entry: content.Entry{Slug: "site", Lang: "en", Title: "halid.org"}, Type: Software,
-		CategoryID: ptr(rack), Stack: []string{"go", " htmx ", ""}}}); err != nil {
+		CategoryID: ptr(rack), Stack: []Tech{{Name: "go", Role: " server "}, {Name: " htmx "}, {}}}}); err != nil {
 		t.Fatal(err)
 	}
 	all, _ := r.List(ctx, ListFilter{Lang: "en", Admin: true})
@@ -104,7 +104,7 @@ func TestHomelabRowsAndRevisions(t *testing.T) {
 		t.Fatalf("lists %d %d %d %+v", len(all), len(pubs), len(soft), soft)
 	}
 	sp, _ := r.Get(ctx, soft[0].ID)
-	if len(sp.Stack) != 2 || sp.Stack[1] != "htmx" {
+	if len(sp.Stack) != 2 || sp.Stack[1].Name != "htmx" || sp.Stack[0].Role != "server" {
 		t.Errorf("stack %v", sp.Stack)
 	}
 }
@@ -168,5 +168,13 @@ VALUES ('L1', 'buildlog', 'first', 'en', 'L1', 'first', 'draft', 'public', 1, 1)
 		N int `json:"n"`
 	}](res); rows[0].N != 0 {
 		t.Errorf("%d entries left", rows[0].N)
+	}
+}
+
+func TestTechReadsOldRevisions(t *testing.T) {
+	var p Project
+	RowsOf(&p, `{"stack":["go",{"name":"htmx 2","role":"admin"}]}`)
+	if len(p.Stack) != 2 || p.Stack[0].Name != "go" || p.Stack[1].Role != "admin" {
+		t.Fatalf("stack %+v", p.Stack)
 	}
 }

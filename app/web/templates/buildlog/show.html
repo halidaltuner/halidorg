@@ -1,0 +1,14 @@
+{{define "content"}}<main class="list-page pl-page tone-{{.Tone}}">
+<a class="mono back" href="{{.ProjectHref}}#log">← {{.Project}}</a>
+<header class="pl-head">
+<span class="pl-meta mono"><span class="pd-dot" aria-hidden="true"></span><time datetime="{{.Date}}">{{.Date}}</time>{{with .Hours}} · {{.}} {{tr $.Lang "projects.hours"}}{{end}}</span>
+<h1>{{.Title}}</h1>
+</header>
+<div class="prose">{{.Body}}</div>
+{{- if or .Prev .Next}}
+<nav class="pl-nav mono" aria-label="{{tr .Lang "projects.log"}}">
+{{- with .Prev}}<a href="{{.Href}}">← {{.Title}}<span>{{.Date}}</span></a>{{else}}<span></span>{{end}}
+{{- with .Next}}<a class="next" href="{{.Href}}">{{.Title}} →<span>{{.Date}}</span></a>{{end}}
+</nav>
+{{- end}}
+</main>{{end}}

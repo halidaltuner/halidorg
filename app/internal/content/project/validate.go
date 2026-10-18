@@ -64,8 +64,10 @@ func Validate(p Project) error {
 		}
 	}
 	for i, s := range p.Stack {
-		if n := utf8.RuneCountInString(s); n == 0 || n > 60 {
+		if n := utf8.RuneCountInString(s.Name); n == 0 || n > 60 {
 			v[fmt.Sprintf("stack.%d.name", i)] = "1 to 60 characters"
+		} else if utf8.RuneCountInString(s.Role) > 40 {
+			v[fmt.Sprintf("stack.%d.role", i)] = "at most 40 characters"
 		}
 	}
 	for i, x := range p.Parts {

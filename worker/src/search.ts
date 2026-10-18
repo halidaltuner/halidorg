@@ -24,7 +24,7 @@ const PREFIXES: Record<string, string> = {
 const LANGS = ["tr", "en"];
 
 /** Item pages per kind; links open their URL, favs the favs page. */
-const SECTIONS: Record<string, string> = { post: "posts", note: "notes", snippet: "snippets" };
+const SECTIONS: Record<string, string> = { post: "posts", note: "notes", snippet: "snippets", project: "projects" };
 
 /** search.Fold: ı, İ and I become i, everything else lowercases. */
 export function fold(s: string): string {

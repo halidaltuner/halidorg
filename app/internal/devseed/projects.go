@@ -20,9 +20,10 @@ var homelabCategory = "01K0000000000000000000HM01" // seeded by migrations/0007
 var sampleProjects = []project.Draft{
 	{Project: project.Project{Entry: content.Entry{Slug: "sample-project-site", Lang: "en", Title: "Sample: this site"},
 		Type: project.Software, ProjectStatus: "active", Tagline: "A bilingual engineering notebook with a htmx admin.", Currency: "TRY",
-		Facts: []project.Fact{{Key: "version", Value: "v0.2"}, {Key: "language", Value: "Go"}},
-		Stack: []string{"go", "htmx", "cloudflare"},
-		Links: []project.Link{{Label: "source", URL: "https://github.com/"}}},
+		Facts:    []project.Fact{{Key: "version", Value: "v0.2"}, {Key: "language", Value: "Go"}},
+		KindLine: "go · htmx · cloudflare",
+		Stack:    []project.Tech{{Name: "Go 1.26", Role: "server"}, {Name: "htmx 2", Role: "admin"}, {Name: "Cloudflare", Role: "edge + storage"}},
+		Links:    []project.Link{{Label: "source", URL: "https://github.com/"}}},
 		Markdown: "## Goal\n\nA site that is fast without a warm container.\n\n## How\n\nRender on publish into KV.", Tags: []string{"sample"}},
 	{Project: project.Project{Entry: content.Entry{Slug: "sample-project-rack", Lang: "en", Title: "Sample: 3-node rack"},
 		Type: project.Homelab, ProjectStatus: "running", CategoryID: &homelabCategory, Tagline: "Three mini PCs and a switch in a 10\" rack.",

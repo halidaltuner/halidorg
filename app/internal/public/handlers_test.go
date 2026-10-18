@@ -153,7 +153,7 @@ func TestHomeHasChrome(t *testing.T) {
 	body := rec.Body.String()
 	for _, want := range []string{
 		`<header class="site-header">`,
-		`<a href="/en/posts" data-s="posts">posts</a>`,
+		`<a href="/en/posts" data-s="posts">posts</a>`, `<a href="/en/projects" data-s="projects">projects</a>`,
 		`<details class="nav-sheet">`,
 		`<footer class="site-footer">`,
 		`<span class="sha">a3f91c2</span>`,
@@ -165,7 +165,7 @@ func TestHomeHasChrome(t *testing.T) {
 		}
 	}
 	// Sections without pages stay out, and home is not a section page.
-	for _, absent := range []string{`aria-current="page"`, "/en/projects", "/en/certificates"} {
+	for _, absent := range []string{`aria-current="page"`, "/en/homelab", "/en/certificates"} {
 		if strings.Contains(body, absent) {
 			t.Errorf("unexpected %s", absent)
 		}

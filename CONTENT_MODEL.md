@@ -73,7 +73,7 @@ Every link category is an awesome list at `/{lang}/awesome/{category}` (Phase 2.
 - `kind_line` is the small line over the title ("go · postgres · htmx"); empty means derived: the first three stack items for software, the category for homelab.
 - `time_spent` is free text ("6 weekends", "ongoing"), as on the build cards. Money (`cost_total`, part prices) is in minor units (kuruş, cents); an empty `cost_total` means the sum of the parts priced in the project currency.
 - `project_facts(project_id, key, value, sort)` fact strip cells (e.g. `nodes: 3`, `idle: 38 W`)
-- `project_stack(project_id, name, sort)` "stack" aside, software only
+- `project_stack(project_id, name, role, sort)` "stack" aside, software only; `role` ("server", "storage + search") is shown on the right (migrations/0008)
 - `project_parts(project_id, name, qty, price, currency, url nullable, sort)` "parts" aside, homelab only; price is the whole line
 - `project_links(project_id, label, url, sort)` the hero buttons, the first is the primary one; a URL is https, a path on the site or an `#anchor` on the project page (`#log`)
 - `project_gallery(project_id, media_id, sort)` images with both alt texts; a media item in a gallery cannot be deleted
