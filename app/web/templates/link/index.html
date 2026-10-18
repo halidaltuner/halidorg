@@ -9,7 +9,7 @@
 {{- range .Groups}}
 <section class="lk-group" data-filter-group>
 <div class="lk-group-head">
-<h2 class="mono">{{if .Href}}<a href="{{.Href}}">{{.Name}}</a>{{else}}{{.Name}}{{end}} · <span data-filter-count>{{len .Items}}</span></h2>
+<h2 class="mono">{{with .Tone}}<span class="cat-dot tone-{{.}}" aria-hidden="true"></span>{{end}}{{if .Href}}<a href="{{.Href}}">{{.Name}}</a>{{else}}{{.Name}}{{end}} · <span data-filter-count>{{len .Items}}</span></h2>
 {{- with .Href}}<a class="lk-awesome mono" href="{{.}}">awesome →</a>{{end}}
 </div>
 {{- range .Items}}

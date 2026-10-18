@@ -217,3 +217,38 @@ func TestSaveRefusals(t *testing.T) {
 		t.Errorf("refused saves queued %d jobs", queued(st))
 	}
 }
+
+func TestDuplicateWarning(t *testing.T) {
+	st := newSite(t)
+	rec := st.do(st.fresh, "POST", "/admin/quick", form("link", "https://Hypermedia.systems/x/", "Hypermedia: A Reintroduction", "", "draft"), "same-origin")
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("first save %d", rec.Code)
+	}
+	id := strings.TrimPrefix(rec.Header().Get("Location"), "/admin/quick/saved/")
+
+	// Fetching the same address, spelled differently, warns and carries dup_ok.
+	body := st.do(st.fresh, "GET", "/admin/quick?url=https://hypermedia.systems/x%23ch1", nil, "none").Body.String()
+	must(t, body, `This address is already saved:`, `<a href="/admin/quick/saved/`+id+`">link: Hypermedia: A Reintroduction</a>`,
+		`· draft`, `name="dup_ok" value="https://hypermedia.systems/x#ch1"`)
+	if strings.Contains(st.do(st.fresh, "GET", "/admin/quick?url=https://hypermedia.systems/y", nil, "none").Body.String(), "already saved") {
+		t.Error("warning for a new address")
+	}
+
+	// Saving without having seen it warns first and saves nothing.
+	f := form("fav", "https://hypermedia.systems/x", "Hypermedia", "", "draft")
+	rec = st.do(st.fresh, "POST", "/admin/quick", f, "same-origin")
+	if rec.Code != http.StatusConflict || queued(st) != 1 {
+		t.Fatalf("unwarned save %d, jobs %d", rec.Code, queued(st))
+	}
+	must(t, rec.Body.String(), `This address is already saved:`, `value="Hypermedia"`)
+	// dup_ok for another address does not count.
+	f.Set("dup_ok", "https://hypermedia.systems/z")
+	if rec = st.do(st.fresh, "POST", "/admin/quick", f, "same-origin"); rec.Code != http.StatusConflict {
+		t.Fatalf("stale dup_ok %d", rec.Code)
+	}
+	// The second press saves.
+	f.Set("dup_ok", "https://hypermedia.systems/x")
+	if rec = st.do(st.fresh, "POST", "/admin/quick", f, "same-origin"); rec.Code != http.StatusSeeOther {
+		t.Fatalf("acknowledged save %d %s", rec.Code, rec.Body.String())
+	}
+}

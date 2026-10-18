@@ -85,7 +85,8 @@ func TestLinksPage(t *testing.T) {
 		`<main class="cur-page lk-page" data-filter="status">`,
 		`<a class="chip tone-navy" href="/en/links" data-filter-key="" aria-current="true">all</a>`,
 		`href="/en/links?status=unread" data-filter-key="unread">unread</a>`,
-		`<a href="/en/awesome/architecture">architecture</a> · <span data-filter-count>2</span>`,
+		`<h2 class="mono"><span class="cat-dot tone-green" aria-hidden="true"></span><a href="/en/awesome/architecture">architecture</a> · <span data-filter-count>2</span>`,
+		`<h2 class="mono">other · <span data-filter-count>1</span>`,
 		`<img class="lk-icon" src="/favicons/grugbrain.dev.ico"`,
 		`<span class="lk-icon lk-initial mono" aria-hidden="true">m</span>`,
 		`<a class="lk-title" href="https://grugbrain.dev/">The Grug Brained Developer</a><span class="lk-domain mono">grugbrain.dev</span>`,
@@ -187,10 +188,10 @@ func TestAwesomeIndex(t *testing.T) {
 	must(t, body,
 		`<h1>awesome</h1>`,
 		// architecture counts its own 2 links and the 1 in books.
-		`<a href="/en/awesome/architecture">awesome architecture</a><span class="mono">3 links</span>`,
-		`<a href="/en/awesome/arch-books">awesome books</a><span class="mono">1 link</span>`,
+		`<a href="/en/awesome/architecture"><span class="cat-dot tone-green" aria-hidden="true"></span>awesome architecture</a><span class="mono">3 links</span>`,
+		`<a href="/en/awesome/arch-books"><span class="cat-dot tone-green" aria-hidden="true"></span>awesome books</a><span class="mono">1 link</span>`,
 		`<div class="aw-index-parent mono">part of <a href="/en/awesome/architecture">architecture</a></div>`,
-		`<a href="/en/awesome/postgres">awesome postgres</a><span class="mono">1 link</span>`,
+		`<a href="/en/awesome/postgres"><span class="cat-dot tone-navy" aria-hidden="true"></span>awesome postgres</a><span class="mono">1 link</span>`,
 		`<link rel="canonical" href="https://halid.org/en/awesome">`,
 	)
 	if i, j := strings.Index(body, "awesome architecture"), strings.Index(body, "awesome books"); i < 0 || j < i {

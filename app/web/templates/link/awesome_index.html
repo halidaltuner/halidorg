@@ -9,7 +9,7 @@
 <ul class="aw-index">
 {{- range .Lists}}
 <li>
-<div class="aw-index-line"><a href="{{.Href}}">awesome {{.Name}}</a><span class="mono">{{.CountLabel}}</span></div>
+<div class="aw-index-line"><a href="{{.Href}}"><span class="cat-dot tone-{{.Tone}}" aria-hidden="true"></span>awesome {{.Name}}</a><span class="mono">{{.CountLabel}}</span></div>
 {{- with .Parent}}<div class="aw-index-parent mono">{{tr $.Lang "awesome.in"}} <a href="{{.Href}}">{{.Name}}</a></div>{{end}}
 </li>
 {{- end}}
