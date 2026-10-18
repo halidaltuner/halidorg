@@ -153,3 +153,16 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - The post TOC is hidden under 900px; above the title it pushes the article down a screen. Headings keep their anchors.
 - Reading time: `N min` on cards, stream rows and the featured card; `N min read` on the post page.
 
+## 12. Implementation notes (Phase 1.5)
+- The OG card is drawn in Go (`app/internal/render/og`) from the template's values, with IBM Plex Sans 600 and JetBrains Mono 400/700 TTFs from their OFL releases (licenses next to the fonts). Colors are the band tokens, hard-coded in Go because a PNG renderer cannot read `tokens.css`; change both together.
+- The title is balanced like `text-wrap: balance` and cut after 3 lines with an ellipsis. The prototype has no limit and overflows into the wordmark with long titles.
+- Pages without their own card (home, lists, tags, errors) use a site card: no kind row, the home headline as title, `halid.org` as meta.
+- Any visual change to the card bumps `og.Version`, which changes every card URL so social caches refetch.
+
+## 13. Implementation notes (Phase 1.6)
+- Admin shell: the sidebar and the search box use `box-sizing: content-box` like the prototype, so the 208px sidebar is 208px inside its padding. Sections that do not exist yet stay in the sidebar, greyed and unlinked. The signed-in email, the tr/en switch and sign out sit at the bottom of the sidebar (not in the prototype, which has no way to sign out).
+- `--warning-tint` (#FEF3E2) is the `staging` badge fill from the prototype.
+- Dashboard: the webmentions panel is hidden until Phase 8, so failed jobs move into the third column. "add redirect" opens an inline form (from, to, or 410) under the 404 heading.
+- Editor additions to the prototype: a title field above the Markdown (the prototype derived the title from a `# heading`, which would print the title twice on the public page) and a slug field in the side panel. The preview shows the title as its h1. The cover drop zone shows the post's OG card when published; uploads come with media (1.7).
+- Every admin form posts without JS. With JS: CodeMirror 6 replaces the textarea and writes back to it, htmx autosaves 800ms after the last input, ⌘S and ⌘⇧P click save and publish, tags become chips.
+- Below 1100px the editor hides the preview; below 760px the columns stack.

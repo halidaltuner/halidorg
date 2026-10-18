@@ -1,6 +1,7 @@
 // Package devseed fills local and staging with sample posts so pages can
 // be checked before real content exists. It is a 404 in prod. Seeding is
-// idempotent: posts whose slug already exists are skipped.
+// idempotent: posts whose slug already exists are not created again, only
+// re-rendered, so a new renderer (pages, OG cards) can be checked on them.
 package devseed
 
 import (
@@ -84,13 +85,18 @@ var samples = []sample{
 }
 
 // Seed creates the samples that do not exist yet, publishes them and
-// queues their render jobs. It returns how many posts it created.
+// queues render jobs for every sample. It returns how many posts it created.
 func Seed(ctx context.Context, db store.DB, j *jobs.Jobs) (int, error) {
 	repo := post.NewRepo(db)
 	n := 0
 	create := func(s sample, lang, group string) (string, error) {
-		if _, err := repo.GetPublished(ctx, lang, s.slug); err == nil {
-			return "", nil
+		if p, err := repo.GetPublished(ctx, lang, s.slug); err == nil {
+			if j != nil {
+				if err := jobs.Enqueue(ctx, j, p.ID, nil); err != nil {
+					return "", err
+				}
+			}
+			return p.TranslationGroupID, nil
 		} else if !errors.Is(err, content.ErrNotFound) {
 			return "", err
 		}

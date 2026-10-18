@@ -1,0 +1,37 @@
+{{define "title"}}{{.Title}} · halid.org admin{{end}}
+{{define "content"}}<div class="adm">
+<aside class="adm-side" aria-label="{{tr .Lang "admin.nav.label"}}">
+<a class="adm-mark" href="/admin">halid<span class="dot">.</span><span class="adm-mark-sub"> / admin</span></a>
+<nav class="adm-nav">
+{{- range .Side}}
+{{- if .Off}}<span class="adm-nav-i is-off{{if .Sub}} sub{{end}}" aria-disabled="true"><span>{{.Label}}</span><span class="n">{{.Count}}</span></span>
+{{- else if .Href}}<a class="adm-nav-i{{if .Sub}} sub{{end}}" href="{{.Href}}"{{if .Active}} aria-current="page"{{end}}><span>{{.Label}}</span><span class="n">{{.Count}}</span></a>
+{{- else}}<span class="adm-nav-i adm-nav-h"><span>{{.Label}}</span></span>
+{{- end}}
+{{- end}}
+</nav>
+<div class="adm-who">
+<span class="mono">{{.Email}}</span>
+{{template "lang-switch" .}}
+<form method="post" action="/admin/logout"><button type="submit" class="adm-btn">{{tr .Lang "admin.logout"}}</button></form>
+</div>
+</aside>
+<div class="adm-body">
+<header class="adm-top">
+<a class="adm-plus" href="/admin/posts/new" title="{{tr .Lang "admin.new_post"}}" aria-label="{{tr .Lang "admin.new_post"}}">+</a>
+<form class="adm-search" method="get" action="/admin/search" role="search">
+<input type="search" name="q" value="{{.Query}}" placeholder="{{tr .Lang "admin.search.placeholder"}}" aria-label="{{tr .Lang "admin.search.label"}}" autocomplete="off"
+ hx-get="/admin/search" hx-trigger="input changed delay:250ms, search" hx-target="#adm-search-results" hx-swap="innerHTML" data-hotkey="k">
+<kbd>⌘K</kbd>
+<div id="adm-search-results" class="adm-search-results" aria-live="polite"></div>
+</form>
+{{with .Env}}<span class="adm-env">{{.}}</span>{{end}}
+</header>
+<main class="adm-main" id="main">
+{{template "main" .}}
+</main>
+</div>
+</div>
+<script src="/static/vendor/htmx.min.js" defer></script>
+<script src="/static/js/admin.js" defer></script>
+{{end}}

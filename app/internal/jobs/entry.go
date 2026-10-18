@@ -3,11 +3,15 @@ package jobs
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/render"
+	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/search"
 	"halid.org/engine/internal/store"
 )
@@ -27,12 +31,16 @@ type EntryChanged struct {
 type EntryJobs struct {
 	db     store.DB
 	search store.DB
+	blob   store.Blob
 	warm   *Warmer
+	origin string // PUBLIC_ORIGIN: absolute links on it count as internal
 }
 
-// NewEntryJobs wires the handler; register it with jobs.Handle.
-func NewEntryJobs(db, searchDB store.DB, warm *Warmer) *EntryJobs {
-	return &EntryJobs{db: db, search: searchDB, warm: warm}
+// NewEntryJobs wires the handler; register it with jobs.Handle. blob is
+// where OG cards go (R2).
+func NewEntryJobs(db, searchDB store.DB, blob store.Blob, warm *Warmer) *EntryJobs {
+	return &EntryJobs{db: db, search: searchDB, blob: blob, warm: warm,
+		origin: strings.TrimRight(os.Getenv("PUBLIC_ORIGIN"), "/")}
 }
 
 // Register adds the entry handlers to j.
@@ -56,6 +64,8 @@ type entryRow struct {
 	Group      string  `json:"translation_group_id"`
 	BodyMD     *string `json:"body_md"`
 	Tags       *string `json:"tags"`
+	Published  *int64  `json:"published_at"`
+	Minutes    *int    `json:"reading_minutes"`
 }
 
 // load returns the entry with the body search should see: the published
@@ -63,7 +73,8 @@ type entryRow struct {
 // finds drafts by their latest text). nil when the entry is gone.
 func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
 	res, err := db.Query(ctx, `SELECT e.id, e.kind, e.lang, e.slug, e.title, e.summary, e.status, e.visibility,
-  e.translation_group_id, r.body_md,
+  e.translation_group_id, r.body_md, e.published_at,
+  (SELECT reading_minutes FROM posts WHERE entry_id = e.id) AS reading_minutes,
   (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tags
 FROM entries e
 LEFT JOIN revisions r ON r.id = CASE WHEN e.status = 'published' THEN e.published_revision_id ELSE e.current_revision_id END
@@ -118,11 +129,121 @@ func (e *EntryJobs) changed(ctx context.Context, raw json.RawMessage) error {
 			return err
 		}
 		c.Siblings = sibs
+		linked, err := e.links(ctx, row, c.Now.Listed)
+		if err != nil {
+			return err
+		}
+		c.Linked = linked
+	}
+	// Cards first: the pages warmed next point og:image at them.
+	if err := e.cards(ctx, c, row); err != nil {
+		return err
 	}
 	if _, err := e.warm.Warm(ctx, Paths(c)); err != nil {
 		return err
 	}
 	return e.index(ctx, p.EntryID, row)
+}
+
+// cards keeps OG images in step with the entry: rendered while it is listed,
+// removed from its old URL when it moves, is unlisted or is deleted. The
+// site cards are written the first time a job sees their design Version.
+func (e *EntryJobs) cards(ctx context.Context, c Change, row *entryRow) error {
+	if p := c.Prev; p != nil {
+		if key := cardKey(*p); key != "" && (c.Now == nil || !c.Now.Listed || cardKey(*c.Now) != key) {
+			if err := e.blob.Delete(ctx, key); err != nil {
+				return err
+			}
+		}
+	}
+	if c.Now != nil && c.Now.Listed && row.Kind == "post" && row.Published != nil {
+		minutes := 0
+		if row.Minutes != nil {
+			minutes = *row.Minutes
+		}
+		png, err := og.Render(og.Post(row.Lang, row.Title, *row.Published, minutes))
+		if err != nil {
+			return err
+		}
+		if err := e.blob.Put(ctx, cardKey(*c.Now), png, "image/png"); err != nil {
+			return err
+		}
+	}
+	return e.siteCards(ctx)
+}
+
+func cardKey(r Ref) string {
+	seg, ok := kindPath[r.Kind]
+	if !ok || r.Slug == "" || !i18n.IsSupported(r.Lang) {
+		return ""
+	}
+	return og.EntryKey(r.Lang, seg, r.Slug)
+}
+
+func (e *EntryJobs) siteCards(ctx context.Context) error {
+	for _, l := range i18n.Supported {
+		key := og.SiteKey(l)
+		if _, err := e.blob.Get(ctx, key); err == nil {
+			continue
+		} else if !errors.Is(err, store.ErrNotFound) {
+			return err
+		}
+		png, err := og.Render(og.Site(l))
+		if err != nil {
+			return err
+		}
+		if err := e.blob.Put(ctx, key, png, "image/png"); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// links rebuilds the entry's outgoing rows in links_graph from its published
+// HTML and returns the entries it linked to before or links to now: their
+// backlink lists change, so their pages are re-rendered too.
+func (e *EntryJobs) links(ctx context.Context, row *entryRow, listed bool) ([]Ref, error) {
+	before, err := content.LinkTargets(ctx, e.db, row.ID)
+	if err != nil {
+		return nil, err
+	}
+	var found []content.Link
+	if listed {
+		res, err := e.db.Query(ctx, `SELECT r.body_html FROM entries e JOIN revisions r ON r.id = e.published_revision_id WHERE e.id = ?`, row.ID)
+		if err != nil {
+			return nil, err
+		}
+		bodies, err := store.Scan[struct {
+			HTML string `json:"body_html"`
+		}](res)
+		if err != nil {
+			return nil, err
+		}
+		if len(bodies) == 1 {
+			found = content.ExtractLinks(bodies[0].HTML, e.origin)
+		}
+	}
+	if _, err := e.db.Batch(ctx, content.SetLinksStmts(row.ID, found)...); err != nil {
+		return nil, err
+	}
+	after, err := content.LinkTargets(ctx, e.db, row.ID)
+	if err != nil {
+		return nil, err
+	}
+	ids := append(before, after...)
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	q := `SELECT kind, lang, slug FROM entries WHERE id IN (?` + strings.Repeat(", ?", len(ids)-1) + `)`
+	args := make([]any, len(ids))
+	for i, id := range ids {
+		args[i] = id
+	}
+	res, err := e.db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[Ref](res)
 }
 
 func siblings(ctx context.Context, db store.DB, row *entryRow) ([]Ref, error) {

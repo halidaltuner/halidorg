@@ -371,3 +371,34 @@ func IsConstraint(err error) bool {
 // NotFound builds the not-found error for a kind lookup; errors.Is matches
 // ErrNotFound.
 func NotFound(kind, key string) error { return fmt.Errorf("%w: %s %s", ErrNotFound, kind, key) }
+
+// slugFold maps letters with diacritics (Turkish first) to ASCII for slugs.
+var slugFold = strings.NewReplacer(
+	"ı", "i", "İ", "i", "ğ", "g", "Ğ", "g", "ü", "u", "Ü", "u", "ş", "s", "Ş", "s", "ö", "o", "Ö", "o", "ç", "c", "Ç", "c",
+	"â", "a", "Â", "a", "î", "i", "Î", "i", "û", "u", "Û", "u", "é", "e", "è", "e", "ê", "e", "ë", "e", "á", "a", "à", "a",
+	"ä", "a", "ó", "o", "ò", "o", "ú", "u", "ù", "u", "ñ", "n", "ß", "ss",
+	"'", "", "’", "", // apostrophes join: Ghost'tan -> ghosttan
+)
+
+// Slugify derives a slug from a title: ASCII, lowercase, hyphens, at most
+// 80 characters, or "" when nothing usable is left.
+func Slugify(title string) string {
+	s := strings.ToLower(slugFold.Replace(title))
+	var b strings.Builder
+	dash := false
+	for _, r := range s {
+		switch {
+		case r >= 'a' && r <= 'z', r >= '0' && r <= '9':
+			b.WriteRune(r)
+			dash = false
+		case b.Len() > 0 && !dash:
+			b.WriteByte('-')
+			dash = true
+		}
+	}
+	out := strings.TrimRight(b.String(), "-")
+	if len(out) > 80 {
+		out = strings.TrimRight(out[:80], "-")
+	}
+	return out
+}

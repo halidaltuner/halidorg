@@ -98,6 +98,7 @@
   --accent-2: #E11D48;
   --success: #15803D;
   --warning: #B45309;
+  --warning-tint: #FEF3E2; /* admin env badge (design/Admin Dashboard) */
   --info: #4F46E5;
 
   /* Dark band */

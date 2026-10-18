@@ -36,3 +36,17 @@ func TestSwitcher(t *testing.T) {
 		t.Errorf("href %q", opts[0].Href)
 	}
 }
+
+// TestCatalogsMatch: every key exists in every language, so no page shows a
+// raw key in one language only.
+func TestCatalogsMatch(t *testing.T) {
+	for _, a := range Supported {
+		for k := range catalog[a] {
+			for _, b := range Supported {
+				if _, ok := catalog[b][k]; !ok {
+					t.Errorf("%q is in %s but not in %s", k, a, b)
+				}
+			}
+		}
+	}
+}

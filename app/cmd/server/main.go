@@ -13,6 +13,7 @@ import (
 
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
+	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/jobs"
@@ -75,7 +76,9 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	authn := auth.New(auth.ConfigFromEnv(), stores.DB)
-	adm, err := admin.New(authn)
+	runner := jobs.New(stores.DB, stores.Queue)
+	adminUI := admin.NewUI(stores.DB)
+	adm, err := admin.New(authn, adminUI, stores.DB, stores.Search, runner)
 	if err != nil {
 		return nil, err
 	}
@@ -94,17 +97,21 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	pub.Register(mux)
 	feeds.New(stores.DB).Register(mux)
 	adm.Register(mux)
+	postAdmin, err := post.NewAdmin(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	postAdmin.Register(mux)
 	sg.Register(mux)
 
 	// Background jobs (Phase 1.3). The warmer renders through this same mux,
 	// so a purge re-renders pages exactly as visitors would get them.
-	runner := jobs.New(stores.DB, stores.Queue)
-	jobs.NewEntryJobs(stores.DB, stores.Search, jobs.NewWarmer(mux, stores.KV)).Register(runner)
+	jobs.NewEntryJobs(stores.DB, stores.Search, stores.Blob, jobs.NewWarmer(mux, stores.KV)).Register(runner)
 	runner.Register(mux)
 
 	seed := authn.RequireSession(devseed.New(stores.DB, runner))
 	mux.Handle("GET /admin/dev/seed", seed)
-	mux.Handle("POST /admin/dev/seed", seed)
+	mux.Handle("POST /admin/dev/seed", admin.Guard(seed))
 	// Two segments, not /static/: that pattern overlaps /{lang}/{$} and ServeMux panics.
 	mux.Handle("GET /static/{dir}/{file}", staticHandler())
 	return mux, nil

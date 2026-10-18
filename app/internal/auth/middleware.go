@@ -42,13 +42,29 @@ func (a *Auth) RequireRecentAuth(next http.Handler) http.Handler {
 			redirect(w, r, LoginPath)
 			return
 		}
-		if a.now().Unix()-sess.LastReauthAt > int64(ReauthMaxAge.Seconds()) {
-			redirect(w, r, "/admin/reauth?next="+url.QueryEscape(returnTo(r)))
+		if !a.Recent(r) {
+			redirect(w, r, ReauthPath(returnTo(r)))
 			return
 		}
 		next.ServeHTTP(w, r)
 	})
 }
+
+// Recent reports whether the session on r signed in or re-authenticated
+// within ReauthMaxAge. Handlers that must save before asking for re-auth
+// (publish keeps the editor's unsaved text) check it themselves.
+func (a *Auth) Recent(r *http.Request) bool {
+	sess := SessionFrom(r.Context())
+	return sess != nil && a.now().Unix()-sess.LastReauthAt <= int64(ReauthMaxAge.Seconds())
+}
+
+// ReauthPath is the re-auth start that returns to next afterwards.
+func ReauthPath(next string) string {
+	return "/admin/reauth?next=" + url.QueryEscape(SafeNext(next))
+}
+
+// Redirect sends a browser to "to", with HX-Redirect for htmx requests.
+func Redirect(w http.ResponseWriter, r *http.Request, to string) { redirect(w, r, to) }
 
 // returnTo is where to land after re-auth. A POST cannot be replayed, so it
 // returns to the page the form was on.

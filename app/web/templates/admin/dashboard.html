@@ -1,0 +1,65 @@
+{{define "main"}}
+<div class="adm-head">
+<h1>{{tr .Lang "admin.dash.title"}}</h1>
+{{with .Deploy}}<span class="mono muted">{{tr $.Lang "admin.dash.deploy"}} {{.}}</span>{{end}}
+</div>
+{{with .Deleted}}<p class="adm-flash mono" role="status">{{printf (tr $.Lang "admin.dash.deleted") .}}</p>{{end}}
+<div class="adm-grid">
+<section class="adm-panel">
+<h2>{{tr .Lang "admin.dash.drafts"}}<span class="n info">{{len .Drafts}}</span></h2>
+{{- range .Drafts}}
+{{template "entry-row" .}}
+{{- else}}<p class="adm-empty">{{tr $.Lang "admin.dash.no_drafts"}}</p>{{end}}
+</section>
+
+<section class="adm-panel">
+<h2>{{tr .Lang "admin.dash.scheduled"}}<span class="n warn">{{len .Scheduled}}</span></h2>
+{{- range .Scheduled}}
+<div class="adm-row2">{{if .Href}}<a href="{{.Href}}">{{.Title}}</a>{{else}}<span>{{.Title}}</span>{{end}}<span class="mono warn">{{.Meta}}</span></div>
+{{- else}}<p class="adm-empty">{{tr $.Lang "admin.dash.none_scheduled"}}</p>{{end}}
+<h2 class="sep">{{tr .Lang "admin.dash.recent"}}<span class="n ok">{{printf (tr .Lang "admin.dash.this_week") .Week}}</span></h2>
+{{- range .Recent}}
+<div class="adm-row2">{{if .Href}}<a href="{{.Href}}">{{.Title}}</a>{{else}}<span>{{.Title}}</span>{{end}}<span class="mono muted">{{.Meta}}</span></div>
+{{- else}}<p class="adm-empty">{{tr $.Lang "admin.dash.none_published"}}</p>{{end}}
+</section>
+
+<section class="adm-panel">
+<h2>{{tr .Lang "admin.dash.failed"}}<span class="n bad">{{len .Failed}}</span></h2>
+{{- range .Failed}}
+{{template "job-row" .}}
+{{- else}}<p class="adm-empty">{{tr $.Lang "admin.dash.no_failed"}}</p>{{end}}
+<div id="adm-404">{{template "not-found" .}}</div>
+</section>
+</div>
+{{end}}
+
+{{define "entry-row"}}{{if .Href}}<a class="adm-row" href="{{.Href}}">{{else}}<div class="adm-row">{{end}}<span class="kdot" style="--k: var(--kind-{{.Kind}})"></span><span class="t">{{.Title}}</span><span class="mono muted">{{.Meta}}</span>{{if .Href}}</a>{{else}}</div>{{end}}{{end}}
+
+{{define "job-row"}}<form class="adm-job" method="post" action="/admin/jobs/{{.ID}}/retry" hx-post="/admin/jobs/{{.ID}}/retry" hx-swap="outerHTML">
+<span class="mono">{{.Name}}</span>
+{{- if .Queued}}<span class="mono muted">{{tr .Lang "admin.jobs.queued"}}</span>
+{{- else}}<button type="submit" class="adm-btn link">{{tr .Lang "admin.jobs.retry"}}</button>{{end}}
+<span class="mono muted err">{{.Detail}}</span>
+</form>{{end}}
+
+{{define "not-found"}}
+<details class="adm-redirect"{{if .Redirect.Error}} open{{end}}>
+<summary><h2 class="sep">{{tr .Lang "admin.dash.404"}}<span class="link">{{tr .Lang "admin.redirect.add"}}</span></h2></summary>
+<form method="post" action="/admin/redirects" hx-post="/admin/redirects" hx-target="#adm-404" class="adm-form">
+{{with .Redirect.Error}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<label>{{tr .Lang "admin.redirect.from"}}<input name="from" value="{{.Redirect.From}}" list="adm-404-paths" required placeholder="/2019/05/old-post/" spellcheck="false"></label>
+<label>{{tr .Lang "admin.redirect.to"}}<input name="to" value="{{.Redirect.To}}" placeholder="/en/posts/new-slug" spellcheck="false"></label>
+<label class="check"><input type="checkbox" name="gone" value="1"{{if .Redirect.Gone}} checked{{end}}> {{tr .Lang "admin.redirect.gone"}}</label>
+<button type="submit" class="adm-btn">{{tr .Lang "admin.redirect.save"}}</button>
+</form>
+<datalist id="adm-404-paths">{{range .NotFound}}<option value="{{.Path}}">{{end}}</datalist>
+</details>
+{{with .Redirect.Saved}}<p class="adm-note mono" role="status">{{.}}</p>{{end}}
+<table class="adm-404">
+<tbody>
+{{- range .NotFound}}
+<tr><td>{{.Path}}</td><td class="n">{{.Hits}}</td></tr>
+{{- else}}<tr><td class="muted">{{tr $.Lang "admin.dash.no_404"}}</td><td></td></tr>{{end}}
+</tbody>
+</table>
+{{end}}

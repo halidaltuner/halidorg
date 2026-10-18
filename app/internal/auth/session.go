@@ -7,7 +7,9 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"net/http"
+	"os"
 	"time"
 
 	"halid.org/engine/internal/store"
@@ -85,4 +87,23 @@ func setSessionCookie(w http.ResponseWriter, token string, maxAge int) {
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
+}
+
+// TestSession creates a session for email whose last sign-in or re-auth was
+// reauthAgo ago and returns its cookie. It exists for handler tests in other
+// packages (admin, post); the sign-in flow never calls it, and it refuses to
+// run when APP_ENV is prod.
+func (a *Auth) TestSession(ctx context.Context, email string, reauthAgo time.Duration) (*http.Cookie, error) {
+	if os.Getenv("APP_ENV") == "prod" {
+		return nil, errors.New("auth: TestSession is not available in prod")
+	}
+	token, err := a.createSession(ctx, email, "", "")
+	if err != nil {
+		return nil, err
+	}
+	at := a.now().Add(-reauthAgo).Unix()
+	if _, err := a.db.Query(ctx, `UPDATE admin_sessions SET last_reauth_at = ? WHERE id = ?`, at, a.sessionID(token)); err != nil {
+		return nil, err
+	}
+	return &http.Cookie{Name: SessionCookie, Value: token}, nil
 }
