@@ -42,6 +42,12 @@ type aboutJob struct {
 // page, with their live counts (the home tiles), and Now.
 type aboutCard struct {
 	Href, Glyph, Label, Text, Tone string
+	Badges                         []aboutBadge // certificates: mini hexagons
+}
+
+type aboutBadge struct {
+	ID, Tone string
+	Image    *image
 }
 
 func (h *Handlers) about(w http.ResponseWriter, r *http.Request, lang string) {
@@ -89,6 +95,14 @@ func (h *Handlers) about(w http.ResponseWriter, r *http.Request, lang string) {
 			when += " – " + j.To
 		}
 		p.Jobs = append(p.Jobs, aboutJob{When: when, Job: j})
+	}
+	cert, err := h.certSummary(r, lang)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	if cert != nil {
+		p.Cards = append(p.Cards, *cert)
 	}
 	tiles, err := h.tiles(r, lang)
 	if err != nil {

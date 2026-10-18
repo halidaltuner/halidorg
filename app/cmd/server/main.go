@@ -15,6 +15,7 @@ import (
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/capture"
 	"halid.org/engine/internal/content/buildlog"
+	"halid.org/engine/internal/content/certificate"
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
@@ -153,6 +154,11 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	ghAdmin.Register(mux)
+	certAdmin, err := certificate.NewAdmin(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	certAdmin.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

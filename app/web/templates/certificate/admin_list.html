@@ -1,0 +1,31 @@
+{{define "cert-st"}}{{if eq . "active"}}published{{else if eq . "renew_soon"}}scheduled{{else}}expired{{end}}{{end}}
+{{define "main"}}
+<div class="adm-head">
+<h1>{{.Title}}</h1>
+<a class="adm-btn solid ent-head-new" href="/admin/certificates/new">{{tr .Lang "admin.cert.new"}}</a>
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+{{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<section class="adm-panel">
+<ul class="ent-list">
+{{- range .Rows}}
+<li><a href="{{.Href}}"><span class="ent-title">{{.Name}}</span><span class="ent-meta mono"><span>{{.Issuer}}</span><span>{{.Issued}}{{with .Expires}} → {{.}}{{end}}</span><span class="adm-st s-{{template "cert-st" .StatusKey}}">{{.Status}}</span>{{if not .Published}}<span class="adm-st s-draft">{{tr $.Lang "admin.status.draft"}}</span>{{end}}</span></a></li>
+{{- else}}
+<li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>
+{{- end}}
+</ul>
+</section>
+<section class="adm-panel">
+<h2>{{tr .Lang "admin.cert.issuers"}} <span class="n">{{len .Issuers}}</span></h2>
+<p class="ent-hint ce-hint">{{tr .Lang "admin.cert.issuers_hint"}}</p>
+<div class="ce-issuers">
+{{- range .Issuers}}{{$i := .}}
+<div class="ce-issuer"><form class="ce-row" method="post" action="/admin/certificates/issuers"><input type="hidden" name="id" value="{{.ID}}">
+<input name="name" value="{{.Name}}" aria-label="{{tr $.Lang "admin.cert.issuer_name"}}"><input name="slug" value="{{.Slug}}" class="mono" aria-label="slug"><select name="tone" aria-label="{{tr $.Lang "kind.project.tone"}}">{{range $.Tones}}<option value="{{.}}"{{if eq . $i.Tone}} selected{{end}}>{{.}}</option>{{end}}</select><input name="sort" value="{{.Sort}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"><button type="submit" class="adm-btn">{{tr $.Lang "admin.tax.save"}}</button></form>
+<form method="post" action="/admin/certificates/issuers/{{.ID}}/delete"><button type="submit" class="adm-btn link danger">{{tr $.Lang "admin.cert.delete_issuer"}}</button></form></div>
+{{- end}}
+<form class="ce-row ce-new" method="post" action="/admin/certificates/issuers">
+<input name="name" placeholder="{{tr .Lang "admin.cert.issuer_name"}}" aria-label="{{tr .Lang "admin.cert.issuer_name"}}" required><input name="slug" class="mono" placeholder="slug" aria-label="slug"><select name="tone" aria-label="{{tr .Lang "kind.project.tone"}}">{{range .Tones}}<option value="{{.}}">{{.}}</option>{{end}}</select><input name="sort" value="0" class="mono" inputmode="numeric" aria-label="{{tr .Lang "kind.snippet.file_order"}}"><button type="submit" class="adm-btn solid">{{tr .Lang "admin.cert.add_issuer"}}</button></form>
+</div>
+</section>
+{{end}}

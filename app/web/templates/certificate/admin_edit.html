@@ -1,0 +1,39 @@
+{{define "main"}}
+<div class="adm-head">
+<a class="mono ent-back" href="/admin/certificates">← {{tr .Lang "admin.nav.certificates"}}</a>
+<h1>{{.Title}}</h1>
+{{- if not .New}}<a class="mono ent-view" href="/{{.Lang}}/certificates">{{tr .Lang "entry.view"}}</a>{{end}}
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+<section class="adm-panel ent-panel">
+<form class="adm-form ent-form" method="post" action="/admin/certificates{{with .Cert.ID}}/{{.}}{{end}}">
+{{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<label>{{tr .Lang "admin.cert.name"}}<input name="name" value="{{.Cert.Name}}" required></label>
+<div class="ent-two">
+<label>{{tr .Lang "admin.cert.issuer"}}<select name="issuer">{{range .Issuers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label>{{tr .Lang "admin.cert.badge"}}<select name="badge">{{range .Badges}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "admin.cert.issued"}}<input type="month" name="issued" value="{{.Issued}}" required></label>
+<label>{{tr .Lang "admin.cert.expires"}}<input type="month" name="expires" value="{{.Expires}}"></label>
+</div>
+<p class="ent-hint">{{tr .Lang "admin.cert.expires_hint"}}</p>
+<label>{{tr .Lang "admin.cert.skills"}}<input name="skills" value="{{.Skills}}" autocapitalize="off" placeholder="kubernetes, ops"></label>
+<label>{{tr .Lang "admin.cert.credly"}}<input name="credly_url" value="{{.Credly}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://www.credly.com/badges/…"></label>
+<div class="ent-two">
+<label>{{tr .Lang "kind.snippet.file_order"}}<input name="sort" value="{{.Sort}}" class="mono" inputmode="numeric"></label>
+<label class="check"><input type="checkbox" name="published" value="1"{{if or .Cert.Published .New}} checked{{end}}>{{tr .Lang "admin.cert.published"}}</label>
+</div>
+<div class="ent-actions"><button type="submit" class="adm-btn solid">{{tr .Lang "admin.tax.save"}}</button></div>
+</form>
+</section>
+{{- if not .New}}
+<details class="adm-panel ent-delete">
+<summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>
+<form method="post" action="/admin/certificates/{{.Cert.ID}}/delete">
+<p>{{tr .Lang "admin.cert.delete_sure"}}</p>
+<button type="submit" class="adm-btn danger">{{tr .Lang "admin.delete.confirm"}}</button>
+</form>
+</details>
+{{- end}}
+{{end}}

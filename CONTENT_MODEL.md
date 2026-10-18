@@ -128,9 +128,11 @@ No weather (decided 2026-10-18). Books are typed in the Now form; the reading li
 - The grid uses `row_span`/`col_span`; the lightbox shows EXIF and "view on 500px".
 
 ### certificates (Credly-style)
-- `cert_issuers(id, slug, name, tone)` AWS, CNCF, HashiCorp, Google, Linux Foundation
-- `certificates(id, issuer_id, name, skills_json, badge_media_id, credly_url, issued_at, expires_at nullable, sort, published bool)`
-- Status is derived, not stored: `active`, `renew_soon` (expires within 3 months), `expired`.
+migrations/0011_certificates.sql, `internal/content/certificate`. No entries: one list for both languages, edited at `/admin/certificates`.
+- `cert_issuers(id, slug, name, tone, sort)`: the tone is one of the entry tones and colors the card's top rule, the badge tint and the chip. An issuer with certificates cannot be deleted.
+- `certificates(id, issuer_id, name, skills_json, badge_media_id, credly_url, issued_at, expires_at nullable, sort, published, created_at, updated_at)`. `issued_at` and `expires_at` are the first day of a month (unix UTC). The badge is an image from media with both alt texts; media in use as a badge cannot be deleted.
+- Status is derived, not stored: `expired` once the expiry month has begun, `renew_soon` when it begins within 3 months, else `active` (also with no expiry). The `now.daily` job re-renders the certificates pages and About, so statuses follow the date.
+- Saves and deletes queue `pages.changed` for `/{lang}/certificates`, its feeds and `/{lang}/about` (`certificate.Paths`). Feeds list published certificates by issue month, linking to the Credly URL when there is one.
 
 ## 4. Synced / derived data
 
@@ -167,7 +169,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | presentation | `/{lang}/presentations?type=talk`, `/{lang}/presentations/{slug}` |
 | deck | `https://decks.halid.org/{slug}/` (isolated origin) |
 | photos | `/{lang}/photos?album={slug}` |
-| certificates | `/{lang}/certificates?issuer=aws` |
+| certificates | `/{lang}/certificates?issuer=aws`, `/{lang}/certificates/feed.xml` |
 | book | `/{lang}/reading` |
 | term | `/{lang}/glossary/{slug}` |
 | radar | `/{lang}/radar?edition=2026-10` |
