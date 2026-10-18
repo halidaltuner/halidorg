@@ -16,12 +16,16 @@
 </section>
 <section class="adm-panel">
 <h2>{{tr .Lang "admin.photo.albums"}} <span class="n">{{len .Albums}}</span></h2>
-<p class="ent-hint ce-hint">{{tr .Lang "admin.photo.albums_hint"}}</p>
+<p class="ent-hint ce-hint">{{tr .Lang "admin.photo.albums_hint"}} {{tr .Lang "admin.photo.upload_hint"}}</p>
 <div class="ce-issuers">
 {{- range .Albums}}
 <div class="ce-issuer"><form class="ce-row ph-row" method="post" action="/admin/photos/albums"><input type="hidden" name="id" value="{{.ID}}">
 <input name="name_tr" value="{{.NameTR}}" lang="tr" aria-label="{{tr $.Lang "admin.photo.name_tr"}}"><input name="name_en" value="{{.NameEN}}" lang="en" aria-label="{{tr $.Lang "admin.photo.name_en"}}"><input name="slug" value="{{.Slug}}" class="mono" aria-label="slug"><input name="sort" value="{{.Sort}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"><button type="submit" class="adm-btn">{{tr $.Lang "admin.tax.save"}}</button></form>
 <form method="post" action="/admin/photos/albums/{{.ID}}/delete"><button type="submit" class="adm-btn link danger">{{tr $.Lang "admin.cert.delete_issuer"}}</button></form></div>
+<form class="ph-upload" method="post" action="/admin/photos/albums/{{.ID}}/upload" enctype="multipart/form-data">
+<input type="file" name="file" accept="image/jpeg,image/png,image/webp,image/gif" multiple required aria-label="{{tr $.Lang "admin.photo.upload_to"}} {{.Name $.Lang}}">
+<label class="check"><input type="checkbox" name="publish" value="1">{{tr $.Lang "admin.photo.upload_publish"}}</label>
+<button type="submit" class="adm-btn">{{tr $.Lang "admin.photo.upload"}}</button></form>
 {{- end}}
 <form class="ce-row ph-row ce-new" method="post" action="/admin/photos/albums">
 <input name="name_tr" lang="tr" placeholder="{{tr .Lang "admin.photo.name_tr"}}" aria-label="{{tr .Lang "admin.photo.name_tr"}}" required><input name="name_en" lang="en" placeholder="{{tr .Lang "admin.photo.name_en"}}" aria-label="{{tr .Lang "admin.photo.name_en"}}" required><input name="slug" class="mono" placeholder="slug" aria-label="slug"><input name="sort" value="0" class="mono" inputmode="numeric" aria-label="{{tr .Lang "kind.snippet.file_order"}}"><button type="submit" class="adm-btn solid">{{tr .Lang "admin.photo.add_album"}}</button></form>

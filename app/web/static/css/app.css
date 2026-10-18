@@ -1457,6 +1457,9 @@ html.pal-open { overflow: hidden; }
 .ce-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) 110px 56px auto; gap: 6px; align-items: center; flex: 1; }
 .ce-new { padding-top: var(--sp-8); border-top: 1px solid var(--border-soft); }
 .ph-row { grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) minmax(0, 1fr) 56px auto; }
+.ph-upload { display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-16); align-items: center; padding: 6px 0 var(--sp-8); border-bottom: 1px solid var(--border-soft); font-size: var(--fs-12); }
+.ph-upload label.check { display: flex; align-items: center; gap: 6px; color: var(--text); }
+.ph-upload input[type=file] { flex: 1; min-width: 0; font-size: var(--fs-12); }
 @media (max-width: 760px) {
   .ce-issuer { flex-direction: column; align-items: stretch; }
   .ce-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }

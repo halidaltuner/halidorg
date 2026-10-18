@@ -42,11 +42,8 @@ func TestRepo(t *testing.T) {
 	}
 	var v content.ValidationError
 	p := Photo{AlbumID: al.ID, MediaID: img.ID, TitleEN: "Galata at blue hour", Place: "Karaköy", Published: true}
-	if _, err := r.Save(ctx, p); !errors.As(err, &v) || v["image"] == "" {
-		t.Fatalf("image without alt: %v", err)
-	}
-	if _, err := m.SetAlt(ctx, img.ID, "Mavi saatte Galata", "Galata at blue hour"); err != nil {
-		t.Fatal(err)
+	if _, err := r.Save(ctx, Photo{AlbumID: al.ID, MediaID: "nope", TitleEN: "x"}); !errors.As(err, &v) || v["image"] == "" {
+		t.Fatalf("unknown image: %v", err)
 	}
 	bad := "https://evil.dev/x"
 	p.URL500px = &bad
@@ -82,5 +79,13 @@ func TestRepo(t *testing.T) {
 	}
 	if err := m.Delete(ctx, img.ID); !errors.Is(err, media.ErrInUse) {
 		t.Errorf("media in use: %v", err)
+	}
+}
+
+func TestTitleFromFile(t *testing.T) {
+	for in, want := range map[string]string{"galata_blue-hour.jpg": "galata blue hour", "DSC 0042.JPG": "DSC 0042", ".jpg": "jpg", "__.png": "photo"} {
+		if got := TitleFromFile(in); got != want {
+			t.Errorf("%q: %q, want %q", in, got, want)
+		}
 	}
 }

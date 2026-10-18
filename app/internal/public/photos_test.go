@@ -89,4 +89,11 @@ func TestPhotosPage(t *testing.T) {
 	}
 	_, body = get(t, mux, "/tr/photos")
 	must(t, body, `Mavi saatte Galata ↗`, `alt="Mavi saatte Galata"`, `Ferry wake ↗`) // tr falls back to en
+
+	// An image without alt text (uploaded from an album) takes the title.
+	if _, err := media.NewRepo(db, nil).SetAlt(context.Background(), ps[0].MediaID, "", ""); err != nil {
+		t.Fatal(err)
+	}
+	_, body = get(t, mux, "/en/photos")
+	must(t, body, `alt="Ferry wake"`, `alt="Galata at blue hour"`)
 }

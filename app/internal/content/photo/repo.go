@@ -8,6 +8,7 @@ import (
 	"unicode/utf8"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/store"
 )
 
@@ -164,8 +165,9 @@ func trimAll(p *Photo) {
 }
 
 // Save inserts (no id) or updates a photo after checking the album and that
-// the image is in media with both alt texts. Empty camera, lens, exposure
-// and date are filled from the image's EXIF when it has them.
+// the image is in media. Its alt text is the media item's, else the photo
+// title. Empty camera, lens, exposure and date are filled from the image's
+// EXIF when it has them.
 func (r *Repo) Save(ctx context.Context, p Photo) (Photo, error) {
 	trimAll(&p)
 	if p.RowSpan == 0 {
@@ -178,7 +180,7 @@ func (r *Repo) Save(ctx context.Context, p Photo) (Photo, error) {
 		return p, err
 	}
 	res, err := r.db.Query(ctx, `SELECT (SELECT COUNT(*) FROM photo_albums WHERE id = ?) AS album,
-  (SELECT r2_key FROM media WHERE id = ? AND mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> '') AS r2_key`,
+  (SELECT r2_key FROM media WHERE id = ? AND mime LIKE 'image/%') AS r2_key`,
 		p.AlbumID, p.MediaID)
 	if err != nil {
 		return p, err
@@ -194,7 +196,7 @@ func (r *Repo) Save(ctx context.Context, p Photo) (Photo, error) {
 		return p, content.ValidationError{"album": "pick an album"}
 	}
 	if ok[0].Key == nil {
-		return p, content.ValidationError{"image": "an image with both alt texts"}
+		return p, content.ValidationError{"image": "an image from media"}
 	}
 	if p.Camera == "" || p.Lens == "" || p.Exposure == "" || p.TakenAt == nil {
 		if e, err := r.EXIFOf(ctx, *ok[0].Key); err == nil {
@@ -285,4 +287,48 @@ func Date(sec *int64) string {
 		return ""
 	}
 	return time.Unix(*sec, 0).UTC().Format("2006-01-02")
+}
+
+// Upload stores an image in media and adds it to the album as a photo
+// titled after the file name in both languages, with its EXIF filled in.
+// Errors from media (media.ErrType, media.ErrTooLarge) are returned as is.
+func (r *Repo) Upload(ctx context.Context, albumID, name string, data []byte, publish bool) (Photo, error) {
+	res, err := r.db.Query(ctx, `SELECT COUNT(*) AS n FROM photo_albums WHERE id = ?`, albumID)
+	if err != nil {
+		return Photo{}, err
+	}
+	n, err := store.Scan[struct {
+		N int `json:"n"`
+	}](res)
+	if err != nil {
+		return Photo{}, err
+	}
+	if len(n) != 1 || n[0].N == 0 {
+		return Photo{}, content.ErrNotFound
+	}
+	it, err := media.NewRepo(r.db, r.blob).Upload(ctx, name, data)
+	if err != nil {
+		return Photo{}, err
+	}
+	if !it.IsImage() {
+		_ = media.NewRepo(r.db, r.blob).Delete(ctx, it.ID)
+		return Photo{}, media.ErrType
+	}
+	t := TitleFromFile(it.Name)
+	return r.Save(ctx, Photo{AlbumID: albumID, MediaID: it.ID, TitleTR: t, TitleEN: t, Published: publish})
+}
+
+// TitleFromFile turns "galata_blue-hour.jpg" into "galata blue hour".
+func TitleFromFile(name string) string {
+	if i := strings.LastIndexByte(name, '.'); i > 0 {
+		name = name[:i]
+	}
+	t := strings.Join(strings.Fields(strings.NewReplacer("_", " ", "-", " ", ".", " ").Replace(name)), " ")
+	if t == "" {
+		t = "photo"
+	}
+	if r := []rune(t); len(r) > 200 {
+		t = string(r[:200])
+	}
+	return t
 }
