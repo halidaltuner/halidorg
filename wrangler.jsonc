@@ -31,8 +31,29 @@
       "database_name": "halidorg-local",
       "database_id": "local-db",
       "migrations_dir": "migrations"
+    },
+    // Search index (ADR-010): FTS5 in its own database so the main DB stays exportable.
+    {
+      "binding": "SEARCH",
+      "database_name": "halidorg-search-local",
+      "database_id": "local-search",
+      "migrations_dir": "migrations-search"
     }
   ],
+  // Jobs (Phase 1.3): the container produces through the bridge, this Worker
+  // consumes and delivers to the container. 3 retries, then the DLQ.
+  "queues": {
+    "producers": [{ "binding": "JOBS", "queue": "halidorg-jobs-local" }],
+    "consumers": [
+      {
+        "queue": "halidorg-jobs-local",
+        "max_batch_size": 5,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+        "dead_letter_queue": "halidorg-jobs-dlq-local"
+      }
+    ]
+  },
   "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-local" }],
 
   "vars": {
@@ -62,8 +83,29 @@
           "database_name": "halidorg-staging",
           "database_id": "06d5c0e6-7d18-4db5-935f-a8f45d24cbed",
           "migrations_dir": "migrations"
+        },
+        // Search index (ADR-010): FTS5 in its own database so the main DB stays exportable.
+        {
+          "binding": "SEARCH",
+          "database_name": "halidorg-search-staging",
+          "database_id": "d6c10762-47ac-4a2e-869e-4466f69ddf39",
+          "migrations_dir": "migrations-search"
         }
       ],
+      // Jobs (Phase 1.3): the container produces through the bridge, this Worker
+      // consumes and delivers to the container. 3 retries, then the DLQ.
+      "queues": {
+        "producers": [{ "binding": "JOBS", "queue": "halidorg-jobs-staging" }],
+        "consumers": [
+          {
+            "queue": "halidorg-jobs-staging",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "halidorg-jobs-dlq-staging"
+          }
+        ]
+      },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
       "vars": {
         "APP_ENV": "staging",
@@ -94,8 +136,29 @@
           "database_name": "halidorg-prod",
           "database_id": "afcbea10-e0d6-46ab-bf01-3c9f5d24dcd9",
           "migrations_dir": "migrations"
+        },
+        // Search index (ADR-010): FTS5 in its own database so the main DB stays exportable.
+        {
+          "binding": "SEARCH",
+          "database_name": "halidorg-search-prod",
+          "database_id": "e0381f89-ed14-40f3-ac58-36e06c29d9ae",
+          "migrations_dir": "migrations-search"
         }
       ],
+      // Jobs (Phase 1.3): the container produces through the bridge, this Worker
+      // consumes and delivers to the container. 3 retries, then the DLQ.
+      "queues": {
+        "producers": [{ "binding": "JOBS", "queue": "halidorg-jobs-prod" }],
+        "consumers": [
+          {
+            "queue": "halidorg-jobs-prod",
+            "max_batch_size": 5,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+            "dead_letter_queue": "halidorg-jobs-dlq-prod"
+          }
+        ]
+      },
       "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-prod" }],
       "vars": {
         "APP_ENV": "prod",

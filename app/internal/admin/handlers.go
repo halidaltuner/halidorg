@@ -7,11 +7,10 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/i18n"
-	"halid.org/engine/web"
+	"halid.org/engine/internal/ui"
 )
 
 // Handlers holds the admin templates and the auth flow.
@@ -25,10 +24,8 @@ type Handlers struct {
 
 // New parses the admin templates. APP_ENV and DEPLOY_SHA come from the Worker.
 func New(a *auth.Auth) (*Handlers, error) {
-	funcs := template.FuncMap{"tr": i18n.T}
 	parse := func(page string) (*template.Template, error) {
-		return template.New(page).Funcs(funcs).ParseFS(web.Templates,
-			"templates/admin/base.html", "templates/partials/lang_switch.html", "templates/admin/"+page+".html")
+		return ui.Parse(page, "templates/admin/base.html", "templates/admin/"+page+".html")
 	}
 	login, err := parse("login")
 	if err != nil {
@@ -38,15 +35,7 @@ func New(a *auth.Auth) (*Handlers, error) {
 	if err != nil {
 		return nil, err
 	}
-	deploy := os.Getenv("DEPLOY_SHA")
-	if len(deploy) > 7 {
-		deploy = deploy[:7]
-	}
-	env := os.Getenv("APP_ENV")
-	if env == "" {
-		env = "local"
-	}
-	return &Handlers{auth: a, env: env, deploy: deploy, login: login, home: home}, nil
+	return &Handlers{auth: a, env: ui.Env(), deploy: ui.Deploy(), login: login, home: home}, nil
 }
 
 // Register adds the admin routes to mux.

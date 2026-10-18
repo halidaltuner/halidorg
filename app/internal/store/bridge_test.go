@@ -23,6 +23,8 @@ type fakeWorker struct {
 	r2      map[string]string
 	r2Type  map[string]string
 	queries []Stmt
+	paths   []string
+	sent    []string
 	d1Err   string
 }
 
@@ -46,8 +48,12 @@ func (f *fakeWorker) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	key, _ := url.PathUnescape(rawKey)
 	body, _ := io.ReadAll(r.Body)
 
+	f.paths = append(f.paths, r.URL.Path)
 	switch store {
-	case "d1":
+	case "queue":
+		f.sent = append(f.sent, string(body))
+		w.WriteHeader(http.StatusNoContent)
+	case "d1", "search":
 		if f.d1Err != "" {
 			http.Error(w, f.d1Err, http.StatusInternalServerError)
 			return
@@ -187,5 +193,25 @@ func TestContextCancel(t *testing.T) {
 	cancel()
 	if _, err := s.KV.Get(ctx, "k"); !errors.Is(err, context.Canceled) {
 		t.Fatalf("got %v", err)
+	}
+}
+
+func TestSearchAndQueueRoutes(t *testing.T) {
+	f, s := newFake(t)
+	if _, err := s.Search.Query(context.Background(), "SELECT 1"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.Search.Batch(context.Background(), Stmt{SQL: "DELETE FROM search_fts"}); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Queue.Send(context.Background(), map[string]string{"type": "x"}); err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"/search/query", "/search/batch", "/queue/send"}
+	if strings.Join(f.paths, ",") != strings.Join(want, ",") {
+		t.Fatalf("paths = %v, want %v", f.paths, want)
+	}
+	if len(f.sent) != 1 || f.sent[0] != `{"type":"x"}` {
+		t.Fatalf("sent = %v", f.sent)
 	}
 }

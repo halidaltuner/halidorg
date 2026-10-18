@@ -7,10 +7,12 @@
 {{range .Alternates}}<link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">
 {{end}}<link rel="stylesheet" href="/static/css/tokens.css">
 <link rel="stylesheet" href="/static/css/app.css">
+<script src="/static/js/header.js" defer></script>
 </head>
 <body>
-<header class="site-top">{{template "lang-switch" .}}</header>
+{{template "header" .}}
 {{template "content" .}}
+{{template "footer" .}}
 </body>
 </html>
 {{end}}

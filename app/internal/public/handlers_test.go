@@ -133,3 +133,28 @@ func TestHomeHasSwitcher(t *testing.T) {
 		}
 	}
 }
+
+func TestHomeHasChrome(t *testing.T) {
+	t.Setenv("DEPLOY_SHA", "a3f91c2deadbeef")
+	rec := httptest.NewRecorder()
+	newMux(t).ServeHTTP(rec, httptest.NewRequest("GET", "/en/", nil))
+	body := rec.Body.String()
+	for _, want := range []string{
+		`<header class="site-header">`,
+		`<a href="/en/posts/" data-s="posts">posts</a>`,
+		`<details class="nav-sheet">`,
+		`<footer class="site-footer">`,
+		`<span class="sha">a3f91c2</span>`,
+		`/static/js/header.js`,
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %s", want)
+		}
+	}
+	// Only posts exists in Phase 1, and home is not a section page.
+	for _, absent := range []string{`aria-current="page"`, "nav-more", "/en/projects/"} {
+		if strings.Contains(body, absent) {
+			t.Errorf("unexpected %s", absent)
+		}
+	}
+}

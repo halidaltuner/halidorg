@@ -40,10 +40,12 @@ flowchart LR
 
 **Interactive fragments** (search, filters, radar, stream pagination): htmx requests to `/x/*`, served by the Go app, short edge cache where safe.
 
-**Admin write**
-1. Save in admin → Go app writes D1 (draft or published revision).
-2. On publish: render HTML, enqueue `render` + `purge` jobs for affected pages (item page, list pages, tag pages, feeds, stream, sitemap).
-3. Jobs rewrite KV entries. Public site never waits on a cold container for published content.
+**Admin write** (implemented in Phase 1.3)
+1. Save in admin → Go app writes D1 (revision; publish moves `published_revision_id`).
+2. The write path snapshots the entry before the write (`jobs.RefOf`) and enqueues one `entry.changed` job. The container sends it through the bridge (`/queue/send`); the row in `job_runs` is written first.
+3. The Worker's `queue()` handler delivers the message to `POST /internal/jobs` on the container (the Worker refuses `/internal/*` from the internet). 2xx acks; anything else retries with backoff, 3 times, then the DLQ.
+4. The job computes affected paths (`jobs.Paths`: item, list, home, old and new tag pages and tag feeds, language feeds, sitemap, translations), renders each through the same mux in process and writes KV (`page:{lang}:{path}`, same metadata as the Worker). A path that no longer renders is deleted. Then it upserts or deletes the entry's row in the SEARCH database.
+5. Public site never waits on a cold container for published content.
 
 ## 3. Key decisions (ADRs)
 

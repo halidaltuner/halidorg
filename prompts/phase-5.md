@@ -2,6 +2,7 @@
 
 Prerequisite: Phase 4 exit check is all "done".
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
+Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
 ## 5.1 Presentations + isolated deck origin
 
@@ -38,7 +39,7 @@ Read CLAUDE.md, CONTENT_MODEL.md §3 (certificates) and design/README.md (Certif
 Phase 5, step 3:
 1. Migration: cert_issuers (with tone), certificates.
 2. Certificates page pixel-close: cyan hero with stat tiles, issuer chips (?issuer=), cards with 4px issuer top border, 112px hexagon badge, skills, date, derived status (active / renew soon within 3 months / expired at 55% opacity), verify link.
-3. Status is computed at render time; add a daily cron that re-renders the page so status changes appear without a publish.
+3. Status is computed at render time; add a daily cron that enqueues a re-render job so status changes appear without a publish.
 4. Admin (not designed): issuer and certificate forms, badge upload.
 Propose a plan first, then wait for my approval.
 ```
@@ -51,7 +52,7 @@ Phase 5, step 4:
 1. Go schemas that validate data_json for the now and about templates.
 2. About pixel-close: dark hero with aberration name, portrait with offset outlines, skill tiles, experience timeline, link cards (certificates with mini hexagons, talks, homelab, now).
 3. Now pixel-close: dark hero with pulse dot and "updated N days ago", building cards with progress, reading covers with offset shadow, learning tiles with 10-cell meter, "not doing" strip.
-4. Weather in the Now hero: fetched at render time, cached for 3h, omitted on failure.
+4. Weather in the Now hero: fetched at render time, cached in KV for 3h via store.KV, omitted on failure.
 5. /now/archive (not designed): list of past published revisions with dates, each viewable read-only.
 6. Admin structured forms for now and about (not designed), not raw JSON.
 7. "updated N days ago" must stay correct: daily re-render job.
@@ -66,8 +67,9 @@ Phase 5, step 5 (none of these are designed: derive from Post and list patterns,
 1. Migrations and content packages for garden_pages, runbooks, books, terms.
 2. Garden page with maturity badge and "last tended" date; runbook page with platform, prerequisites, verified_on and risk badge.
 3. Series index page listing parts in order.
-4. Glossary index and term page; auto-link the first mention of a term or alias in posts at render time, with tests for word boundaries and Turkish characters.
-5. Reading list page (/reading) grouped by status; Now page reading section pulls from books.
+4. Add garden, runbook, term and book to the SEARCH index.
+5. Glossary index and term page; auto-link the first mention of a term or alias in posts at render time, with tests for word boundaries and Turkish characters.
+6. Reading list page (/reading) grouped by status; Now page reading section pulls from books.
 Propose a plan first, then wait for my approval.
 ```
 

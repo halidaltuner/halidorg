@@ -13,8 +13,11 @@ import (
 
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
+	"halid.org/engine/internal/feeds"
+	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/public"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/styleguide"
 	"halid.org/engine/web"
 )
 
@@ -66,11 +69,17 @@ func run() error {
 // routes builds the full mux. ServeMux panics on conflicting patterns, so
 // main_test.go calls this to catch them before a deploy does.
 func routes() (*http.ServeMux, error) {
+	stores := store.FromEnv()
 	pub, err := public.New()
 	if err != nil {
 		return nil, err
 	}
-	adm, err := admin.New(auth.New(auth.ConfigFromEnv(), store.FromEnv().DB))
+	adm, err := admin.New(auth.New(auth.ConfigFromEnv(), stores.DB))
+	if err != nil {
+		return nil, err
+	}
+
+	sg, err := styleguide.New()
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +91,15 @@ func routes() (*http.ServeMux, error) {
 		_, _ = w.Write([]byte("ok\n"))
 	})
 	pub.Register(mux)
+	feeds.New(stores.DB).Register(mux)
 	adm.Register(mux)
+	sg.Register(mux)
+
+	// Background jobs (Phase 1.3). The warmer renders through this same mux,
+	// so a purge re-renders pages exactly as visitors would get them.
+	runner := jobs.New(stores.DB, stores.Queue)
+	jobs.NewEntryJobs(stores.DB, stores.Search, jobs.NewWarmer(mux, stores.KV)).Register(runner)
+	runner.Register(mux)
 	// Two segments, not /static/: that pattern overlaps /{lang}/{$} and ServeMux panics.
 	mux.Handle("GET /static/{dir}/{file}", staticHandler())
 	return mux, nil

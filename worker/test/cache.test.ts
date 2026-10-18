@@ -25,7 +25,7 @@ describe("isCacheableRequest", () => {
 		expect(isCacheableRequest(req("/en/", { headers: { Authorization: "Bearer x" } }))).toBe(false);
 	});
 	it("bypasses internal and dynamic prefixes", () => {
-		for (const p of ["/admin", "/admin/login", "/x/search", "/healthz", "/lang/en"]) {
+		for (const p of ["/admin", "/admin/login", "/x/search", "/healthz", "/lang/en", "/internal/jobs"]) {
 			expect(isCacheableRequest(req(p)), p).toBe(false);
 		}
 	});

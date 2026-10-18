@@ -1,5 +1,4 @@
-/* Design tokens (DESIGN.md section 3). Phase 0 holds only what Admin Login and
-   the /admin stub use; Phase 1 fills in the rest. Light theme only. */
+/* Design tokens (DESIGN.md section 3). Light theme only: dark is a band, not a theme. */
 
 @font-face {
   font-family: "IBM Plex Sans";
@@ -91,9 +90,15 @@
   --surface: #FFFFFF;
   --border: #DCE1E8;
   --text: #0E1525;
+  --surface-2: #EEF1F5;
+  --border-soft: #EEF1F5;
   --text-muted: #5A6578;
   --link: #0E7490;
   --accent: #0891B2;
+  --accent-2: #E11D48;
+  --success: #15803D;
+  --warning: #B45309;
+  --info: #4F46E5;
 
   /* Dark band */
   --dk-bg: #0B1220;
@@ -107,6 +112,7 @@
   --dk-rose: #FB7185;
   --dk-green: #4ADE80;
   --dk-amber: #FBBF24;
+  --dk-indigo: #A5B4FC;
   --dk-aberration-rose: rgba(251, 113, 133, .8);
   --dk-aberration-cyan: rgba(34, 211, 238, .8);
 
@@ -116,6 +122,85 @@
   --google-green: #34A853;
   --google-blue: #4285F4;
 
+  /* Grid texture on dark bands: two 1px lines in --dk-surface-2, 48px cell, used at opacity .6. */
+  --dk-grid: linear-gradient(var(--dk-surface-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--dk-surface-2) 1px, transparent 1px);
+  --dk-grid-size: 48px 48px;
+
+  /* Brand: aberration on light bg, tri-stripe above header and footer. */
+  --ab-rose: rgba(225, 29, 72, .7);
+  --ab-cyan: rgba(8, 145, 178, .7);
+  --ab-rose-hover: rgba(225, 29, 72, .8);
+  --ab-cyan-hover: rgba(8, 145, 178, .8);
+  --tri-stripe: linear-gradient(90deg, #E11D48 0 33%, #0891B2 33% 66%, #4F46E5 66%);
+
+  /* Section tones: tint bg, ink text, stripe for covers. */
+  --tone-cyan-tint: #D7F1F7;    --tone-cyan-ink: #0E7490;    --tone-cyan-stripe: #C4E9F2;
+  --tone-indigo-tint: #E4E3FC;  --tone-indigo-ink: #4338CA;  --tone-indigo-stripe: #D5D3FA;
+  --tone-amber-tint: #FCEBCF;   --tone-amber-ink: #92400E;   --tone-amber-stripe: #F8DDB0;
+  --tone-green-tint: #D9F0E0;   --tone-green-ink: #166534;   --tone-green-stripe: #C5E7CF;
+  --tone-orange-tint: #FDE3D3;  --tone-orange-ink: #9A3412;  --tone-orange-stripe: #FAD0B6;
+  --tone-rose-tint: #FCE1E7;    --tone-rose-ink: #BE123C;    --tone-rose-stripe: #F9CCD6;
+  --tone-violet-tint: #EBE2FD;  --tone-violet-ink: #6D28D9;  --tone-violet-stripe: #DDCFFB;
+  --tone-navy-tint: #DCE3EF;    --tone-navy-ink: #0E1525;    --tone-navy-stripe: #CBD5E6;
+
+  /* Active nav underline per section (design/Header.dc.html). */
+  --nav-posts: #0891B2;
+  --nav-projects: #15803D;
+  --nav-homelab: #C2410C;
+  --nav-presentations: #BE123C;
+  --nav-photos: #6D28D9;
+  --nav-radar: #4F46E5;
+  --nav-now: #0891B2;
+  --nav-about: #0E1525;
+
+  /* Kind dots: more menu squares, palette rows, stream. */
+  --kind-post: #0891B2;
+  --kind-note: #4F46E5;
+  --kind-snippet: #B45309;
+  --kind-link: #5A6578;
+  --kind-fav: #E11D48;
+  --kind-project: #15803D;
+  --kind-homelab: #C2410C;
+  --kind-talk: #BE123C;
+  --kind-certificate: #0E7490;
+  --kind-page: #0E1525;
+
+  /* Type scale */
+  --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px; --fs-15: 15px;
+  --fs-16: 16px; --fs-18: 18px; --fs-20: 20px; --fs-22: 22px; --fs-24: 24px;
+  --fs-28: 28px; --fs-36: 36px; --fs-40: 40px; --fs-48: 48px; --fs-56: 56px;
+
+  /* Spacing */
+  --sp-4: 4px; --sp-8: 8px; --sp-12: 12px; --sp-16: 16px; --sp-20: 20px;
+  --sp-24: 24px; --sp-32: 32px; --sp-40: 40px; --sp-48: 48px; --sp-56: 56px;
+  --sp-64: 64px; --sp-72: 72px; --sp-96: 96px;
+  --gutter: 24px;
+
+  /* Containers */
+  --w-default: 1200px;
+  --w-post: 1240px;
+  --w-now: 1100px;
+  --w-narrow: 860px;
+  --w-prose: 68ch;
+
+  /* Radius: 4 inputs, buttons, code, badges; 8 cards, panels; pill for chips and tag pills only. */
   --radius-1: 4px;
   --radius-2: 8px;
+  --radius-pill: 999px;
+
+  --shadow-card: 0 1px 3px rgba(14, 21, 37, .06);
+  --shadow-card-hover: 0 10px 28px rgba(14, 21, 37, .10);
+  --shadow-hero: 0 16px 40px rgba(14, 21, 37, .14);
+  --shadow-popover: 0 12px 32px rgba(14, 21, 37, .12);
+
+  --dur-fast: 120ms;
+  --dur: 160ms;
+  --ease: ease-out;
+
+  --focus-ring: 2px solid var(--accent);
+}
+
+@media (max-width: 479px) {
+  :root { --gutter: 16px; }
 }

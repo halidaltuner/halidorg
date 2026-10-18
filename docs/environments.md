@@ -43,6 +43,35 @@ npx wrangler d1 migrations apply DB --remote --env staging -c ../wrangler.jsonc
 npx wrangler d1 migrations apply DB --remote --env prod -c ../wrangler.jsonc
 ```
 
+The search index lives in its own database (ADR-010), binding `SEARCH`,
+migrations in `migrations-search/`. Created on 2026-10-18:
+
+| Env | Database | `database_id` |
+|---|---|---|
+| staging | `halidorg-search-staging` | `d6c10762-47ac-4a2e-869e-4466f69ddf39` |
+| prod | `halidorg-search-prod` | `e0381f89-ed14-40f3-ac58-36e06c29d9ae` |
+
+```bash
+npx wrangler d1 migrations apply SEARCH --remote --env staging -c ../wrangler.jsonc
+npx wrangler d1 migrations apply SEARCH --remote --env prod -c ../wrangler.jsonc
+```
+
+It is never exported or backed up: a rebuild job recreates it from `DB`.
+
+### Job queues (Phase 1.3)
+
+Each env has a jobs queue and a dead-letter queue (`wrangler.jsonc`, `queues`).
+Create them once before the first deploy that carries the `queues` block:
+
+```bash
+npx wrangler queues create halidorg-jobs-staging
+npx wrangler queues create halidorg-jobs-dlq-staging
+npx wrangler queues create halidorg-jobs-prod
+npx wrangler queues create halidorg-jobs-dlq-prod
+```
+
+The API token used by CI needs **Account: Queues: Edit** to deploy a consumer.
+
 ## 2. Secrets
 
 | Secret | Value |

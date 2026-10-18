@@ -1,0 +1,33 @@
+{{/* Site header (design/Header.dc.html). Reads ui.Chrome. Under 900px the nav
+   moves into a <details> sheet; both menus open without JS. */}}
+{{define "header"}}<header class="site-header">
+<div class="tri-stripe" aria-hidden="true"></div>
+<div class="site-header-row">
+  <a class="wordmark" href="/{{.Lang}}/" aria-label="{{tr .Lang "wordmark.home"}}">halid<span class="dot">.</span></a>
+  <nav class="nav" aria-label="{{tr .Lang "nav.label"}}">
+    {{range .Nav}}<a href="{{.Href}}" data-s="{{.Slug}}"{{if .Active}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}
+    {{if .More}}<details class="nav-more">
+      <summary>{{tr .Lang "nav.more"}} ▾</summary>
+      <div class="popover">
+        {{range .More}}<a href="{{.Href}}" data-s="{{.Slug}}"{{if .Active}} aria-current="page"{{end}}><span class="sq" aria-hidden="true"></span>{{.Label}}</a>{{end}}
+      </div>
+    </details>{{end}}
+  </nav>
+  <div class="site-header-tools">
+    <button type="button" class="search-btn" data-palette{{if not .Search}} hidden{{end}}>
+      <span>{{tr .Lang "search.label"}}</span><kbd>⌘K</kbd>
+    </button>
+    {{template "lang-switch" .}}
+  </div>
+  <details class="nav-sheet">
+    <summary><span>{{tr .Lang "nav.menu"}}</span></summary>
+    <div class="nav-sheet-panel">
+      <nav aria-label="{{tr .Lang "nav.label"}}">
+        {{range .Nav}}<a href="{{.Href}}" data-s="{{.Slug}}"{{if .Active}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}
+        {{range .More}}<a href="{{.Href}}" data-s="{{.Slug}}"{{if .Active}} aria-current="page"{{end}}><span class="sq" aria-hidden="true"></span>{{.Label}}</a>{{end}}
+      </nav>
+      {{template "lang-switch" .}}
+    </div>
+  </details>
+</div>
+</header>{{end}}

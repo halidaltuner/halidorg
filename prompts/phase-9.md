@@ -2,15 +2,16 @@
 
 Prerequisite: Phase 8 exit check is done (or Phase 8 consciously skipped).
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
+Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
 ## 9.1 Backups and export
 
 ```
 Read CLAUDE.md and ARCHITECTURE.md §6 (backups).
 Phase 9, step 1:
-1. Nightly D1 export to R2 with 30-day retention (verify it already exists from Phase 3; harden it).
+1. Nightly D1 export of the main DB to R2 with 30-day retention (verify it exists from Phase 3; harden it). The SEARCH DB is not exported; document that it is rebuilt with the rebuild-index job.
 2. Weekly full export: every entry as Markdown with front matter, gallery data as JSON, media manifest, zipped in R2.
-3. Restore runbook in docs/runbook-restore.md, and a script that restores a D1 export into a fresh staging database. Test it once on staging.
+3. Restore runbook in docs/runbook-restore.md: restore main DB, then rebuild the SEARCH DB. Script that restores into a fresh staging database; test it once on staging.
 Propose a plan first, then wait for my approval.
 ```
 
@@ -20,7 +21,7 @@ Propose a plan first, then wait for my approval.
 Read CLAUDE.md and DESIGN.md §7.
 Phase 9, step 2 (not designed: derive from the dashboard failed-jobs panel):
 1. Jobs page: runs table with filters, retry (shows "retry n/3"), payload and error view.
-2. Health page: last GitHub sync, last backup, failed jobs in 24h, KV hit ratio, D1 and R2 usage.
+2. Health page: last GitHub sync, last backup, failed jobs and DLQ depth in 24h, KV hit ratio, bridge latency p50/p95, D1 (main + SEARCH) and R2 usage, deployed image SHA vs DEPLOY_SHA seen by the container.
 3. Settings page: everything in site_settings with typed inputs.
 Propose a plan first, then wait for my approval.
 ```
@@ -41,7 +42,7 @@ Propose a plan first, then wait for my approval.
 ```
 Read CLAUDE.md and ARCHITECTURE.md.
 Phase 9, step 4: review only, no code changes.
-Check CSP on every origin, cookie flags, OIDC claim checks, re-auth gate on publish and delete, SSRF guards, deck origin isolation, secrets handling, rate limits on login, webmention and quick capture endpoints. Write findings with severity to docs/security-review.md.
+Check CSP on every origin, cookie flags, OIDC claim checks (including auth_time fail-closed), that bridge.internal is unreachable from the internet, re-auth gate on publish and delete, SSRF guards, deck origin isolation, secrets handling, rate limits on login, webmention and quick capture endpoints. Write findings with severity to docs/security-review.md.
 ```
 
 ## Phase 9 exit check

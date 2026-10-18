@@ -4,8 +4,10 @@
 
 export interface BridgeEnv {
 	DB: D1Database;
+	SEARCH: D1Database;
 	PAGES: KVNamespace;
 	MEDIA: R2Bucket;
+	JOBS: Queue;
 }
 
 interface Statement {
@@ -13,13 +15,15 @@ interface Statement {
 	params?: unknown[];
 }
 
-/** Serves a bridge request whose path is already stripped to `/d1/...`, `/kv/...` or `/r2/...`. */
+/** Serves a bridge request: `/d1/...` (DB), `/search/...` (SEARCH, ADR-010), `/kv/...`, `/r2/...`, `/queue/send`. */
 export async function handleBridge(req: Request, path: string, env: BridgeEnv): Promise<Response> {
 	const [, store, ...rest] = path.split("/");
 	const key = decodeURIComponent(rest.join("/"));
 
 	try {
-		if (store === "d1") return await d1(req, rest[0], env);
+		if (store === "d1") return await d1(req, rest[0], env.DB);
+		if (store === "search") return await d1(req, rest[0], env.SEARCH);
+		if (store === "queue") return await enqueue(req, rest[0], env);
 		if (store !== "kv" && store !== "r2") return text(404, "unknown store");
 		if (key === "") return text(400, "missing key");
 		return store === "kv" ? await kv(req, key, env) : await r2(req, key, env);
@@ -29,23 +33,31 @@ export async function handleBridge(req: Request, path: string, env: BridgeEnv): 
 	}
 }
 
-async function d1(req: Request, op: string | undefined, env: BridgeEnv): Promise<Response> {
+async function d1(req: Request, op: string | undefined, db: D1Database): Promise<Response> {
 	if (req.method !== "POST") return text(405, "method not allowed");
 	if (op === "query") {
 		const st = await req.json<Statement>();
-		return Response.json(result(await prepare(env, st).all()));
+		return Response.json(result(await prepare(db, st).all()));
 	}
 	if (op === "batch") {
 		const { statements } = await req.json<{ statements: Statement[] }>();
-		const out = await env.DB.batch(statements.map((st) => prepare(env, st)));
+		const out = await db.batch(statements.map((st) => prepare(db, st)));
 		return Response.json(out.map(result));
 	}
 	return text(404, "unknown d1 op");
 }
 
-function prepare(env: BridgeEnv, st: Statement): D1PreparedStatement {
-	const stmt = env.DB.prepare(st.sql);
+function prepare(db: D1Database, st: Statement): D1PreparedStatement {
+	const stmt = db.prepare(st.sql);
 	return st.params?.length ? stmt.bind(...st.params) : stmt;
+}
+
+// The container is a producer only; the Worker's queue() handler consumes.
+async function enqueue(req: Request, op: string | undefined, env: BridgeEnv): Promise<Response> {
+	if (req.method !== "POST") return text(405, "method not allowed");
+	if (op !== "send") return text(404, "unknown queue op");
+	await env.JOBS.send(await req.json(), { contentType: "json" });
+	return new Response(null, { status: 204 });
 }
 
 function result(r: D1Result): { results: unknown[]; changes: number; last_row_id: number } {

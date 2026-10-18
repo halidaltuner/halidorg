@@ -12,7 +12,7 @@ import (
 	"strings"
 
 	"halid.org/engine/internal/i18n"
-	"halid.org/engine/web"
+	"halid.org/engine/internal/ui"
 )
 
 type alternate struct {
@@ -21,9 +21,8 @@ type alternate struct {
 }
 
 type page struct {
-	Lang       string
+	ui.Chrome
 	Alternates []alternate
-	Switch     []i18n.Option
 }
 
 // Handlers holds parsed templates for public pages.
@@ -33,9 +32,7 @@ type Handlers struct {
 
 // New parses the public templates. It fails at startup rather than per request.
 func New() (*Handlers, error) {
-	funcs := template.FuncMap{"tr": i18n.T}
-	hello, err := template.New("hello").Funcs(funcs).ParseFS(web.Templates,
-		"templates/partials/base.html", "templates/partials/lang_switch.html", "templates/public/hello.html")
+	hello, err := ui.Parse("hello", "templates/partials/base.html", "templates/public/hello.html")
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +65,8 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request) {
 		alts = append(alts, alternate{Lang: l, Href: "/" + l + "/"})
 	}
 	var buf bytes.Buffer
-	sw := i18n.Switcher(lang, func(l string) string { return "/" + l + "/" })
-	if err := h.hello.ExecuteTemplate(&buf, "base", page{Lang: lang, Alternates: alts, Switch: sw}); err != nil {
+	chrome := ui.NewChrome(lang, "", false, func(l string) string { return "/" + l + "/" })
+	if err := h.hello.ExecuteTemplate(&buf, "base", page{Chrome: chrome, Alternates: alts}); err != nil {
 		slog.Error("render hello", "lang", lang, "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return

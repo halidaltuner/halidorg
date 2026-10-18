@@ -5,6 +5,7 @@ import { type BridgeEnv, handleBridge } from "../src/bridge";
 function fakeEnv() {
 	const kv = new Map<string, { value: ArrayBuffer; metadata: unknown }>();
 	const sql: { sql: string; params: unknown[] }[] = [];
+	const sent: unknown[] = [];
 	const stmt = (q: string, params: unknown[] = []) => ({
 		bind: (...p: unknown[]) => stmt(q, p),
 		all: async () => (sql.push({ sql: q, params }), { results: [{ ok: 1 }], meta: { changes: 0, last_row_id: 0 } }),
@@ -17,8 +18,10 @@ function fakeEnv() {
 			delete: async (k: string) => void kv.delete(k),
 		},
 		MEDIA: {},
+		SEARCH: { prepare: (q: string) => stmt("search:" + q), batch: async () => [] },
+		JOBS: { send: async (m: unknown) => void sent.push(m) },
 	} as unknown as BridgeEnv;
-	return { env, kv, sql };
+	return { env, kv, sql, sent };
 }
 
 const post = (body: unknown) => new Request("http://bridge.internal/x", { method: "POST", body: JSON.stringify(body) });
@@ -42,5 +45,15 @@ describe("handleBridge", () => {
 		const got = await handleBridge(new Request("http://bridge.internal" + path), path, env);
 		expect(await got.text()).toBe("<html>");
 		expect(got.headers.get("X-KV-Metadata")).toBe('{"etag":"x"}');
+	});
+
+	it("routes search to the SEARCH database and sends queue messages", async () => {
+		const { env, sql, sent } = fakeEnv();
+		await handleBridge(post({ sql: "SELECT 1" }), "/search/query", env);
+		expect(sql.at(-1)?.sql).toBe("search:SELECT 1");
+		const res = await handleBridge(post({ id: "j1", type: "entry.changed" }), "/queue/send", env);
+		expect(res.status).toBe(204);
+		expect(sent).toEqual([{ id: "j1", type: "entry.changed" }]);
+		expect((await handleBridge(post({}), "/queue/other", env)).status).toBe(404);
 	});
 });

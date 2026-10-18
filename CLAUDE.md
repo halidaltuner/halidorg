@@ -21,6 +21,15 @@ README.md, ARCHITECTURE.md, CONTENT_MODEL.md, DESIGN.md, ROADMAP.md. Work only o
 - Runtime split (ADR-001): Go app runs in a Container; `/worker` is a thin TypeScript edge Worker. No Go/WASM.
 - Migrations: plain SQL in `/migrations`, applied with `wrangler d1 migrations`
 
+## Known constraints
+Phase 0 spike findings. Full list in `prompts/_constraints.md`, details in `docs/spike-phase0.md`.
+- All storage access from Go goes through `internal/store` (Worker bridge); never call Cloudflare APIs from the container.
+- Assign `outboundByHost` inside a `static {}` block, not as a class field, and keep `export { ContainerProxy }`.
+- Container env vars are set in the Durable Object constructor; a new image does not restart the DO, so new secrets or `DEPLOY_SHA` may lag.
+- ServeMux patterns can conflict and panic (`GET /static/` vs `/{lang}/{$}`); every route change must pass the `routes()` test in `cmd/server/main_test.go`.
+- Language-prefixed routes register literal prefixes per language (`for _, l := range i18n.Supported { "GET /"+l+"/posts" }`), never `/{lang}/literal`: that overlaps `/lang/{lang}` and ServeMux panics.
+- Every write to an entry enqueues `jobs.TypeEntryChanged` with the pre-write `jobs.RefOf` snapshot; the job re-renders affected pages into KV (`jobs.Paths`) and re-indexes search. New kinds add their paths in `jobs/purge.go`.
+
 ## Conventions
 - Each content kind: `internal/content/<kind>/` with `model.go`, `repo.go`, `validate.go`, `handlers_admin.go`, `handlers_public.go`, templates under `web/templates/<kind>/`
 - No ORM. Hand-written SQL with small query helpers.

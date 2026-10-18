@@ -52,6 +52,7 @@ Google sign-in mark: `--google-red #EA4335` · `--google-yellow #FBBC05` · `--g
 Nav underline: posts `#0891B2`, projects `#15803D`, homelab `#C2410C`, presentations `#BE123C`, photos `#6D28D9`, radar `#4F46E5`, now `#0891B2`, about `#0E1525`.
 
 Kind glyphs (28×28 tile, tint bg, ink text): post `¶`, note `~`, snippet `{}`, link `↗`, fav `*`, project `◆`, homelab `⌁`.
+Kind dots (more menu squares, palette rows; from `Header.dc.html`): post `#0891B2`, note `#4F46E5`, snippet `#B45309`, link `#5A6578`, fav `#E11D48`, project `#15803D`, homelab `#C2410C`, talk `#BE123C`, certificate `#0E7490`, page `#0E1525`.
 
 ### Typography
 - **Sans:** IBM Plex Sans 400/500/600. **Mono:** JetBrains Mono 400/500/700. Self-hosted (woff2) in production.
@@ -114,7 +115,7 @@ Kind glyphs (28×28 tile, tint bg, ink text): post `¶`, note `~`, snippet `{}`,
 
 | Screen | Phase | Notes |
 |---|---|---|
-| Mobile nav sheet, header under 900px | 1 | must exist before launch |
+| Mobile nav sheet, header under 900px | 1 | derived in 1.1: `<details>` sheet under 900px, nav + more as one list, 44px rows, lang switch at the bottom, works without JS |
 | Post list, tag page | 1 | reuse latest-post cards + chips |
 | 404 / 410 | 1 | dark band, palette hint |
 | Admin entry list, media library, revisions diff | 1 | dashboard density |

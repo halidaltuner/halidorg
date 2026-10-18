@@ -2,6 +2,7 @@
 
 Prerequisite: Phase 5 exit check is all "done".
 Run each in a fresh session (`/clear`), in plan mode (Shift+Tab). One commit (or PR) per step.
+Every prompt assumes `prompts/_constraints.md` (storage via internal/store, separate SEARCH DB, queue consumer Worker, routes() test).
 
 ## 6.1 Radar schema + editions
 

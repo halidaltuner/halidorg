@@ -4,8 +4,9 @@ One file per ROADMAP phase. Run steps in order, each in a fresh session (`/clear
 
 | File | Phase | Steps |
 |---|---|---|
+| [_constraints.md](_constraints.md) | Phase 0 spike findings, read with every prompt | - |
 | [phase-0.md](phase-0.md) | Spike and foundations | 4 + exit |
-| [phase-1.md](phase-1.md) | Design system, core engine, posts | 7 + exit |
+| [phase-1.md](phase-1.md) | Design system, core engine, posts | 1.0 + 7 + exit |
 | [phase-2.md](phase-2.md) | Short-form and curation | 5 + exit |
 | [phase-3.md](phase-3.md) | Ghost importer and launch | 4 + exit |
 | [phase-4.md](phase-4.md) | Projects, homelab, GitHub | 5 + exit |
