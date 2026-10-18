@@ -40,6 +40,10 @@ async function kvHit(path) {
 	const second = await get(path);
 	const a = first.res.headers.get("x-cache"), b = second.res.headers.get("x-cache");
 	check(`KV: ${path} second request is a HIT`, second.res.status === 200 && b === "HIT", `${first.res.status} ${a} → ${second.res.status} ${b}`);
+	// A page stored before the latest deploy still has the old templates:
+	// every public page now loads the palette (Phase 1 PR #5).
+	if (second.res.status === 200) check(`Fresh: ${path} has the current templates (palette.js)`, second.body.includes("/static/js/palette.js"),
+		`deploy in footer: ${second.body.match(/deploy <span[^>]*>([0-9a-f]+)/)?.[1] ?? second.body.match(/deploy ([0-9a-f]{7})/)?.[1] ?? "?"}`);
 	return second;
 }
 
