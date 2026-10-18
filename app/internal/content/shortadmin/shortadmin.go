@@ -17,6 +17,7 @@ import (
 	"net/http"
 	"net/url"
 	"sort"
+	"strconv"
 	"strings"
 	"unicode/utf8"
 
@@ -44,10 +45,11 @@ type Kind struct {
 	// Fields is the template file that defines "entry-fields", the kind's
 	// own inputs. It reads .Item (the Draft) and .Options.
 	Fields string
+	Extra  []string // more template files the fields use (the tone picker)
 	// Public is the item's public page, or "" for kinds listed on a page
 	// of their own (links, favs). Deleting a published item with a page
 	// leaves a 410 there.
-	Public  func(e content.Entry) string
+	Public  func(d Draft) string
 	New     func() Draft
 	Load    func(ctx context.Context, id string) (Draft, error) // entry and kind fields; text and tags are filled here
 	Read    func(r *http.Request, d Draft)                      // the kind's fields from the form
@@ -57,6 +59,20 @@ type Kind struct {
 	// Options is extra data for the fields template (categories, files);
 	// nil when the kind needs none.
 	Options func(ctx context.Context, lang string, d Draft) (any, error)
+	// Optional hooks. Nav is the sidebar key when it differs from Section
+	// (build logs sit under projects). Prefill fills a new draft from the
+	// query (a build log's project). DeleteStmts replace the plain delete
+	// of the entry (a project takes its build logs with it).
+	Nav         string
+	Prefill     func(r *http.Request, d Draft)
+	DeleteStmts func(e content.Entry) []store.Stmt
+}
+
+func (k Kind) nav() string {
+	if k.Nav != "" {
+		return k.Nav
+	}
+	return k.Section
 }
 
 // Admin serves one kind's list and editor.
@@ -76,7 +92,7 @@ func New(k Kind, db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs) (*Admin, 
 	if err != nil {
 		return nil, err
 	}
-	edit, err := u.Parse(k.Section+"-edit", "templates/admin/entry_edit.html", k.Fields)
+	edit, err := u.Parse(k.Section+"-edit", append([]string{"templates/admin/entry_edit.html", k.Fields}, k.Extra...)...)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +136,7 @@ var statuses = []string{content.Draft, content.Published, content.Archived}
 func (h *Admin) listPage(w http.ResponseWriter, r *http.Request) {
 	lang := i18n.FromRequest(r)
 	q := r.URL.Query()
-	p := listPage{Shell: h.ui.Shell(r, i18n.T(lang, "admin.nav."+h.k.Section), h.k.Section),
+	p := listPage{Shell: h.ui.Shell(r, i18n.T(lang, "admin.nav."+h.k.Section), h.k.nav()),
 		Section: h.k.Section, Kind: h.k.Name, Statuses: statuses, Status: q.Get("status"), Filter: q.Get("lang")}
 	where, args := "e.kind = ?", []any{h.k.Name}
 	if contains(statuses, p.Status) {
@@ -225,14 +241,14 @@ func (h *Admin) page(r *http.Request, d Draft, isNew bool, errs []string) (editP
 			title = i18n.T(lang, "admin.untitled") + " · " + e.Slug
 		}
 	}
-	p := editPage{Shell: h.ui.Shell(r, title, h.k.Section), Section: h.k.Section, Kind: h.k.Name, New: isNew,
+	p := editPage{Shell: h.ui.Shell(r, title, h.k.nav()), Section: h.k.Section, Kind: h.k.Name, New: isNew,
 		Item: d, Entry: e, Markdown: *d.Text(), TagsValue: strings.Join(*d.TagList(), ", "), Body: h.k.Body,
 		Errors: errs, Langs: i18n.Supported, Action: h.base()}
 	if !isNew {
 		p.Action = h.base() + "/" + e.ID
 		if e.Status == content.Published {
 			if h.k.Public != nil {
-				p.PublicHref = h.k.Public(e)
+				p.PublicHref = h.k.Public(d)
 			}
 			// Only the body waits for publish; links and favs have none, and
 			// their fields are live on save.
@@ -252,6 +268,9 @@ func (h *Admin) page(r *http.Request, d Draft, isNew bool, errs []string) (editP
 func (h *Admin) newPage(w http.ResponseWriter, r *http.Request) {
 	d := h.k.New()
 	d.Base().Lang = i18n.FromRequest(r)
+	if h.k.Prefill != nil {
+		h.k.Prefill(r, d)
+	}
 	p, err := h.page(r, d, true, nil)
 	if err != nil {
 		h.fail(w, err)
@@ -500,12 +519,16 @@ func (h *Admin) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	var stmts []store.Stmt
 	if e.Status == content.Published && h.k.Public != nil {
-		if from := h.k.Public(e); from != "" {
+		if from := h.k.Public(d); from != "" {
 			stmts = append(stmts, store.Stmt{SQL: `INSERT INTO redirects (from_path, to_path, code, created_at) VALUES (?, '', 410, ?)
 ON CONFLICT (from_path) DO UPDATE SET to_path = '', code = 410`, Args: []any{from, content.Clock().Unix()}})
 		}
 	}
-	stmts = append(stmts, store.Stmt{SQL: `DELETE FROM entries WHERE id = ? AND kind = ?`, Args: []any{e.ID, h.k.Name}})
+	if h.k.DeleteStmts != nil {
+		stmts = append(stmts, h.k.DeleteStmts(e)...)
+	} else {
+		stmts = append(stmts, store.Stmt{SQL: `DELETE FROM entries WHERE id = ? AND kind = ?`, Args: []any{e.ID, h.k.Name}})
+	}
 	if _, err := h.db.Batch(r.Context(), stmts...); err != nil {
 		h.fail(w, err)
 		return
@@ -545,11 +568,17 @@ func Errors(lang string, v content.ValidationError) []string {
 			out = append(out, t)
 			continue
 		}
-		var n int
-		var field string
-		if _, err := fmt.Sscanf(strings.ReplaceAll(f, ".", " "), "files %d %s", &n, &field); err == nil {
-			out = append(out, fmt.Sprintf(i18n.T(lang, "entry.err.file"), n+1, msg))
-			continue
+		// Row fields (files.0.filename, parts.2.price) name the group and
+		// the row by its position.
+		if parts := strings.Split(f, "."); len(parts) == 3 {
+			if n, err := strconv.Atoi(parts[1]); err == nil {
+				group := i18n.T(lang, "entry.row."+parts[0])
+				if group == "entry.row."+parts[0] {
+					group = parts[0]
+				}
+				out = append(out, fmt.Sprintf(i18n.T(lang, "entry.err.row"), group, n+1, msg))
+				continue
+			}
 		}
 		out = append(out, f+": "+msg)
 	}
@@ -602,4 +631,52 @@ func contains(xs []string, s string) bool {
 		}
 	}
 	return false
+}
+
+// Rows reads repeated form rows: each field name appears once per row, in
+// row order, and order names the field that sorts them (ties keep the form
+// order). Rows whose fields are all blank are dropped, so an empty row in
+// the form adds one and emptying a row removes it, without JS.
+func Rows(r *http.Request, order string, fields ...string) [][]string {
+	_ = r.ParseForm()
+	cols := make([][]string, len(fields))
+	n := 0
+	for i, f := range fields {
+		cols[i] = r.PostForm[f]
+		n = max(n, len(cols[i]))
+	}
+	orders := r.PostForm[order]
+	type row struct {
+		vals  []string
+		order int
+	}
+	var rows []row
+	for i := 0; i < n; i++ {
+		vals := make([]string, len(fields))
+		blank := true
+		for j := range fields {
+			if i < len(cols[j]) {
+				vals[j] = strings.TrimSpace(cols[j][i])
+			}
+			if vals[j] != "" {
+				blank = false
+			}
+		}
+		if blank {
+			continue
+		}
+		o := i
+		if i < len(orders) {
+			if v, err := strconv.Atoi(strings.TrimSpace(orders[i])); err == nil {
+				o = v
+			}
+		}
+		rows = append(rows, row{vals, o})
+	}
+	sort.SliceStable(rows, func(a, b int) bool { return rows[a].order < rows[b].order })
+	out := make([][]string, len(rows))
+	for i, x := range rows {
+		out[i] = x.vals
+	}
+	return out
 }

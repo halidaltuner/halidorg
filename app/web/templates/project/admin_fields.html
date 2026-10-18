@@ -1,0 +1,64 @@
+{{define "entry-fields"}}{{$o := .Options}}
+<fieldset class="ent-langs"><legend>{{tr .Lang "kind.project.type"}}</legend>
+{{- range $o.Types}}<label class="check"><input type="radio" name="project_type" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
+</fieldset>
+<div class="ent-two">
+<label>{{tr .Lang "kind.project.status"}}<select name="project_status">{{range $o.Statuses}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label class="only-homelab">{{tr .Lang "entry.category"}}<select name="category">{{range $o.Categories}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+</div>
+<label>{{tr .Lang "kind.project.tagline"}}<input name="tagline" value="{{.Item.Tagline}}"></label>
+<label>{{tr .Lang "kind.project.kind_line"}}<input name="kind_line" value="{{.Item.KindLine}}" placeholder="{{tr .Lang "kind.project.kind_line_hint"}}"></label>
+<label class="check"><input type="checkbox" name="featured" value="1"{{if .Item.Featured}} checked{{end}}>{{tr .Lang "kind.project.featured"}}</label>
+<div class="ent-two">
+<label>{{tr .Lang "kind.project.started"}}<input type="month" name="started" value="{{$o.Started}}"></label>
+<label>{{tr .Lang "kind.project.ended"}}<input type="month" name="ended" value="{{$o.Ended}}"></label>
+</div>
+<fieldset class="ent-langs"><legend>{{tr .Lang "kind.project.tone"}}</legend>{{template "tone-picker" dict "form" "" "tones" $o.Tones "on" $o.Tone "lang" .Lang}}</fieldset>
+<label>{{tr .Lang "kind.project.cover"}}<select name="cover">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "entry.row.links"}}</legend>
+<p class="ent-hint">{{tr .Lang "kind.project.links_hint"}}</p>
+{{- range $i, $l := $o.Links}}
+<div class="ent-row r-link"><input name="link_label" value="{{$l.Label}}" aria-label="{{tr $.Lang "kind.project.label"}}" placeholder="{{tr $.Lang "kind.project.label"}}"><input name="link_url" value="{{$l.URL}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" aria-label="url" placeholder="https:// · /… · #log"><input name="link_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "entry.row.facts"}}</legend>
+{{- range $i, $f := $o.Facts}}
+<div class="ent-row r-fact"><input name="fact_key" value="{{$f.Key}}" class="mono" aria-label="{{tr $.Lang "kind.project.key"}}" placeholder="{{tr $.Lang "kind.project.key"}}"><input name="fact_value" value="{{$f.Value}}" aria-label="{{tr $.Lang "kind.project.value"}}" placeholder="{{tr $.Lang "kind.project.value"}}"><input name="fact_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows only-software"><legend>{{tr .Lang "entry.row.stack"}}</legend>
+{{- range $i, $s := $o.Stack}}
+<div class="ent-row r-stack"><input name="stack_name" value="{{$s}}" class="mono" autocapitalize="off" aria-label="{{tr $.Lang "entry.row.stack"}}" placeholder="go"><input name="stack_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<fieldset class="ent-rows only-homelab"><legend>{{tr .Lang "entry.row.parts"}}</legend>
+<p class="ent-hint">{{tr .Lang "kind.project.parts_hint"}}</p>
+{{- range $i, $p := $o.Parts}}
+<div class="ent-row r-part"><input name="part_name" value="{{$p.Name}}" class="p-name" aria-label="{{tr $.Lang "kind.project.part"}}" placeholder="{{tr $.Lang "kind.project.part"}}"><input name="part_qty" value="{{$p.Qty}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.project.qty"}}" placeholder="1"><input name="part_price" value="{{$p.Price}}" class="mono" inputmode="decimal" aria-label="{{tr $.Lang "kind.project.price"}}" placeholder="{{tr $.Lang "kind.project.price"}}"><input name="part_currency" value="{{$p.Currency}}" class="mono" autocapitalize="characters" aria-label="{{tr $.Lang "kind.project.currency"}}" placeholder="{{$.Item.Currency}}" maxlength="3"><input name="part_url" value="{{$p.URL}}" class="mono p-url" inputmode="url" autocapitalize="off" spellcheck="false" aria-label="url" placeholder="https://"><input name="part_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+
+<div class="ent-two">
+<label>{{tr .Lang "kind.project.cost"}}<input name="cost_total" value="{{$o.Cost}}" class="mono" inputmode="decimal" placeholder="{{tr .Lang "kind.project.cost_hint"}}"></label>
+<label>{{tr .Lang "kind.project.currency"}}<input name="currency" value="{{.Item.Currency}}" class="mono" autocapitalize="characters" maxlength="3"></label>
+</div>
+<label>{{tr .Lang "kind.project.time_spent"}}<input name="time_spent" value="{{.Item.TimeSpent}}" placeholder="{{tr .Lang "kind.project.time_hint"}}"></label>
+
+<fieldset class="ent-rows"><legend>{{tr .Lang "entry.row.gallery"}}</legend>
+<p class="ent-hint">{{tr .Lang "kind.project.gallery_hint"}}</p>
+{{- range $i, $g := $o.Gallery}}
+<div class="ent-row r-gallery"><select name="gallery_media" aria-label="{{tr $.Lang "entry.row.gallery"}}">{{range $o.Media}}<option value="{{.Value}}"{{if eq .Value $g}} selected{{end}}>{{.Label}}</option>{{end}}</select><input name="gallery_order" value="{{$i}}" class="mono" inputmode="numeric" aria-label="{{tr $.Lang "kind.snippet.file_order"}}"></div>
+{{- end}}
+</fieldset>
+<label>{{tr .Lang "kind.project.github"}}<input name="github_repo" value="{{.Item.GitHubRepo}}" class="mono" autocapitalize="off" spellcheck="false" placeholder="owner/name"></label>
+{{- if $o.NewLog}}
+<section class="ent-logs" aria-label="{{tr .Lang "kind.project.logs"}}">
+<div class="ent-logs-head"><span class="mono">{{tr .Lang "kind.project.logs"}}</span><a class="mono" href="{{$o.NewLog}}">{{tr .Lang "kind.project.new_log"}}</a></div>
+<ul class="ent-list">{{range $o.Logs}}<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono"><span>{{.Date}}</span><span class="adm-st s-{{.StatusKey}}">{{.Status}}</span></span></a></li>{{else}}<li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>{{end}}</ul>
+</section>
+{{- end}}
+{{end}}

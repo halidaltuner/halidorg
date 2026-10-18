@@ -11,7 +11,7 @@ import (
 )
 
 // 4 posts, 3 notes, 2 snippets, 5 links, 4 favs.
-const samplesTotal = 18
+const samplesTotal = 21
 
 func TestSeedIsIdempotent(t *testing.T) {
 	ctx := context.Background()

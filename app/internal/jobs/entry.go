@@ -68,6 +68,9 @@ type entryRow struct {
 	Extra      *string `json:"extra"`
 	Tags       *string `json:"tags"`
 	Categories *string `json:"categories"`
+	Homelab    *int    `json:"homelab"`
+	Parent     *string `json:"parent"`
+	Logs       *string `json:"logs"`
 	Published  *int64  `json:"published_at"`
 	Minutes    *int    `json:"reading_minutes"`
 }
@@ -80,7 +83,14 @@ func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
   e.translation_group_id, r.body_md, r.data_json, e.published_at,
   -- kind fields worth finding: a link's domain and URL, a fav's author
   CASE e.kind WHEN 'link' THEN (SELECT l.domain || ' ' || l.url FROM links l WHERE l.entry_id = e.id)
-              WHEN 'fav' THEN (SELECT coalesce(f.author, '') || ' ' || f.fav_type FROM favs f WHERE f.entry_id = e.id) END AS extra,
+              WHEN 'fav' THEN (SELECT coalesce(f.author, '') || ' ' || f.fav_type FROM favs f WHERE f.entry_id = e.id)
+              -- a project's tagline and stack, a build log's project
+              WHEN 'project' THEN (SELECT p.tagline || ' ' || p.kind_line || coalesce(' ' || (SELECT group_concat(s.name, ' ')
+                FROM project_stack s WHERE s.project_id = p.entry_id), '') FROM projects p WHERE p.entry_id = e.id)
+              WHEN 'buildlog' THEN (SELECT pe.title FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id) END AS extra,
+  (SELECT p.project_type = 'homelab' FROM projects p WHERE p.entry_id = e.id) AS homelab,
+  (SELECT pe.slug FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id) AS parent,
+  (SELECT group_concat(le.slug, ' ') FROM buildlogs b JOIN entries le ON le.id = b.entry_id WHERE b.project_entry_id = e.id) AS logs,
   (SELECT reading_minutes FROM posts WHERE entry_id = e.id) AS reading_minutes,
   -- a link's category and its parent: both awesome pages list it
   (SELECT c.slug || coalesce(' ' || p.slug, '') FROM links l JOIN categories c ON c.id = l.category_id
@@ -111,6 +121,13 @@ func (r *entryRow) ref() Ref {
 		Listed: r.Status == content.Published && r.Visibility == content.Public}
 	if r.Categories != nil {
 		ref.Categories = strings.Fields(*r.Categories)
+	}
+	ref.Homelab = r.Homelab != nil && *r.Homelab == 1
+	if r.Parent != nil {
+		ref.Parent = *r.Parent
+	}
+	if r.Logs != nil {
+		ref.Logs = strings.Fields(*r.Logs)
 	}
 	if r.Kind == "snippet" && r.DataJSON != nil {
 		for _, f := range snippetFiles(*r.DataJSON) {

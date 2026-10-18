@@ -1,0 +1,8 @@
+{{define "entry-fields"}}{{$o := .Options}}
+<label>{{tr .Lang "kind.buildlog.project"}}<select name="project" required><option value="">{{tr .Lang "kind.buildlog.pick"}}</option>{{range $o.Projects}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+{{- with $o.ProjectHref}}<a class="mono ent-view" href="{{.}}">← {{tr $.Lang "kind.buildlog.to_project"}}</a>{{end}}
+<div class="ent-two">
+<label>{{tr .Lang "kind.buildlog.date"}}<input type="date" name="log_date" value="{{$o.Date}}" required></label>
+<label>{{tr .Lang "kind.buildlog.hours"}}<input name="hours" value="{{$o.Hours}}" class="mono" inputmode="decimal" placeholder="2,5"></label>
+</div>
+{{end}}

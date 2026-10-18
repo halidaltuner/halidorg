@@ -68,16 +68,21 @@ Every content item with its own page has one row here. Type-specific fields live
 Every link category is an awesome list at `/{lang}/awesome/{category}` (Phase 2.3): its published links, then one section per child category. No table of its own; a page that renders no link is a 404. A curated `page` with `data_json.list_category_ids` can come with pages in Phase 5.
 
 ### project (software and homelab/DIY share one model and one detail template)
-`projects(entry_id, project_type: software|homelab, status: active|paused|archived|idea|done, category_id nullable, tagline, repo_url, demo_url, github_repo nullable, started_at, ended_at, featured bool, cost_total nullable, currency default 'TRY', time_spent_hours nullable)`
+`projects(entry_id, project_type: software|homelab, project_status, category_id nullable, tagline, kind_line, github_repo nullable, started_at, ended_at, featured bool, cost_total nullable, currency default 'TRY', time_spent)` (migrations/0007_projects.sql)
+- `project_status` (named apart from `entries.status`, the publish state) follows the prototypes: `active`, `maintained`, `running`, `in_progress`, `paused`, `done`, `idea`, `archived`.
+- `kind_line` is the small line over the title ("go · postgres · htmx"); empty means derived: the first three stack items for software, the category for homelab.
+- `time_spent` is free text ("6 weekends", "ongoing"), as on the build cards. Money (`cost_total`, part prices) is in minor units (kuruş, cents); an empty `cost_total` means the sum of the parts priced in the project currency.
 - `project_facts(project_id, key, value, sort)` fact strip cells (e.g. `nodes: 3`, `idle: 38 W`)
-- `project_stack(project_id, name, sort)` "stack" aside for software
-- `project_parts(project_id, name, qty, price, currency, url nullable, sort)` "parts" aside for homelab
-- `project_gallery(project_id, media_id, sort)`
-- Homelab categories (`categories.kind = 'homelab'`): homelab, electronics, 3d print, woodwork, network
+- `project_stack(project_id, name, sort)` "stack" aside, software only
+- `project_parts(project_id, name, qty, price, currency, url nullable, sort)` "parts" aside, homelab only; price is the whole line
+- `project_links(project_id, label, url, sort)` the hero buttons, the first is the primary one; a URL is https, a path on the site or an `#anchor` on the project page (`#log`)
+- `project_gallery(project_id, media_id, sort)` images with both alt texts; a media item in a gallery cannot be deleted
+- Homelab categories (`categories.kind = 'homelab'`, seeded by 0007 with the prototype tones): homelab orange, electronics violet, 3d print cyan, woodwork amber, network green. A homelab project needs one; a software project has none.
+- Each revision keeps the facts, stack, parts, links and gallery in `data_json`, so a restore brings them back; public pages read the published revision's copy.
 - Homelab stats tiles (builds, nodes, idle W, uptime): `builds` is computed; the rest live in `site_settings` as manual values
 
 ### buildlog
-`buildlogs(entry_id, project_entry_id, log_date, hours_spent nullable)` rendered as the project timeline
+`buildlogs(entry_id, project_entry_id, log_date, hours_spent nullable)` rendered as the project timeline and at `/{lang}/projects/{project}/log/{slug}`. A log is in its project's language; deleting a project deletes its logs.
 
 ### presentation (replaces `talk`)
 `presentations(entry_id, pres_type: talk|workshop|lightning, event, city, date, talk_lang, slide_count, deck_r2_key, recording_url nullable, outline_json)`

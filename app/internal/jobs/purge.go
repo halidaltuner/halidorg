@@ -21,6 +21,14 @@ type Ref struct {
 	// Categories are a link's category and its parent, by slug: each has
 	// an awesome list page.
 	Categories []string `json:"categories,omitempty"`
+	// Homelab marks a homelab project: it is also on the homelab page.
+	Homelab bool `json:"homelab,omitempty"`
+	// Parent is a build log's project slug: the log lives under it and the
+	// project page shows its timeline.
+	Parent string `json:"parent,omitempty"`
+	// Logs are a project's build log slugs: their URLs sit under the
+	// project's, so they move (and are purged) with it.
+	Logs []string `json:"logs,omitempty"`
 }
 
 // Change is one entry change: its state now (nil when deleted), its state
@@ -83,6 +91,7 @@ var kindPath = map[string]string{
 	"post":    "posts",
 	"note":    "notes",
 	"snippet": "snippets",
+	"project": "projects",
 }
 
 // listPath is the URL segment of each kind's list page and per-kind feeds.
@@ -93,6 +102,7 @@ var listPath = map[string]string{
 	"snippet": "snippets",
 	"link":    "links",
 	"fav":     "favs",
+	"project": "projects",
 }
 
 // ListSegment is the URL segment of a kind's list page, or "".
@@ -103,7 +113,14 @@ func ListSegment(kind string) string { return listPath[kind] }
 func ItemSegment(kind string) string { return kindPath[kind] }
 
 // ItemPath is the public path of one entry, or "" for kinds without pages yet.
+// A build log lives under its project: /{lang}/projects/{project}/log/{slug}.
 func ItemPath(r Ref) string {
+	if r.Kind == "buildlog" {
+		if r.Slug == "" || r.Parent == "" || !i18n.IsSupported(r.Lang) {
+			return ""
+		}
+		return "/" + r.Lang + "/projects/" + r.Parent + "/log/" + r.Slug
+	}
 	seg, ok := kindPath[r.Kind]
 	if !ok || r.Slug == "" || !i18n.IsSupported(r.Lang) {
 		return ""
@@ -135,13 +152,21 @@ func Paths(c Change) []string {
 			continue
 		}
 		add(ItemPath(*r))
+		for _, s := range r.Logs {
+			add(ItemPath(Ref{Kind: "buildlog", Lang: r.Lang, Slug: s, Parent: r.Slug}))
+		}
+		if r.Kind == "buildlog" && i18n.IsSupported(r.Lang) {
+			// the project's timeline, and home's stream
+			add(ItemPath(Ref{Kind: "project", Lang: r.Lang, Slug: r.Parent}))
+			add("/" + r.Lang + "/")
+		}
 		for _, f := range r.Files {
 			add(RawPath(*r, f))
 		}
 		// The same slug under the other languages serves the "not translated
 		// yet" page (public.post), which renders this entry.
 		for _, l := range i18n.Supported {
-			if l != r.Lang {
+			if l != r.Lang && r.Kind != "buildlog" { // a log is always in its project's language
 				o := *r
 				o.Lang = l
 				add(ItemPath(o))
@@ -167,6 +192,9 @@ func Paths(c Change) []string {
 				}
 			}
 			add("/sitemap.xml")
+			if r.Kind == "project" && r.Homelab {
+				add(l + "/homelab")
+			}
 			if r.Kind == "link" && len(r.Categories) > 0 {
 				add(l + "/awesome") // the index counts the category's links
 				for _, c := range r.Categories {
