@@ -12,8 +12,8 @@ import (
 	"halid.org/engine/internal/store/storetest"
 )
 
-// Projects have their own feeds; projects and their build logs are in the
-// sitemap, a log under its project.
+// Projects have their own feeds, which carry their build logs; projects and
+// their build logs are in the sitemap, a log under its project.
 func TestProjectFeedAndSitemap(t *testing.T) {
 	t.Setenv("PUBLIC_ORIGIN", "https://halid.org")
 	ctx := context.Background()
@@ -39,6 +39,9 @@ func TestProjectFeedAndSitemap(t *testing.T) {
 	rec := get(t, mux, "/en/projects/feed.xml")
 	if rec.Code != 200 || !strings.Contains(rec.Body.String(), "<link>https://halid.org/en/projects/site</link>") {
 		t.Fatalf("feed %d %s", rec.Code, rec.Body.String())
+	}
+	if f := rec.Body.String(); !strings.Contains(f, "<title>halid.org: First</title>") || !strings.Contains(f, "<link>https://halid.org/en/projects/site/log/first</link>") {
+		t.Errorf("build log not in the projects feed: %s", f)
 	}
 	sm := get(t, mux, "/sitemap.xml").Body.String()
 	for _, want := range []string{"<loc>https://halid.org/en/projects</loc>", "<loc>https://halid.org/en/projects/site</loc>",

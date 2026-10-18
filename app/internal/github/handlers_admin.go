@@ -211,6 +211,23 @@ func (h *Admin) link(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.refresh(r)
+	// The repo's stream rows now open another page: its archive months too.
+	if res, err := h.db.Query(ctx, `SELECT DISTINCT strftime('%Y-%m', occurred_at, 'unixepoch') AS m FROM gh_activity WHERE repo = ?`, rp.FullName); err == nil {
+		ms, _ := store.Scan[struct {
+			M string `json:"m"`
+		}](res)
+		var months []string
+		for _, m := range ms {
+			months = append(months, m.M)
+		}
+		for paths := monthPaths(months); len(paths) > 0; {
+			n := min(len(paths), 50)
+			if err := jobs.EnqueuePages(ctx, h.jobs, paths[:n]...); err != nil {
+				slog.Error("enqueue pages.changed", "err", err)
+			}
+			paths = paths[n:]
+		}
+	}
 	http.Redirect(w, r, "/admin/github?done=saved", http.StatusSeeOther)
 }
 

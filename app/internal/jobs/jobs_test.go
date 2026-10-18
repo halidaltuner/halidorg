@@ -58,10 +58,16 @@ func TestPaths(t *testing.T) {
 	if got := Paths(Change{Now: &Ref{Kind: "project", Lang: "en", Slug: "site", Listed: true}}); contains(got, "/en/homelab") {
 		t.Errorf("software project on the homelab page: %v", got)
 	}
-	// A build log: its page under the project, the project page, the stream.
+	// A build log: its page under the project, the project page, the
+	// projects feeds, the stream.
 	logPaths := Paths(Change{Now: &Ref{Kind: "buildlog", Lang: "en", Slug: "brackets", Parent: "rack", Listed: true}})
-	if want := []string{"/en/", "/en/projects/rack", "/en/projects/rack/log/brackets", "/en/stream"}; !reflect.DeepEqual(logPaths, want) {
+	if want := []string{"/en/", "/en/projects/atom.xml", "/en/projects/feed.json", "/en/projects/feed.xml", "/en/projects/rack", "/en/projects/rack/log/brackets", "/en/stream"}; !reflect.DeepEqual(logPaths, want) {
 		t.Errorf("buildlog paths =\n%v\nwant\n%v", logPaths, want)
+	}
+	// The month it was published in (now and before) has a stream archive page.
+	moved := Paths(Change{Now: &Ref{Kind: "note", Lang: "en", Slug: "til", Listed: true, Month: "2026-10"}, Prev: &Ref{Kind: "note", Lang: "en", Slug: "til", Listed: true, Month: "2026-09"}})
+	if !contains(moved, "/en/stream/2026-10") || !contains(moved, "/en/stream/2026-09") {
+		t.Errorf("month paths %v", moved)
 	}
 	// Kinds without pages yet contribute nothing.
 	if got := Paths(Change{Now: &Ref{Kind: "garden", Lang: "en", Slug: "x"}}); len(got) != 0 {

@@ -143,7 +143,7 @@ The token owner's public data, synced every 6h (migrations/0009_github.sql, `int
 - Synced via GraphQL (`viewer`: pins, contribution calendar, public owned repos, 100 per page, up to 5 pages). The cron Worker enqueues `github.sync` at `17 */6 * * *`; `/admin/github` "run now" enqueues it too. The token is the Worker secret `GITHUB_TOKEN`, sent with each job delivery. Rate limits and network errors retry; a partial answer writes what came and fails the run so `job_runs` shows it. After a sync it queues `pages.changed` for `/{lang}/projects` and linked project pages.
 
 ### Stream
-Two queries merged in Go (`public.streamRows`), newest first: published public entries (post, note, snippet, link, fav, project, and build logs under a published project) in the page language, and `gh_activity` (the same rows in both languages; repos marked gone are left out). `radar_history` joins in Phase 6. Stream kinds: homelab builds and their logs are `homelab`, software projects, their logs and GitHub rows are `project`. Filterable by kind (`?kind=`), 30 rows a page, cursor-paginated by `?before={unix}.{id}` (rows older than the last one shown, ties broken by id). A GitHub row opens the published project in that language linked to its repo, else GitHub.
+Two queries merged in Go (`public.streamRows`), newest first: published public entries (post, note, snippet, link, fav, project, and build logs under a published project) in the page language, and `gh_activity` (the same rows in both languages; repos marked gone are left out). `radar_history` joins in Phase 6. Stream kinds: homelab builds and their logs are `homelab`, software projects, their logs and GitHub rows are `project`. Filterable by kind (`?kind=`). `/{lang}/stream` shows the newest 30 rows; older rows live on month archive pages `/{lang}/stream/{YYYY-MM}` (UTC, at most 500 rows), so every page has a stable KV key. An entry change re-renders the archive pages of the months it was published in before and after (`jobs.Ref.Month`); a GitHub sync re-renders the current month and the months of activity from the last 90 days, linking a repo every month of its activity. The sitemap lists the month pages. A GitHub row opens the published project in that language linked to its repo, else GitHub.
 
 ### Site settings
 `site_settings(key, value_json)` homelab stats, social links, footer tagline, 500px profile URL, default lang.
@@ -162,7 +162,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | fav | `/{lang}/favs?type=tool` |
 | project | `/{lang}/projects`, `/{lang}/projects/{slug}` |
 | homelab | `/{lang}/homelab?category=electronics` (detail uses `/projects/{slug}`) |
-| buildlog | `/{lang}/projects/{project}/log/{slug}` |
+| buildlog | `/{lang}/projects/{project}/log/{slug}` (in the projects feeds) |
 | presentation | `/{lang}/presentations?type=talk`, `/{lang}/presentations/{slug}` |
 | deck | `https://decks.halid.org/{slug}/` (isolated origin) |
 | photos | `/{lang}/photos?album={slug}` |
@@ -171,7 +171,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | term | `/{lang}/glossary/{slug}` |
 | radar | `/{lang}/radar?edition=2026-10` |
 | github | `/{lang}/github` (also embedded in Projects) |
-| stream | `/{lang}/stream?kind=note` |
+| stream | `/{lang}/stream?kind=note`, `/{lang}/stream/{YYYY-MM}` (month archive) |
 | pages | `/{lang}/now`, `/{lang}/now/archive`, `/{lang}/about`, `/{lang}/uses` |
 | feeds | `/{lang}/feed.xml`, `/{lang}/feed.json`, `/{lang}/{kind}/feed.xml`, `/{lang}/tags/{tag}/feed.xml` |
 | admin | `/admin/login`, `/admin/auth/callback`, `/admin/...` |

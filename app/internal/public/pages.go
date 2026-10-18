@@ -147,7 +147,7 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
 		p.Latest = cs[:min(3, len(cs))]
 	}
 	// Stream: every short-form kind too, grouped by day (design/Home.dc.html).
-	rows, err := streamRows(r.Context(), h.db, lang, "", streamCursor{}, streamSize)
+	rows, err := streamRows(r.Context(), h.db, lang, "", streamSpan{}, streamSize)
 	if err != nil {
 		h.fail(w, r, err)
 		return

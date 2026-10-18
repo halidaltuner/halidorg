@@ -58,6 +58,15 @@ func Entry(kind, lang, title, summary, slug string, publishedAt int64) Card {
 	return Card{Kind: kind, Title: title, Date: Date(publishedAt), Meta: "halid.org"}
 }
 
+// LogSection is the key section of build log cards: a log's slug is unique
+// per language, so its card stays put when its project's slug changes.
+const LogSection = "logs"
+
+// BuildLog is the card of a published build log.
+func BuildLog(lang, title, slug string, publishedAt int64) Card {
+	return Entry("build log", lang, title, "", slug, publishedAt)
+}
+
 // Site is the card for pages without their own: home, lists, tags.
 func Site(lang string) Card {
 	parts := make([]string, 0, 4)

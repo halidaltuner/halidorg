@@ -139,15 +139,23 @@ func (h *Handlers) postItems(ctx context.Context, lang, tag string) ([]item, err
 
 // kindItems reads the newest published entries of a short-form kind with the
 // HTML of their published revision. Links point at the link itself, favs at
-// their URL when they have one; notes and snippets at their page.
+// their URL when they have one; notes and snippets at their page. The
+// projects feed carries build logs too, under a published project, titled
+// "project: log".
 func (h *Handlers) kindItems(ctx context.Context, lang, kind string) ([]item, error) {
+	logs := ""
+	if kind == "project" {
+		logs = "buildlog"
+	}
 	res, err := h.db.Query(ctx, `SELECT e.slug, e.lang, e.title, e.summary, e.published_at, e.updated_at, r.body_html,
-  l.url AS link_url, f.url AS fav_url,
+  l.url AS link_url, f.url AS fav_url, pe.slug AS parent, pe.title AS parent_title,
   (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tags
 FROM entries e JOIN revisions r ON r.id = e.published_revision_id
 LEFT JOIN links l ON l.entry_id = e.id LEFT JOIN favs f ON f.entry_id = e.id
-WHERE e.kind = ? AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
-ORDER BY e.published_at DESC, e.id DESC LIMIT 20`, kind, lang)
+LEFT JOIN buildlogs b ON b.entry_id = e.id LEFT JOIN entries pe ON pe.id = b.project_entry_id
+WHERE e.kind IN (?, ?) AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
+  AND (e.kind <> 'buildlog' OR (pe.status = 'published' AND pe.visibility = 'public'))
+ORDER BY e.published_at DESC, e.id DESC LIMIT 20`, kind, logs, lang)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +169,8 @@ ORDER BY e.published_at DESC, e.id DESC LIMIT 20`, kind, lang)
 		HTML      string  `json:"body_html"`
 		LinkURL   *string `json:"link_url"`
 		FavURL    *string `json:"fav_url"`
+		Parent    *string `json:"parent"`
+		PTitle    *string `json:"parent_title"`
 		Tags      *string `json:"tags"`
 	}](res)
 	if err != nil {
@@ -176,6 +186,11 @@ ORDER BY e.published_at DESC, e.id DESC LIMIT 20`, kind, lang)
 			it.URL = *x.FavURL
 		case kind == "fav":
 			it.URL = h.origin + "/" + x.Lang + "/favs#" + x.Slug
+		case x.Parent != nil:
+			it.URL = h.origin + "/" + x.Lang + "/projects/" + *x.Parent + "/log/" + x.Slug
+			if x.PTitle != nil && *x.PTitle != "" {
+				it.Title = *x.PTitle + ": " + x.Title
+			}
 		default:
 			it.URL = h.origin + "/" + x.Lang + "/" + kindFeeds[kind] + "/" + x.Slug
 		}
@@ -422,6 +437,45 @@ ORDER BY 1, 2`)
 	return store.Scan[smRow](res)
 }
 
+// streamMonths lists the /stream archive pages that render: months with
+// stream rows per language (public.streamMonths; GitHub rows in both).
+func (h *Handlers) streamMonths(ctx context.Context) ([]smRow, error) {
+	res, err := h.db.Query(ctx, `SELECT DISTINCT e.lang, strftime('%Y-%m', e.published_at, 'unixepoch') AS slug FROM entries e
+LEFT JOIN buildlogs b ON b.entry_id = e.id LEFT JOIN entries pe ON pe.id = b.project_entry_id
+WHERE e.status = 'published' AND e.visibility = 'public' AND e.published_at IS NOT NULL
+  AND e.kind IN ('post', 'note', 'snippet', 'link', 'fav', 'project', 'buildlog')
+  AND (e.kind <> 'buildlog' OR (pe.status = 'published' AND pe.visibility = 'public'))
+ORDER BY 1, 2 LIMIT 2000`)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := store.Scan[smRow](res)
+	if err != nil {
+		return nil, err
+	}
+	res, err = h.db.Query(ctx, `SELECT DISTINCT strftime('%Y-%m', a.occurred_at, 'unixepoch') AS slug FROM gh_activity a
+JOIN gh_repos g ON g.full_name = a.repo WHERE g.gone = 0 ORDER BY 1 LIMIT 1000`)
+	if err != nil {
+		return nil, err
+	}
+	gh, err := store.Scan[smRow](res)
+	if err != nil {
+		return nil, err
+	}
+	seen := map[string]bool{}
+	for _, r := range rows {
+		seen[r.Lang+r.Slug] = true
+	}
+	for _, l := range i18n.Supported {
+		for _, m := range gh {
+			if !seen[l+m.Slug] {
+				rows = append(rows, smRow{Lang: l, Slug: m.Slug})
+			}
+		}
+	}
+	return rows, nil
+}
+
 // itemSegments are the kinds with a page per entry and their URL segment.
 var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects"}
 
@@ -466,6 +520,15 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, a := range awesome {
 		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + a.Lang + "/awesome/" + a.Slug})
+	}
+	months, err := h.streamMonths(r.Context())
+	if err != nil {
+		slog.Error("sitemap", "err", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	for _, m := range months {
+		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + m.Lang + "/stream/" + m.Slug})
 	}
 	h.writeXML(w, r, "application/xml; charset=utf-8", set)
 }

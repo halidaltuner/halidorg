@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
@@ -296,5 +297,24 @@ func TestShortFormKinds(t *testing.T) {
 	}
 	if h, pr := find(t, s.Search, "h:quiet"), find(t, s.Search, "pr:quiet"); len(h) != 1 || len(pr) != 1 || h[0] == pr[0] {
 		t.Errorf("h: %v, pr: %v", h, pr)
+	}
+
+	// A build log gets its own card, keyed by its slug (not its project's).
+	rack, err := projects.GetPublished(ctx, "en", "rack")
+	if err != nil {
+		t.Fatal(err)
+	}
+	logs := buildlog.NewRepo(s.DB)
+	b, err := logs.Create(ctx, buildlog.Draft{Buildlog: buildlog.Buildlog{Entry: content.Entry{Slug: "brackets", Lang: "en", Title: "brackets"},
+		ProjectID: rack.ID, LogDate: 1}, Markdown: "Printed."})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := logs.Publish(ctx, b.ID); err != nil {
+		t.Fatal(err)
+	}
+	run(b.ID)
+	if _, ok := blob.Objects["og/en/logs/brackets.png"]; !ok {
+		t.Error("build log card missing")
 	}
 }

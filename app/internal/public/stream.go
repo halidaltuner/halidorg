@@ -3,10 +3,8 @@ package public
 import (
 	"context"
 	"net/http"
-	"net/url"
 	"regexp"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -42,38 +40,36 @@ type streamRow struct {
 	Parent      *string `json:"parent"`
 }
 
-// streamCursor is where a /stream page starts: rows older than At, or as
-// old with a smaller id. The zero value is the first page.
-type streamCursor struct {
-	At int64
-	ID string
-}
+// streamSpan bounds stream rows by publish time: From inclusive, To
+// exclusive, unix seconds; zero means open.
+type streamSpan struct{ From, To int64 }
 
-func (c streamCursor) String() string { return strconv.FormatInt(c.At, 10) + "." + c.ID }
-
-// parseCursor reads ?before=; anything malformed is the first page.
-func parseCursor(s string) streamCursor {
-	at, id, ok := strings.Cut(s, ".")
-	n, err := strconv.ParseInt(at, 10, 64)
-	if !ok || err != nil || id == "" || len(id) > 120 {
-		return streamCursor{}
+// monthSpan is the span of a 2006-01 month, false when malformed.
+func monthSpan(m string) (streamSpan, bool) {
+	t, err := time.Parse("2006-01", m)
+	if err != nil || t.Format("2006-01") != m {
+		return streamSpan{}, false
 	}
-	return streamCursor{At: n, ID: id}
+	return streamSpan{From: t.Unix(), To: t.AddDate(0, 1, 0).Unix()}, true
 }
 
-// streamRows reads up to limit rows in lang, newest first, before the
-// cursor and of one kind when kind is set: published public entries of the
+// streamRows reads up to limit rows in lang, newest first, within span and
+// of one kind when kind is set: published public entries of the
 // stream kinds (build logs under a published project) and GitHub activity
 // (releases, new repos; the same rows in both languages).
-func streamRows(ctx context.Context, db store.DB, lang, kind string, before streamCursor, limit int) ([]streamRow, error) {
+func streamRows(ctx context.Context, db store.DB, lang, kind string, span streamSpan, limit int) ([]streamRow, error) {
 	where, args := "", []any{lang}
 	if kind != "" {
 		where += " AND kind = ?"
 		args = append(args, kind)
 	}
-	if before.ID != "" {
-		where += " AND (published_at < ? OR (published_at = ? AND id < ?))"
-		args = append(args, before.At, before.At, before.ID)
+	if span.From != 0 {
+		where += " AND published_at >= ?"
+		args = append(args, span.From)
+	}
+	if span.To != 0 {
+		where += " AND published_at < ?"
+		args = append(args, span.To)
 	}
 	ghArgs := append([]any{lang}, args[1:]...)
 	res, err := db.Query(ctx, `SELECT * FROM (
@@ -259,51 +255,108 @@ func streamKind(r *http.Request) string {
 
 // --- /stream (derive: the home stream as its own page) ----------------------
 
+// streamMonthMax bounds one month's archive page.
+const streamMonthMax = 500
+
 type streamPage struct {
 	page
+	Month      string // the archive month, empty on the first page
 	Stream     []streamDay
 	Chips      []filterChip
 	StreamKind string
-	Older      string // the next page's URL, empty on the last
-	Newest     string // the first page's URL, on later pages
+	Older      string // the next older page's URL, empty when none
+	Newer      string // the next newer page's URL (a month or the first page)
 }
 
-// streamPage serves /{lang}/stream: 30 rows a page, ?kind= filters in the
-// query (so pages stay full), ?before= continues after a row. Only the
-// first page is cached at the edge (a query string bypasses KV).
-func (h *Handlers) streamPage(w http.ResponseWriter, r *http.Request, lang string) {
+// streamPage serves /{lang}/stream: the newest 30 rows, then one archive
+// page per month (/{lang}/stream/2006-01), so every page has a stable path
+// in KV and an entry change re-renders only its own month (jobs.Paths).
+// ?kind= filters on the server (no-JS chips; a query string bypasses KV).
+func (h *Handlers) streamPage(w http.ResponseWriter, r *http.Request, lang, month string) {
 	kind := streamKind(r)
-	before := parseCursor(r.URL.Query().Get("before"))
-	rows, err := streamRows(r.Context(), h.db, lang, kind, before, streamSize+1)
+	span, limit := streamSpan{}, streamSize+1
+	if month != "" {
+		var ok bool
+		if span, ok = monthSpan(month); !ok {
+			h.notFound(w, r)
+			return
+		}
+		limit = streamMonthMax
+	}
+	rows, err := streamRows(r.Context(), h.db, lang, kind, span, limit)
 	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
-	more := len(rows) > streamSize
-	rows = rows[:min(streamSize, len(rows))]
-	p := streamPage{page: h.newPage(lang, "", i18n.T(lang, "stream.title")+" · halid.org", "/stream", nil), StreamKind: kind}
+	if month != "" && len(rows) == 0 && kind == "" {
+		h.notFound(w, r)
+		return
+	}
+	months, err := streamMonths(r.Context(), h.db, lang)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	base := "/" + lang + "/stream"
+	q := ""
+	if kind != "" {
+		q = "?kind=" + kind
+	}
+	title, path := i18n.T(lang, "stream.title"), "/stream"
+	p := streamPage{Month: month, StreamKind: kind}
+	if month == "" {
+		// Older: the month of the first row not shown, else nothing.
+		if len(rows) > streamSize {
+			p.Older = base + "/" + time.Unix(at(rows[streamSize]), 0).UTC().Format("2006-01") + q
+			rows = rows[:streamSize]
+		}
+	} else {
+		title += " · " + month
+		path += "/" + month
+		// months is newest first.
+		p.Newer = base + q
+		for i, m := range months {
+			if m == month {
+				if i > 0 {
+					p.Newer = base + "/" + months[i-1] + q
+				}
+				if i+1 < len(months) {
+					p.Older = base + "/" + months[i+1] + q
+				}
+			}
+		}
+	}
+	p.page = h.newPage(lang, "", title+" · halid.org", path, nil)
 	p.Head.Description = i18n.T(lang, "stream.sub")
-	if before.ID != "" || kind != "" {
+	if kind != "" {
 		p.Head.Noindex = true
 	}
 	p.Stream = stream(lang, "", rows)
-	path := "/" + lang + "/stream"
 	// Chips list every stream kind: a page holds only some of them.
-	p.Chips = chips(lang, path, "kind", kind, streamKinds, func(k string) string { return i18n.T(lang, "palette.kind."+k) })
-	q := url.Values{}
-	if kind != "" {
-		q.Set("kind", kind)
-	}
-	if before.ID != "" {
-		p.Newest = path
-		if kind != "" {
-			p.Newest += "?" + q.Encode()
-		}
-	}
-	if more {
-		last := rows[len(rows)-1]
-		q.Set("before", streamCursor{At: at(last), ID: last.ID}.String())
-		p.Older = path + "?" + q.Encode()
-	}
+	p.Chips = chips(lang, base+strings.TrimPrefix(path, "/stream"), "kind", kind, streamKinds, func(k string) string { return i18n.T(lang, "palette.kind."+k) })
 	h.render(w, r, "stream", p)
+}
+
+// streamMonths are the months with stream rows in lang, newest first.
+func streamMonths(ctx context.Context, db store.DB, lang string) ([]string, error) {
+	res, err := db.Query(ctx, `SELECT DISTINCT m FROM (
+SELECT strftime('%Y-%m', e.published_at, 'unixepoch') AS m FROM entries e
+LEFT JOIN buildlogs b ON b.entry_id = e.id LEFT JOIN entries pe ON pe.id = b.project_entry_id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public' AND e.published_at IS NOT NULL
+  AND e.kind IN ('post', 'note', 'snippet', 'link', 'fav', 'project', 'buildlog')
+  AND (e.kind <> 'buildlog' OR (pe.status = 'published' AND pe.visibility = 'public'))
+UNION
+SELECT strftime('%Y-%m', a.occurred_at, 'unixepoch') FROM gh_activity a JOIN gh_repos g ON g.full_name = a.repo WHERE g.gone = 0
+) ORDER BY m DESC LIMIT 600`, lang)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := store.Scan[struct {
+		M string `json:"m"`
+	}](res)
+	out := make([]string, 0, len(rows))
+	for _, r := range rows {
+		out = append(out, r.M)
+	}
+	return out, err
 }

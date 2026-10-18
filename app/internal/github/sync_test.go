@@ -97,6 +97,10 @@ func TestSyncJobAndAdmin(t *testing.T) {
 	if last.Type != jobs.TypePagesChanged || !strings.Contains(string(last.Payload), "/en/projects") {
 		t.Errorf("refresh %+v", last)
 	}
+	// The current month's stream archive page, not one from long ago.
+	if p := string(last.Payload); !strings.Contains(p, "/tr/stream/"+time.Now().UTC().Format("2006-01")) || strings.Contains(p, "/stream/2025-11") {
+		t.Errorf("month pages %s", p)
+	}
 	body = do("GET", "/admin/github", nil).Body.String()
 	for _, want := range []string{`>halid/site</a>`, "★ 42", `<span class="adm-st s-published">done</span>`, `pinned</span> unpin`} {
 		if !strings.Contains(body, want) {

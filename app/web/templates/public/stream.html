@@ -1,7 +1,7 @@
 {{define "content"}}<main class="list-page stream-page">
 <header class="list-head">
 <span class="eyebrow mono">// {{tr .Lang "stream.eyebrow"}}</span>
-<h1>{{tr .Lang "stream.title"}}</h1>
+<h1>{{tr .Lang "stream.title"}}{{with .Month}} <span class="stream-month mono">{{.}}</span>{{end}}</h1>
 </header>
 <section class="stream">
 <nav class="chips" aria-label="{{tr .Lang "stream.title"}}">{{range .Chips}}<a class="chip stream-chip k-{{or .Key "all"}}" href="{{.Href}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>
@@ -10,8 +10,8 @@
 {{- else}}
 <p class="empty">{{tr .Lang "stream.empty"}}</p>
 {{- end}}
-{{- if or .Newest .Older}}
-<nav class="stream-pager mono" aria-label="{{tr .Lang "stream.pages"}}">{{with .Newest}}<a href="{{.}}">← {{tr $.Lang "stream.newest"}}</a>{{end}}{{with .Older}}<a class="older" href="{{.}}">{{tr $.Lang "stream.older"}} →</a>{{end}}</nav>
+{{- if or .Newer .Older}}
+<nav class="stream-pager mono" aria-label="{{tr .Lang "stream.pages"}}">{{with .Newer}}<a href="{{.}}">← {{tr $.Lang "stream.newer"}}</a>{{end}}{{with .Older}}<a class="older" href="{{.}}">{{tr $.Lang "stream.older"}} →</a>{{end}}</nav>
 {{- end}}
 </section>
 </main>{{end}}

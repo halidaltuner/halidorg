@@ -2,6 +2,7 @@ package public
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -116,6 +117,7 @@ func TestProjectsPages(t *testing.T) {
 		t.Fatalf("log %d", code)
 	}
 	must(t, body, `<a class="mono back" href="/en/projects/rack#log">← 3-node rack</a>`, `<h1>log brackets</h1>`, `Did brackets.`,
+		`<meta property="og:image" content="https://halid.org/og/en/logs/brackets.png?v=`,
 		`<a class="next" href="/en/projects/rack/log/switch">log switch →`)
 	for _, p := range []string{"/en/projects/site/log/brackets", "/en/projects/secret", "/en/projects/nope", "/en/projects/rack/log/nope"} {
 		if code, _ := get(t, mux, p); code != 404 {
@@ -264,39 +266,24 @@ func TestStreamAndGitHubPages(t *testing.T) {
 	_, body = get(t, mux, "/en/stream?kind=project")
 	must(t, body, `site v0.4.0`, `>halid.org<`)
 
-	// Pages follow one another without gaps or repeats.
-	all, err := streamRows(ctx, db, "en", "", streamCursor{}, 100)
-	if err != nil || len(all) < 6 {
-		t.Fatalf("rows %d %v", len(all), err)
+	// Month archive pages: stable paths, whole months, linked in order.
+	code, body = get(t, mux, "/en/stream/2025-11")
+	if code != 200 {
+		t.Fatalf("month %d", code)
 	}
-	var paged []string
-	var cur streamCursor
-	for {
-		rows, err := streamRows(ctx, db, "en", "", cur, 2)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, r := range rows {
-			paged = append(paged, r.ID)
-		}
-		if len(rows) < 2 {
-			break
-		}
-		cur = streamCursor{At: at(rows[1]), ID: rows[1].ID}
+	must(t, body, `<span class="stream-month mono">2025-11</span>`, `<link rel="canonical" href="https://halid.org/en/stream/2025-11">`,
+		`<span class="stream-title">tool</span>`, `← newer</a>`)
+	if strings.Contains(body, "log switch") || strings.Contains(body, `class="older"`) {
+		t.Error("another month's rows, or an older page before the first month")
 	}
-	if len(paged) != len(all) {
-		t.Fatalf("paged %d rows, want %d", len(paged), len(all))
-	}
-	for i := range all {
-		if paged[i] != all[i].ID {
-			t.Fatalf("row %d: %s, want %s", i, paged[i], all[i].ID)
+	for _, p := range []string{"/en/stream/2025-13", "/en/stream/1999-01", "/en/stream/x"} {
+		if code, _ := get(t, mux, p); code != 404 {
+			t.Errorf("%s: %d", p, code)
 		}
 	}
-	if c := parseCursor(cur.String()); c != cur {
-		t.Errorf("cursor round trip %v", c)
-	}
-	if c := parseCursor("x.y"); c.ID != "" {
-		t.Errorf("bad cursor read %v", c)
+	months, err := streamMonths(ctx, db, "en")
+	if err != nil || len(months) < 2 || months[len(months)-1] != "2025-11" {
+		t.Fatalf("months %v %v", months, err)
 	}
 
 	code, body = get(t, mux, "/en/github")
@@ -323,4 +310,26 @@ func TestGitHubPageBeforeSync(t *testing.T) {
 	must(t, body, `GitHub verisi henüz senkronlanmadı.`)
 	_, body = get(t, mux, "/tr/stream")
 	must(t, body, `Henüz yayınlanmış bir şey yok.`)
+}
+
+func TestStreamFirstPageLinksOlderMonth(t *testing.T) {
+	mux, db := newSite(t)
+	created := time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC)
+	repo := github.Repo{ID: "R1", FullName: "halid/site", Name: "site", URL: "https://github.com/halid/site", CreatedAt: &created}
+	// 35 releases, one a day from 2026-03-01: the 31st newest falls in March.
+	for i := 0; i < 35; i++ {
+		at := time.Date(2026, 3, 1, 0, 0, 0, 0, time.UTC).AddDate(0, 0, i)
+		repo.Releases = append(repo.Releases, github.Release{ID: fmt.Sprintf("V%d", i), Tag: fmt.Sprintf("v%d", i),
+			URL: "https://github.com/halid/site/releases/x", PublishedAt: at})
+	}
+	if err := github.Write(context.Background(), db, github.Snapshot{Complete: true, Repos: []github.Repo{repo}}, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	_, body := get(t, mux, "/en/stream")
+	if n := strings.Count(body, `class="stream-row"`); n != 30 {
+		t.Errorf("first page %d rows", n)
+	}
+	must(t, body, `<a class="older" href="/en/stream/2026-03">older →</a>`)
+	_, body = get(t, mux, "/en/stream/2026-03?kind=project")
+	must(t, body, `<meta name="robots" content="noindex">`, `href="/en/stream/2025-01?kind=project">older →</a>`, `href="/en/stream/2026-04?kind=project">← newer</a>`)
 }
