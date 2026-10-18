@@ -86,7 +86,7 @@ var sections = []struct {
 	{"snippets", "/admin/snippets", "snippet", true, true},
 	{"links", "/admin/links", "link", true, true},
 	{"favs", "/admin/favs", "fav", true, true},
-	{"projects", "", "project", true, false},
+	{"projects", "/admin/projects", "project", true, true},
 	{"categories", "/admin/categories", "", false, true},
 	{"tags", "/admin/tags", "", false, true},
 	{"media", "/admin/media", "", false, true},

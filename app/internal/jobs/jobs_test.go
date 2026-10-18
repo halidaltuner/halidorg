@@ -46,6 +46,23 @@ func TestPaths(t *testing.T) {
 	if got := Paths(Change{Now: &Ref{Kind: "fav", Lang: "en", Slug: "ddia"}}); !contains(got, "/en/favs") || contains(got, "/en/favs/ddia") {
 		t.Errorf("fav paths = %v", got)
 	}
+	// A homelab project: its page, the projects list and feeds, the homelab
+	// page; a slug change moves its build logs too.
+	proj := Paths(Change{Now: &Ref{Kind: "project", Lang: "en", Slug: "rack", Listed: true, Homelab: true, Logs: []string{"brackets"}},
+		Prev: &Ref{Kind: "project", Lang: "en", Slug: "rack-old", Listed: true, Homelab: true, Logs: []string{"brackets"}}})
+	if want := []string{"/en/", "/en/homelab", "/en/projects", "/en/projects/atom.xml", "/en/projects/feed.json", "/en/projects/feed.xml",
+		"/en/projects/rack", "/en/projects/rack-old", "/en/projects/rack-old/log/brackets", "/en/projects/rack/log/brackets",
+		"/sitemap.xml", "/tr/projects/rack", "/tr/projects/rack-old"}; !reflect.DeepEqual(proj, want) {
+		t.Errorf("project paths =\n%v\nwant\n%v", proj, want)
+	}
+	if got := Paths(Change{Now: &Ref{Kind: "project", Lang: "en", Slug: "site", Listed: true}}); contains(got, "/en/homelab") {
+		t.Errorf("software project on the homelab page: %v", got)
+	}
+	// A build log: its page under the project, the project page, home.
+	logPaths := Paths(Change{Now: &Ref{Kind: "buildlog", Lang: "en", Slug: "brackets", Parent: "rack", Listed: true}})
+	if want := []string{"/en/", "/en/projects/rack", "/en/projects/rack/log/brackets"}; !reflect.DeepEqual(logPaths, want) {
+		t.Errorf("buildlog paths =\n%v\nwant\n%v", logPaths, want)
+	}
 	// Kinds without pages yet contribute nothing.
 	if got := Paths(Change{Now: &Ref{Kind: "garden", Lang: "en", Slug: "x"}}); len(got) != 0 {
 		t.Errorf("garden paths = %v", got)

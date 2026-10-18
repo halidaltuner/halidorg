@@ -1416,3 +1416,26 @@ html.pal-open { overflow: hidden; }
   .ent-file-head label:first-child { grid-column: 1 / -1; }
   .ent-list a { flex-direction: column; gap: 4px; }
 }
+
+/* Project and build log editor rows (Phase 4.1, derive) */
+.ent-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--sp-12); }
+.ent-rows { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+.ent-row { display: grid; gap: 6px; align-items: center; }
+.ent-row .mono { font-family: var(--font-mono); }
+.r-link { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 56px; }
+.r-fact { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) 56px; }
+.r-stack { grid-template-columns: minmax(0, 1fr) 56px; }
+.r-gallery { grid-template-columns: minmax(0, 1fr) 56px; }
+.r-part { grid-template-columns: minmax(0, 3fr) 56px minmax(0, 1fr) 64px minmax(0, 2fr) 56px; }
+/* The type radios show the stack or the parts, the category only for homelab. */
+.ent-form:has(input[name=project_type][value=software]:checked) .only-homelab,
+.ent-form:has(input[name=project_type][value=homelab]:checked) .only-software { display: none; }
+.ent-logs { border: 1px solid var(--border); border-radius: var(--radius-1); }
+.ent-logs-head { display: flex; justify-content: space-between; align-items: baseline; padding: 8px var(--sp-16); border-bottom: 1px solid var(--border-soft); font-size: var(--fs-12); }
+.ent-logs-head a { color: var(--link); text-decoration: none; }
+@media (max-width: 760px) {
+  .ent-two { grid-template-columns: minmax(0, 1fr); }
+  /* name / qty, price, currency, order / url */
+  .r-part { grid-template-columns: 56px minmax(0, 1fr) 64px 56px; grid-auto-flow: dense; padding-bottom: 6px; border-bottom: 1px solid var(--border-soft); }
+  .r-part .p-name, .r-part .p-url { grid-column: 1 / -1; }
+}

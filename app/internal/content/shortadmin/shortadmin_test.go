@@ -12,9 +12,11 @@ import (
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
+	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/jobs"
@@ -37,7 +39,7 @@ func newSite(t *testing.T) site {
 	j := jobs.New(s.DB, s.Queue)
 	mux := http.NewServeMux()
 	for _, f := range []func(store.DB, *admin.UI, *auth.Auth, *jobs.Jobs) (*shortadmin.Admin, error){
-		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor,
+		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor,
 	} {
 		e, err := f(s.DB, u, a, j)
 		if err != nil {
@@ -247,5 +249,70 @@ func TestLinkNoteFavEditors(t *testing.T) {
 	pid := idOf(t, rec, "/admin/links")
 	if l, _ := link.NewRepo(st.s.DB).Get(ctx, pid); l.Status != content.Published {
 		t.Errorf("new + publish: %s", l.Status)
+	}
+}
+
+func TestProjectEditor(t *testing.T) {
+	st := newSite(t)
+	ctx := context.Background()
+	rack := "01K0000000000000000000HM01"
+
+	body := st.do(st.fresh, "GET", "/admin/projects/new", nil).Body.String()
+	must(t, body, `name="project_type" value="software" checked`, `<option value="active" selected>active</option>`, `name="part_name"`, `name="tone" value="orange"`)
+
+	// A homelab build: rows, an amount typed the Turkish way, a bad amount.
+	f := url.Values{"title": {"3-node Proxmox cluster"}, "lang": {"en"}, "project_type": {"homelab"}, "project_status": {"running"},
+		"category": {rack}, "tagline": {"Three mini PCs."}, "currency": {"TRY"}, "time_spent": {"6 weekends"}, "started": {"2025-11"},
+		"tone": {"orange"}, "markdown": {"## Goal\n\nQuiet."},
+		"fact_key": {"nodes", "idle", ""}, "fact_value": {"3", "38 W", ""}, "fact_order": {"0", "1", "2"},
+		"part_name": {"3× N100 mini PC", "UPS", ""}, "part_qty": {"3", "", ""}, "part_price": {"27.000", "3.900,50", ""},
+		"part_currency": {"", "", ""}, "part_url": {"", "", ""}, "part_order": {"0", "1", "2"},
+		"link_label": {"build log", ""}, "link_url": {"#log", ""}, "link_order": {"0", "1"},
+		"cost_total": {"lots"}, "action": {"save"}}
+	rec := st.do(st.fresh, "POST", "/admin/projects", f)
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("bad cost %d", rec.Code)
+	}
+	must(t, rec.Body.String(), `The cost must be an amount (27000 or 149.90).`, `value="27000"`, `value="3900.50"`)
+	f.Set("cost_total", "")
+	id := idOf(t, st.do(st.fresh, "POST", "/admin/projects", f), "/admin/projects")
+	p, err := project.NewRepo(st.s.DB).Get(ctx, id)
+	if err != nil || p.Type != project.Homelab || len(p.Facts) != 2 || len(p.Parts) != 2 || *p.Parts[0].Price != 2700000 ||
+		*p.Parts[1].Price != 390050 || p.Parts[0].Qty != 3 || len(p.Links) != 1 || *p.StartedAt == 0 || *p.Tone != "orange" || p.Slug != "3-node-proxmox-cluster" {
+		t.Fatalf("project %+v %v", p, err)
+	}
+	body = st.do(st.fresh, "GET", "/admin/projects/"+id, nil).Body.String()
+	must(t, body, `value="27000"`, `value="3900.50"`, `value="2025-11"`, `name="project_type" value="homelab" checked`,
+		`href="/admin/buildlogs/new?project=`+id+`"`)
+
+	// Software cannot keep the parts.
+	f.Set("project_type", "software")
+	f.Set("slug", p.Slug)
+	if rec := st.do(st.fresh, "POST", "/admin/projects/"+id, f); rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("software with parts %d", rec.Code)
+	} else {
+		must(t, rec.Body.String(), `Only homelab builds have parts.`)
+	}
+
+	// A build log from the project page: project and language filled in.
+	body = st.do(st.fresh, "GET", "/admin/buildlogs/new?project="+id, nil).Body.String()
+	must(t, body, `<option value="`+id+`" selected>3-node Proxmox cluster · en</option>`, `name="lang" value="en" checked`, `type="date" name="log_date"`)
+	lid := idOf(t, st.do(st.fresh, "POST", "/admin/buildlogs", url.Values{"title": {"Printed the brackets"}, "lang": {"en"}, "project": {id},
+		"log_date": {"2026-10-09"}, "hours": {"2,5"}, "markdown": {"PLA, 4 hours of printing."}, "action": {"publish"}}), "/admin/buildlogs")
+	b, err := buildlog.NewRepo(st.s.DB).Get(ctx, lid)
+	if err != nil || b.Status != content.Published || *b.Hours != 2.5 || b.ProjectSlug != p.Slug {
+		t.Fatalf("log %+v %v", b, err)
+	}
+	must(t, st.do(st.fresh, "GET", "/admin/buildlogs/"+lid, nil).Body.String(),
+		`<a class="mono ent-view" href="/en/projects/3-node-proxmox-cluster/log/printed-the-brackets">`, `value="2026-10-09"`, `value="2.5"`,
+		`<a class="adm-nav-i sub" href="/admin/projects" aria-current="page">`)
+	must(t, st.do(st.fresh, "GET", "/admin/projects/"+id, nil).Body.String(), `<span class="ent-title">Printed the brackets</span>`)
+
+	// Deleting the project takes the log with it.
+	if rec := st.do(st.fresh, "POST", "/admin/projects/"+id+"/delete", url.Values{}); rec.Code != http.StatusSeeOther {
+		t.Fatalf("delete %d", rec.Code)
+	}
+	if _, err := buildlog.NewRepo(st.s.DB).Get(ctx, lid); err == nil {
+		t.Error("build log outlived its project")
 	}
 }

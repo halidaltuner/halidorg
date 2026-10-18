@@ -33,7 +33,7 @@ func NewEditor(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs) (*shortadmi
 	r := NewRepo(db)
 	return shortadmin.New(shortadmin.Kind{
 		Name: Kind, Section: "snippets", Body: true, Fields: "templates/snippet/admin_fields.html",
-		Public: func(e content.Entry) string { return "/" + e.Lang + "/snippets/" + e.Slug },
+		Public: func(d shortadmin.Draft) string { e := d.Base(); return "/" + e.Lang + "/snippets/" + e.Slug },
 		New:    func() shortadmin.Draft { return &Draft{Snippet: Snippet{Entry: content.Entry{Kind: Kind}}} },
 		Load: func(ctx context.Context, id string) (shortadmin.Draft, error) {
 			s, err := r.Get(ctx, id)

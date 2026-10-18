@@ -182,14 +182,16 @@ func (r *Repo) SetAlt(ctx context.Context, id, tr, en string) (Item, error) {
 	return r.Get(ctx, id)
 }
 
-// Delete removes an item that no entry uses as its cover. Markdown that
-// embeds the URL is not tracked; the admin warns about that.
+// Delete removes an item that no entry uses as its cover and no project
+// shows in its gallery. Markdown that embeds the URL is not tracked; the
+// admin warns about that.
 func (r *Repo) Delete(ctx context.Context, id string) error {
 	it, err := r.Get(ctx, id)
 	if err != nil {
 		return err
 	}
-	res, err := r.db.Query(ctx, `SELECT COUNT(*) AS n FROM entries WHERE cover_media_id = ?`, id)
+	res, err := r.db.Query(ctx, `SELECT (SELECT COUNT(*) FROM entries WHERE cover_media_id = ?)
+  + (SELECT COUNT(*) FROM project_gallery WHERE media_id = ?) AS n`, id, id)
 	if err != nil {
 		return err
 	}
