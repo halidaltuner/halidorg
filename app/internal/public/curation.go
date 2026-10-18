@@ -38,8 +38,21 @@ type linkRow struct {
 }
 
 type linkGroup struct {
-	Name, Href string
-	Items      []linkRow
+	Name, Href, Tone string // Tone is empty for "other"
+	Items            []linkRow
+}
+
+// catTone is a category's tone, else its parent's, else navy.
+func catTone(c content.Category, byID map[string]content.Category) string {
+	if c.Tone != nil && *c.Tone != "" {
+		return *c.Tone
+	}
+	if c.ParentID != nil {
+		if p, ok := byID[*c.ParentID]; ok && p.Tone != nil && *p.Tone != "" {
+			return *p.Tone
+		}
+	}
+	return "navy"
 }
 
 type linksPage struct {
@@ -82,6 +95,10 @@ func (h *Handlers) links(w http.ResponseWriter, r *http.Request, lang string) {
 	p.Head.Scripts = []string{"/static/js/filter.js", "/static/js/links.js"}
 	p.Chips = chips(lang, "/"+lang+"/links", "status", status, []string{link.Unread, link.Read}, func(k string) string { return i18n.T(lang, "links."+k) })
 
+	byID := map[string]content.Category{}
+	for _, c := range cats {
+		byID[c.ID] = c
+	}
 	byCat := map[string][]linkRow{}
 	for _, l := range list {
 		row := linkRow{ID: l.ID, Title: l.Title, URL: l.URL, Domain: l.Domain, Comment: l.Summary, Initial: initial(l.Domain), Read: l.ReadStatus == link.Read}
@@ -92,7 +109,7 @@ func (h *Handlers) links(w http.ResponseWriter, r *http.Request, lang string) {
 	}
 	for _, c := range cats {
 		if items := byCat[c.ID]; len(items) > 0 {
-			p.Groups = append(p.Groups, linkGroup{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Items: items})
+			p.Groups = append(p.Groups, linkGroup{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Tone: catTone(c, byID), Items: items})
 			delete(byCat, c.ID)
 		}
 	}
@@ -258,9 +275,9 @@ func (h *Handlers) awesome(w http.ResponseWriter, r *http.Request, lang string) 
 }
 
 type awesomeEntry struct {
-	Name, Href, CountLabel string
-	Count                  int
-	Parent                 *awesomeEntry // set for child categories
+	Name, Href, CountLabel, Tone string
+	Count                        int
+	Parent                       *awesomeEntry // set for child categories
 }
 
 type awesomeIndexPage struct {
@@ -302,7 +319,7 @@ func (h *Handlers) awesomeIndex(w http.ResponseWriter, r *http.Request, lang str
 		}
 	}
 	entry := func(c content.Category) awesomeEntry {
-		e := awesomeEntry{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Count: count[c.ID]}
+		e := awesomeEntry{Name: c.Name(lang), Href: "/" + lang + "/awesome/" + c.Slug, Tone: catTone(c, byID), Count: count[c.ID]}
 		key := "awesome.count"
 		if e.Count == 1 {
 			key = "awesome.count_one"

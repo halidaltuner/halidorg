@@ -190,6 +190,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Fav cards keep the striped cover with the type in mono, since favs have no image yet; the type dot is `--kind-fav`. Cards with a URL are links, and `#slug` targets a card (feed items point there) with the focus outline.
 - Awesome list (derive): the list head with the category tone (navy without one), a back link to links, a mono section index when there are child categories, then one H2 and bullet list per section: title in `--link`, domain in mono, comment on its own line.
 - Awesome navigation (after the staging check): the links intro ends with "all awesome lists →" (`/{lang}/awesome`), and each categorized group head has an "awesome →" link on the right in mono 12px `--link`; the group name alone did not read as a link. An awesome page links back to links and to the index.
+- Category tones show as an 8px dot in the tone's `--t-ink` before the name on `/links` group heads and `/awesome` index rows (a child without a tone takes its parent's, else navy; "other" has none). The awesome page header already carries the tone.
 - Awesome index (derive): the list head, then one row per category with links, children too, in category order: bold name, link count in mono, and for a child a small "part of {parent}" line. A parent's count includes its children's links, as its page lists them.
 
 ## 18. Implementation notes (Phase 2.4)
@@ -199,6 +200,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Publishing saves the draft first. Without a recent sign-in it goes through re-auth and comes back to the saved screen with "publish now".
 - The admin top bar's `+` opens Quick Capture (as in `Admin Dashboard.dc.html`), no longer the new post form.
 - The bookmarklet is a dashed `--link` pill ("drag me") with a one-line hint, under the Quick Capture card on wide screens and in a strip under the dashboard heading next to "+ quick capture" (hidden on touch screens). Clicked in place it does not navigate; the hint asks to drag it instead.
+- An address already saved as a link, a fav or a note's source shows a warning under the URL field (`--warning` left border on `--warning-tint`) with a link to the existing entry, its kind and status. Fetch shows it; a save that has not shown it re-renders with it (409) and saves nothing. The form then carries `dup_ok` with that address, so the next press saves; editing the address checks again. Comparison ignores the fragment, trailing slashes and case.
 
 ## 19. Implementation notes (Phase 2.5)
 - Home stream (`Home.dc.html`): posts, notes, snippets, links and favs in one day-grouped list. Each row has its kind's glyph tile (post `¶` cyan, note `~` indigo, snippet `{}` amber, link `↗` on `--surface-2` with `--text-muted`, fav `*` rose) and its meta: reading time, time of day, the first file's language, the domain, or the fav type. Untitled notes show their first line.

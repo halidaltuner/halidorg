@@ -16,6 +16,13 @@
 <button type="submit" class="qc-fetch" formmethod="get" formaction="/admin/quick" formnovalidate>{{tr .Lang "qc.fetch"}}</button>
 </div>
 {{- with .FetchError}}<p class="qc-hint">{{.}}</p>{{end}}
+{{- with .Duplicate}}
+<div class="qc-dup" role="status">
+<p>{{tr $.Lang "qc.dup"}} <a href="/admin/quick/saved/{{.ID}}">{{.KindLabel}}: {{if .Title}}{{.Title}}{{else}}{{tr $.Lang "admin.untitled"}}{{end}}</a> <span class="mono">· {{.Status}}</span></p>
+<p class="qc-dup-hint">{{tr $.Lang "qc.dup_hint"}}</p>
+<input type="hidden" name="dup_ok" value="{{$.URL}}">
+</div>
+{{- end}}
 </div>
 {{- if .Fetched}}
 <div class="qc-field">

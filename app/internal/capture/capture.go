@@ -98,6 +98,9 @@ type page struct {
 	Kinds       []option
 	Langs       []option
 	Bookmarklet template.URL
+	// Duplicate is an entry that already has this address. The form says
+	// so and carries dup_ok=URL, so pressing save again saves anyway.
+	Duplicate *duplicate
 }
 
 func (h *Handlers) newPage(r *http.Request) page {
@@ -152,6 +155,12 @@ func (h *Handlers) form(w http.ResponseWriter, r *http.Request) {
 			p.Kind = note.Kind
 		} else {
 			h.fill(r, &p)
+			dup, err := h.findDuplicate(r.Context(), p.Lang, p.URL)
+			if err != nil {
+				h.fail(w, err)
+				return
+			}
+			p.Duplicate = dup
 		}
 	}
 	p.options()
@@ -287,6 +296,21 @@ func (h *Handlers) save(w http.ResponseWriter, r *http.Request) {
 		p.options()
 		h.ui.Render(w, http.StatusUnprocessableEntity, h.page, p)
 		return
+	}
+	// Saved before? Say so once; the form then carries dup_ok with the
+	// address it was shown for, so editing the address checks again.
+	if p.URL != "" && r.FormValue("dup_ok") != p.URL {
+		dup, err := h.findDuplicate(r.Context(), p.Lang, p.URL)
+		if err != nil {
+			h.fail(w, err)
+			return
+		}
+		if dup != nil {
+			p.Duplicate = dup
+			p.options()
+			h.ui.Render(w, http.StatusConflict, h.page, p)
+			return
+		}
 	}
 	id, err := h.create(r.Context(), p)
 	var v content.ValidationError
