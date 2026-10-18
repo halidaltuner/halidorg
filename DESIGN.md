@@ -198,4 +198,4 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Before a fetch only the URL shows and draft / publish are disabled, as in the prototype. A failed fetch keeps the fields open so the title can be typed; fetching with an empty URL opens a note without a link.
 - Publishing saves the draft first. Without a recent sign-in it goes through re-auth and comes back to the saved screen with "publish now".
 - The admin top bar's `+` opens Quick Capture (as in `Admin Dashboard.dc.html`), no longer the new post form.
-- The bookmarklet link sits under the card on wide screens.
+- The bookmarklet is a dashed `--link` pill ("drag me") with a one-line hint, under the Quick Capture card on wide screens and in a strip under the dashboard heading next to "+ quick capture" (hidden on touch screens). Clicked in place it does not navigate; the hint asks to drag it instead.

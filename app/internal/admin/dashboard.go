@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"html/template"
 	"log/slog"
 	"net/http"
 	"net/url"
@@ -58,6 +59,7 @@ type dashPage struct {
 	NotFound                  []notFoundRow
 	Redirect                  redirectForm
 	Deleted                   string // slug of an entry just deleted from its editor
+	Bookmarklet               template.URL
 }
 
 type entryRec struct {
@@ -119,7 +121,7 @@ func (h *Handlers) dashboard(w http.ResponseWriter, r *http.Request) {
 // a plain (no-JS) post that failed validation.
 func (h *Handlers) renderDash(w http.ResponseWriter, r *http.Request, f redirectForm, status int) {
 	ctx := r.Context()
-	p := dashPage{Shell: h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.dash.title"), "dashboard"), Redirect: f}
+	p := dashPage{Shell: h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.dash.title"), "dashboard"), Redirect: f, Bookmarklet: Bookmarklet()}
 	if d := r.URL.Query().Get("deleted"); content.ValidSlug(d) {
 		p.Deleted = d
 	}

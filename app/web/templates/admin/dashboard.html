@@ -3,6 +3,7 @@
 <h1>{{tr .Lang "admin.dash.title"}}</h1>
 {{with .Deploy}}<span class="mono muted">{{tr $.Lang "admin.dash.deploy"}} {{.}}</span>{{end}}
 </div>
+{{template "capture-strip" .}}
 {{with .Deleted}}<p class="adm-flash mono" role="status">{{printf (tr $.Lang "admin.dash.deleted") .}}</p>{{end}}
 <div class="adm-grid">
 <section class="adm-panel">
@@ -63,3 +64,8 @@
 </tbody>
 </table>
 {{end}}
+
+{{define "capture-strip"}}<div class="adm-capture">
+<a class="adm-btn" href="/admin/quick">+ {{tr .Lang "qc.title"}}</a>
+{{template "bookmarklet" .}}
+</div>{{end}}

@@ -98,7 +98,8 @@ func TestFormAndFetch(t *testing.T) {
 	must(t, body, `<form class="qc" method="post" action="/admin/quick">`, `formmethod="get" formaction="/admin/quick"`,
 		`name="action" value="draft" disabled`, `<span class="adm-env">staging</span>`,
 		// Percent-encoded by html/template; browsers decode javascript: URLs before running them.
-		`href="javascript:%28%28%29=%3e%7bwindow.open%28%27https://staging.halid.org/admin/quick?url=%27&#43;encodeURIComponent%28location.href%29`)
+		`href="javascript:%28%28%29=%3e%7bwindow.open%28%27https://staging.halid.org/admin/quick?url=%27&#43;encodeURIComponent%28location.href%29`,
+		`class="bm-chip mono"`, `data-bookmarklet`, `Drag this to your bookmarks bar`)
 	if strings.Contains(body, "ZgotmplZ") || strings.Contains(body, `id="qc-title"`) {
 		t.Error("bookmarklet sanitized away or fields shown before a fetch")
 	}
