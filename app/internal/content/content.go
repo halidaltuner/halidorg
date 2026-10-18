@@ -402,3 +402,21 @@ func Slugify(title string) string {
 	}
 	return out
 }
+
+// Translation is where an entry's translation lives.
+type Translation struct {
+	Lang string `json:"lang"`
+	Slug string `json:"slug"`
+}
+
+// Translations lists the published, non-private entries of e's kind in its
+// translation group, e excluded.
+func Translations(ctx context.Context, db store.DB, e Entry) ([]Translation, error) {
+	res, err := db.Query(ctx, `SELECT lang, slug FROM entries
+WHERE translation_group_id = ? AND id <> ? AND kind = ? AND status = 'published' AND visibility <> 'private'
+ORDER BY lang`, e.TranslationGroupID, e.ID, e.Kind)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[Translation](res)
+}

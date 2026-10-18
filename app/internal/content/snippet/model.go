@@ -21,6 +21,16 @@ type Snippet struct {
 	CategoryID *string `json:"category_id"`
 	GistURL    string  `json:"gist_url"`
 	Files      []File  `json:"-"`
+	// HTML is the description of the published revision (GetPublished only).
+	HTML string `json:"-"`
+}
+
+// Item is one row of the public snippet list.
+type Item struct {
+	Slug        string `json:"slug"`
+	Title       string `json:"title"`
+	PublishedAt *int64 `json:"published_at"`
+	Language    string `json:"language"` // first file's language
 }
 
 // Draft is the input for Create and Save: Markdown is the description.

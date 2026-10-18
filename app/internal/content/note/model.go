@@ -12,6 +12,8 @@ type Note struct {
 	content.Entry
 	SourceURL string `json:"source_url"`
 	TIL       bool   `json:"til"`
+	// HTML is the body of the published revision (GetPublished and List).
+	HTML string `json:"-"`
 }
 
 // Draft is the input for Create and Save.

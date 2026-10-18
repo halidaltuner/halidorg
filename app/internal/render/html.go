@@ -1,6 +1,7 @@
 package render
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"html"
@@ -283,4 +284,15 @@ func highlight(w util.BufWriter, lang, code string, lineNumbers bool) {
 		}
 		w.WriteString("</span></span>")
 	}
+}
+
+// Code highlights one source file with numbered lines (snippet pages). The
+// markup is the same as a code group panel's, so the chroma classes in
+// app.css color it.
+func Code(lang, code string) string {
+	var b bytes.Buffer
+	w := bufio.NewWriter(&b)
+	highlight(w, lang, strings.TrimSuffix(code, "\n"), true)
+	_ = w.Flush()
+	return b.String()
 }
