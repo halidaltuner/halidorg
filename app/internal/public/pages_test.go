@@ -73,7 +73,7 @@ func TestHomeAndLists(t *testing.T) {
 	must(t, body,
 		`<a class="featured" href="/en/posts/htmx-admin">`,
 		`<h3>Leaving Ghost</h3>`,
-		`<a class="stream-row" href="/en/posts/ghost">`,
+		`<a class="stream-row" href="/en/posts/ghost" data-filter-value="post"><span class="glyph k-post mono" aria-hidden="true">¶</span>`,
 		`#htmx`,
 	)
 	if strings.Contains(body, "Sadece") {

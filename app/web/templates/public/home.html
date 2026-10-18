@@ -19,17 +19,20 @@
 <div class="section-head"><h2>{{tr .Lang "home.latest"}}</h2><a class="mono" href="/{{.Lang}}/posts">{{tr .Lang "home.all"}} →</a></div>
 <div class="card-grid">{{range .Latest}}{{template "post-card" .}}{{end}}</div>
 </section>
-<section class="home-section stream">
+{{- end}}
+{{- if .HasStream}}
+<section class="home-section stream" data-filter="kind"{{with .StreamKind}} data-filtered="{{.}}"{{end}}>
 <div class="section-head"><h2>{{tr .Lang "home.stream"}}</h2>
-<div class="chips"><span class="chip tone-cyan" aria-current="true">{{tr .Lang "stream.all"}}</span></div></div>
+<nav class="chips" aria-label="{{tr .Lang "home.stream"}}">{{range .Chips}}<a class="chip stream-chip k-{{or .Key "all"}}" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav></div>
 <div class="stream-box">
 {{- range .Stream}}
-<div class="stream-day"><div class="stream-date mono">{{.Day}}</div><div class="stream-items">
-{{- range .Items}}<a class="stream-row" href="{{.Href}}"><span class="glyph tone-cyan mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
+<div class="stream-day" data-filter-group><div class="stream-date mono">{{.Day}}</div><div class="stream-items">
+{{- range .Items}}<a class="stream-row" href="{{.Href}}" data-filter-value="{{.Kind}}"><span class="glyph k-{{.Kind}} mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
 </div></div>{{end}}
 </div>
 </section>
-{{- else}}
+{{- end}}
+{{- if not (or .Latest .HasStream)}}
 <section class="home-section"><p class="empty">{{tr .Lang "home.empty"}}</p></section>
 {{- end}}
 </main>{{end}}

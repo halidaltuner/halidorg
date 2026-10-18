@@ -672,6 +672,16 @@ body.dark { background: var(--dk-bg); }
 .stream-items { display: flex; flex-direction: column; }
 .stream-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 0; text-decoration: none; color: var(--text); }
 .stream-row:hover { color: var(--link); }
+/* Kind tones of the stream glyphs and chips (design/Home.dc.html). */
+.k-post { --t-tint: var(--tone-cyan-tint); --t-ink: var(--tone-cyan-ink); }
+.k-note { --t-tint: var(--tone-indigo-tint); --t-ink: var(--tone-indigo-ink); }
+.k-snippet { --t-tint: var(--tone-amber-tint); --t-ink: var(--tone-amber-ink); }
+.k-link { --t-tint: var(--surface-2); --t-ink: var(--text-muted); }
+.k-fav { --t-tint: var(--tone-rose-tint); --t-ink: var(--tone-rose-ink); }
+.k-all { --t-tint: var(--text); --t-ink: var(--text); }
+.stream-chip[aria-current] { background: var(--t-tint); color: var(--t-ink); border-color: var(--t-ink); }
+.stream-chip.k-all[aria-current] { color: var(--surface); }
+.stream [hidden] { display: none; }
 .glyph { width: 28px; height: 28px; border-radius: var(--radius-1); display: grid; place-items: center; font-size: var(--fs-12); font-weight: 700; background: var(--t-tint); color: var(--t-ink); }
 .stream-title { font-size: var(--fs-16); line-height: 1.5; text-wrap: pretty; }
 .stream-meta { font-size: var(--fs-12); color: var(--text-muted); }

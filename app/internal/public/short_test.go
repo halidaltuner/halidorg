@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/link"
 	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/store"
@@ -158,4 +159,34 @@ func TestNotesPages(t *testing.T) {
 	}
 	_, body = get(t, mux, "/tr/notes")
 	must(t, body, `Henüz yayınlanmış not yok.`)
+}
+
+func TestHomeStreamKinds(t *testing.T) {
+	mux, db := newSite(t)
+	seedShort(t, db)
+	if _, err := link.NewRepo(db).Create(context.Background(), link.Draft{}); err == nil {
+		t.Fatal("empty link accepted")
+	}
+	code, body := get(t, mux, "/en/")
+	if code != 200 {
+		t.Fatalf("home %d", code)
+	}
+	must(t, body,
+		`<section class="home-section stream" data-filter="kind">`,
+		`<a class="chip stream-chip k-all" href="/en/" data-filter-key="" aria-current="true">all</a>`,
+		`href="/en/?kind=note" data-filter-key="note">note</a>`,
+		`href="/en/?kind=snippet" data-filter-key="snippet">snippet</a>`,
+		// An untitled note shows its first line; its meta is the time.
+		`<a class="stream-row" href="/en/notes/loopvar" data-filter-value="note"><span class="glyph k-note mono" aria-hidden="true">~</span><span class="stream-title">Go 1.22 gives each loop iteration its own variable.</span>`,
+		`<a class="stream-row" href="/en/snippets/graceful" data-filter-value="snippet"><span class="glyph k-snippet mono" aria-hidden="true">{}</span><span class="stream-title">go: graceful shutdown</span><span class="stream-meta mono">go</span>`,
+		`/static/js/filter.js`,
+	)
+	if strings.Contains(body, `data-filter-key="fav"`) {
+		t.Error("chip for a kind without entries")
+	}
+	_, body = get(t, mux, "/en/?kind=note")
+	must(t, body, `data-filtered="note"`, `href="/en/?kind=note" data-filter-key="note" aria-current="true"`)
+	if strings.Contains(body, `data-filter-value="post"`) || strings.Contains(body, `data-filter-value="snippet"`) {
+		t.Error("other kinds in the note filter")
+	}
 }
