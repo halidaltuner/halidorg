@@ -135,11 +135,18 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 func staticHandler() http.Handler {
 	files := http.FileServerFS(web.Static)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Templates link CSS and JS with a content hash (web.Asset): those
-		// URLs never change content. Unversioned ones (fonts from CSS) stay short.
-		if r.URL.Query().Has("v") {
+		// Templates link CSS and JS with a content hash (web.Asset): a URL
+		// whose hash matches the file never changes content. Any other ?v= is
+		// an older page asking for an older file (KV keeps a page from the
+		// previous deploy until it is rendered again): it gets today's file,
+		// cached briefly, never pinned for a year under the old hash.
+		// Unversioned paths (fonts from CSS) stay at an hour.
+		switch {
+		case r.URL.Query().Has("v") && web.Asset(r.URL.Path) == r.URL.RequestURI():
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
-		} else {
+		case r.URL.Query().Has("v"):
+			w.Header().Set("Cache-Control", "public, max-age=60")
+		default:
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}
 		files.ServeHTTP(w, r)
