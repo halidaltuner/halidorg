@@ -187,7 +187,8 @@ func (h *Handlers) photoItems(ctx context.Context, lang string) ([]item, error) 
 	}
 	sort.SliceStable(list, func(i, j int) bool { return list[i].CreatedAt > list[j].CreatedAt })
 	list = list[:min(len(list), 20)]
-	keys := map[string]string{}
+	type img struct{ url, alt string }
+	imgs := map[string]img{}
 	if len(list) > 0 {
 		args := make([]any, len(list))
 		for i, x := range list {
@@ -211,15 +212,22 @@ func (h *Handlers) photoItems(ctx context.Context, lang string) ([]item, error) 
 			if lang == "tr" {
 				alt = m.AltTR
 			}
-			keys[m.ID] = `<p><img src="` + template.HTMLEscapeString(h.origin+"/"+m.Key) + `" alt="` + template.HTMLEscapeString(alt) + `"></p>`
+			imgs[m.ID] = img{h.origin + "/" + m.Key, alt}
 		}
 	}
 	out := make([]item, 0, len(list))
 	for _, x := range list {
 		created := x.CreatedAt
 		meta := strings.Trim(strings.Join([]string{x.Place, x.Camera, x.Exposure}, " · "), " ·")
+		body := "<p>" + template.HTMLEscapeString(meta) + "</p>"
+		if im, ok := imgs[x.MediaID]; ok {
+			if im.alt == "" {
+				im.alt = x.Title(lang)
+			}
+			body = `<p><img src="` + template.HTMLEscapeString(im.url) + `" alt="` + template.HTMLEscapeString(im.alt) + `"></p>` + body
+		}
 		out = append(out, item{Title: x.Title(lang), Summary: meta, URL: h.origin + "/" + lang + "/photos#p-" + x.ID,
-			Published: &created, Updated: x.UpdatedAt, HTML: keys[x.MediaID] + "<p>" + template.HTMLEscapeString(meta) + "</p>"})
+			Published: &created, Updated: x.UpdatedAt, HTML: body})
 	}
 	return out, nil
 }

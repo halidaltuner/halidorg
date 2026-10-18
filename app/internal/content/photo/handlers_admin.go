@@ -3,6 +3,7 @@ package photo
 import (
 	"errors"
 	"html/template"
+	"io"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -15,6 +16,7 @@ import (
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/jobs"
+	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/store"
 )
 
@@ -57,6 +59,7 @@ func (h *Admin) Register(mux *http.ServeMux) {
 	mux.Handle("POST /admin/photos/{id}/delete", admin.Guard(h.auth.RequireSession(h.auth.RequireRecentAuth(http.HandlerFunc(h.delete)))))
 	mux.Handle("POST /admin/photos/albums", w(h.saveAlbum))
 	mux.Handle("POST /admin/photos/albums/{id}/delete", w(h.deleteAlbum))
+	mux.Handle("POST /admin/photos/albums/{id}/upload", w(h.upload))
 }
 
 type listRow struct {
@@ -164,8 +167,7 @@ func (h *Admin) renderEdit(w http.ResponseWriter, r *http.Request, code int, p P
 	for _, a := range albums {
 		e.Albums = append(e.Albums, shortadmin.Option{Value: a.ID, Label: a.Name(lang), On: a.ID == p.AlbumID})
 	}
-	res, err := h.db.Query(ctx, `SELECT id, name FROM media WHERE mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> ''
-ORDER BY created_at DESC LIMIT 500`)
+	res, err := h.db.Query(ctx, `SELECT id, name FROM media WHERE mime LIKE 'image/%' ORDER BY created_at DESC LIMIT 500`)
 	if err != nil {
 		h.fail(w, err)
 		return
@@ -297,6 +299,66 @@ func (h *Admin) deleteAlbum(w http.ResponseWriter, r *http.Request) {
 	}
 	h.refresh(r)
 	http.Redirect(w, r, "/admin/photos?done=album_deleted", http.StatusSeeOther)
+}
+
+// upload adds every file in the "file" field to the album as a photo
+// (drafts unless "publish" is checked), then returns to the list.
+func (h *Admin) upload(w http.ResponseWriter, r *http.Request) {
+	lang := i18n.FromRequest(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 10*media.MaxBytes)
+	if err := r.ParseMultipartForm(media.MaxBytes); err != nil {
+		h.renderList(w, r, http.StatusUnprocessableEntity, []string{i18n.T(lang, "admin.photo.upload_too_large")})
+		return
+	}
+	defer func() { _ = r.MultipartForm.RemoveAll() }()
+	files := r.MultipartForm.File["file"]
+	if len(files) == 0 {
+		h.renderList(w, r, http.StatusUnprocessableEntity, []string{i18n.T(lang, "admin.media.no_file")})
+		return
+	}
+	publish := r.FormValue("publish") == "1"
+	var errs []string
+	added := 0
+	for _, fh := range files {
+		f, err := fh.Open()
+		if err != nil {
+			h.fail(w, err)
+			return
+		}
+		data, err := io.ReadAll(io.LimitReader(f, media.MaxBytes+1))
+		_ = f.Close()
+		if err != nil {
+			h.fail(w, err)
+			return
+		}
+		_, err = h.repo.Upload(r.Context(), r.PathValue("id"), fh.Filename, data, publish)
+		switch {
+		case errors.Is(err, content.ErrNotFound):
+			http.NotFound(w, r)
+			return
+		case errors.Is(err, media.ErrTooLarge):
+			errs = append(errs, fh.Filename+": "+i18n.T(lang, "admin.media.too_large"))
+		case errors.Is(err, media.ErrType):
+			errs = append(errs, fh.Filename+": "+i18n.T(lang, "admin.photo.bad_type"))
+		case err != nil:
+			h.fail(w, err)
+			return
+		default:
+			added++
+		}
+	}
+	if added > 0 {
+		h.refresh(r)
+	}
+	if len(errs) > 0 {
+		h.renderList(w, r, http.StatusUnprocessableEntity, errs)
+		return
+	}
+	done := "uploaded_draft"
+	if publish {
+		done = "uploaded"
+	}
+	http.Redirect(w, r, "/admin/photos?done="+done, http.StatusSeeOther)
 }
 
 // Paths are the pages that show photos.

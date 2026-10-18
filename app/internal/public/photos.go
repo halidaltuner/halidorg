@@ -68,6 +68,9 @@ func (h *Handlers) photos(w http.ResponseWriter, r *http.Request, lang string) {
 		if !ok {
 			continue
 		}
+		if im.Alt == "" {
+			im.Alt = x.Title(lang) // photos uploaded from an album carry no alt text of their own
+		}
 		a := byID[x.AlbumID]
 		count[a.Slug]++
 		t := photoTile{ID: x.ID, Title: x.Title(lang), Album: a.Name(lang), AlbumKey: a.Slug, Camera: x.Camera, Lens: x.Lens,

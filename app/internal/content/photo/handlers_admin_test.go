@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"image"
 	"image/jpeg"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -78,7 +79,6 @@ func TestAdmin(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, _ = m.SetAlt(ctx, img.ID, "kare", "frame")
 	if rec := do("POST", "/admin/photos/albums", url.Values{"name_tr": {"Sokak"}, "name_en": {"Street"}}); rec.Code != http.StatusSeeOther {
 		t.Fatalf("album %d %s", rec.Code, rec.Body.String())
 	}
@@ -112,5 +112,58 @@ func TestAdmin(t *testing.T) {
 	}
 	if rec := do("POST", "/admin/photos/albums/"+albums[0].ID+"/delete", url.Values{}); rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("album in use %d", rec.Code)
+	}
+
+	// Uploading from the album row adds drafts titled after the files, with
+	// their EXIF; a PDF is refused and the rest still go in.
+	upload := func(album string, publish bool, files map[string][]byte) *httptest.ResponseRecorder {
+		var b bytes.Buffer
+		mw := multipart.NewWriter(&b)
+		for name, data := range files {
+			fw, _ := mw.CreateFormFile("file", name)
+			_, _ = fw.Write(data)
+		}
+		if publish {
+			_ = mw.WriteField("publish", "1")
+		}
+		_ = mw.Close()
+		req := httptest.NewRequest("POST", "/admin/photos/albums/"+album+"/upload", &b)
+		req.Header.Set("Content-Type", mw.FormDataContentType())
+		req.Header.Set("Sec-Fetch-Site", "same-origin")
+		req.Header.Set("Accept-Language", "en")
+		req.AddCookie(fresh)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		return rec
+	}
+	if rec := upload(albums[0].ID, false, map[string][]byte{"ferry_wake.jpg": exifJPEG(t)}); rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/admin/photos?done=uploaded_draft" {
+		t.Fatalf("upload %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := upload(albums[0].ID, true, map[string][]byte{"balat-stairs.jpg": exifJPEG(t), "cv.pdf": []byte("%PDF-1.4\n%%EOF\n")}); rec.Code != http.StatusUnprocessableEntity ||
+		!strings.Contains(rec.Body.String(), "cv.pdf: Must be a JPEG") {
+		t.Errorf("pdf %d %s", rec.Code, rec.Body.String())
+	}
+	if rec := upload("nope", false, map[string][]byte{"x.jpg": exifJPEG(t)}); rec.Code != http.StatusNotFound {
+		t.Errorf("unknown album %d", rec.Code)
+	}
+	got := map[string]photo.Photo{}
+	all, _ = photo.NewRepo(s.DB, nil).All(ctx)
+	for _, x := range all {
+		got[x.TitleEN] = x
+	}
+	if x := got["ferry wake"]; x.Published || x.TitleTR != "ferry wake" || x.Camera != "X100V" || x.AlbumID != albums[0].ID {
+		t.Errorf("draft upload %+v", x)
+	}
+	if x := got["balat stairs"]; !x.Published {
+		t.Errorf("published upload %+v", x)
+	}
+	if len(all) != 3 {
+		t.Errorf("%d photos", len(all))
+	}
+	if ms, _ := m.List(ctx, 50); len(ms) != 3 {
+		t.Errorf("media %d: the pdf must not stay", len(ms))
+	}
+	if !strings.Contains(do("GET", "/admin/photos", nil).Body.String(), `action="/admin/photos/albums/`+albums[0].ID+`/upload" enctype="multipart/form-data"`) {
+		t.Error("upload form")
 	}
 }
