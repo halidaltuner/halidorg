@@ -77,7 +77,7 @@ func TestSnippetsPage(t *testing.T) {
 		`<a href="/en/snippets/graceful" aria-current="page">`,
 		`<h2>go: graceful shutdown</h2>`,
 		`<strong>SIGTERM</strong>`,
-		`#go</span>`,
+		` · #go</span>`,
 		`aria-selected="true" data-lang="go" data-raw="/en/snippets/graceful/raw/main.go">main.go</a>`,
 		`aria-selected="false" data-lang="bash" data-raw="/en/snippets/graceful/raw/run%20it.sh">run it.sh</a>`,
 		`<span class="snip-lang">go</span>`,

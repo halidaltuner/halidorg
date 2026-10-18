@@ -697,9 +697,11 @@ body.dark { background: var(--dk-bg); }
 .list-head h1 { margin: 0; font-size: var(--fs-48); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
 .list-head .back { font-size: var(--fs-13); color: var(--link); text-decoration: none; }
 
-/* Snippets (design/Snippets.dc.html): list on the left, viewer on the right. */
+/* Snippets (design/Snippets.dc.html): list on the left, viewer on the right.
+   Page widths here are the content width, as in the prototypes; the gutter
+   is added on top. */
 .snip-page {
-  max-width: var(--w-snippets); margin: 0 auto; padding: var(--sp-64) var(--gutter) 0;
+  max-width: calc(var(--w-snippets) + 2 * var(--gutter)); margin: 0 auto; padding: var(--sp-64) var(--gutter) 0;
   display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-48); align-items: start;
 }
 .snip-aside { display: flex; flex-direction: column; gap: var(--sp-16); max-width: 320px; min-width: 0; }
@@ -778,7 +780,7 @@ body.dark { background: var(--dk-bg); }
 .cur-title p { margin: 0; font-size: var(--fs-16); color: var(--text-muted); }
 .cur-page [hidden] { display: none; }
 
-.lk-page { max-width: var(--w-links); gap: var(--sp-48); }
+.lk-page { max-width: calc(var(--w-links) + 2 * var(--gutter)); gap: var(--sp-48); }
 .cat-dot { display: inline-block; width: 8px; height: 8px; margin-right: 8px; border-radius: 50%; background: var(--t-ink); vertical-align: 1px; }
 .lk-group { display: flex; flex-direction: column; }
 .lk-group-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-12); margin: 0 0 var(--sp-8); }
@@ -805,7 +807,7 @@ body.dark { background: var(--dk-bg); }
 button.lk-status { font-family: var(--font-mono); cursor: pointer; }
 button.lk-status:disabled { opacity: .6; cursor: progress; }
 
-.fv-page { max-width: var(--w-favs); gap: var(--sp-32); }
+.fv-page { max-width: calc(var(--w-favs) + 2 * var(--gutter)); gap: var(--sp-32); }
 .fv-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-16); }
 .fv-card {
   display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2);

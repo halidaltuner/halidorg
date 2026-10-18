@@ -13,7 +13,7 @@
 {{- if $.Untranslated}}
 <div class="banner-untranslated" lang="{{$.Lang}}">{{tr $.Lang "snippets.untranslated"}} <a href="{{$.OtherURL}}">{{tr $.Lang "post.read_original"}} →</a></div>
 {{- end}}
-<div class="snip-kind mono"><span class="kdot" aria-hidden="true"></span><span>{{tr $.Lang "palette.kind.snippet"}}{{with .Date}} · <time>{{.}}</time>{{end}}{{range .Tags}} #{{.}}{{end}}</span></div>
+<div class="snip-kind mono"><span class="kdot" aria-hidden="true"></span><span>{{tr $.Lang "palette.kind.snippet"}}{{with .Date}} · <time>{{.}}</time>{{end}}{{with .Tags}} ·{{range .}} #{{.}}{{end}}{{end}}</span></div>
 <h2>{{.Title}}</h2>
 {{- if .Desc}}<div class="snip-desc">{{.Desc}}</div>{{end}}
 {{- if .Files}}
