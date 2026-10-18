@@ -135,7 +135,7 @@ func formOptions(ctx context.Context, db store.DB, lang string, p *Draft) (optio
 	for _, l := range i18n.Supported {
 		o.Langs = append(o.Langs, shortadmin.Option{Value: l, Label: l, On: talk == l})
 	}
-	res, err := db.Query(ctx, `SELECT id, name FROM media WHERE mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> '' ORDER BY created_at DESC LIMIT 200`)
+	res, err := db.Query(ctx, `SELECT id, name FROM media WHERE mime LIKE 'image/%' ORDER BY created_at DESC LIMIT 200`)
 	if err != nil {
 		return o, err
 	}

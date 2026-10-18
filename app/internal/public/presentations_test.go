@@ -1,12 +1,16 @@
 package public
 
 import (
+	"bytes"
 	"context"
+	stdimage "image"
+	stdpng "image/png"
 	"strings"
 	"testing"
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/presentation"
+	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/store/storetest"
 )
@@ -119,6 +123,24 @@ func TestPresentationsPages(t *testing.T) {
 	if code, _ := get(t, mux, "/en/presentations/radar"); code != 404 {
 		t.Errorf("draft page %d", code)
 	}
+
+	// A cover without alt text (uploaded straight to media) takes the title.
+	var png bytes.Buffer
+	_ = stdpng.Encode(&png, stdimage.NewRGBA(stdimage.Rect(0, 0, 16, 9)))
+	img, err := media.NewRepo(db, storetest.NewBlob()).Upload(context.Background(), "title.png", png.Bytes())
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := presentation.NewRepo(db)
+	talk.CoverMediaID = &img.ID
+	if _, err := r.Save(context.Background(), presentation.Draft{Presentation: talk, Markdown: "A year ago I replaced a React admin."}, content.OriginManual); err != nil {
+		t.Fatalf("cover without alt: %v", err)
+	}
+	if _, err := r.Publish(context.Background(), talk.ID); err != nil {
+		t.Fatal(err)
+	}
+	_, body = get(t, mux, "/en/presentations")
+	must(t, body, `<img src="/`+img.R2Key+`" alt="htmx in production"`)
 
 	// Home and About get the talks card.
 	_, body = get(t, mux, "/en/")

@@ -127,7 +127,8 @@ func RowsOf(p *Presentation, dataJSON string) {
 	p.Outline, p.Links = d.Outline, d.Links
 }
 
-// check validates p and its cover: an image with both alt texts.
+// check validates p and its cover: an image from media. Its alt text is the
+// media item's, else the presentation title.
 func (r *Repo) check(ctx context.Context, p Presentation) error {
 	if err := Validate(p); err != nil {
 		return err
@@ -135,7 +136,7 @@ func (r *Repo) check(ctx context.Context, p Presentation) error {
 	if p.CoverMediaID == nil {
 		return nil
 	}
-	res, err := r.db.Query(ctx, `SELECT COUNT(*) AS n FROM media WHERE id = ? AND mime LIKE 'image/%' AND trim(alt_tr) <> '' AND trim(alt_en) <> ''`,
+	res, err := r.db.Query(ctx, `SELECT COUNT(*) AS n FROM media WHERE id = ? AND mime LIKE 'image/%'`,
 		*p.CoverMediaID)
 	if err != nil {
 		return err
@@ -147,7 +148,7 @@ func (r *Repo) check(ctx context.Context, p Presentation) error {
 		return err
 	}
 	if len(n) == 0 || n[0].N == 0 {
-		return content.ValidationError{"cover": "an image with both alt texts"}
+		return content.ValidationError{"cover": "an image from media"}
 	}
 	return nil
 }
