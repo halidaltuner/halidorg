@@ -10,7 +10,7 @@
 {{- range .Lists}}
 <li>
 <div class="aw-index-line"><a href="{{.Href}}">awesome {{.Name}}</a><span class="mono">{{.CountLabel}}</span></div>
-{{- if .Children}}<div class="aw-index-children mono">{{range .Children}}<a href="{{.Href}}">{{.Name}} · {{.Count}}</a>{{end}}</div>{{end}}
+{{- with .Parent}}<div class="aw-index-parent mono">{{tr $.Lang "awesome.in"}} <a href="{{.Href}}">{{.Name}}</a></div>{{end}}
 </li>
 {{- end}}
 </ul>

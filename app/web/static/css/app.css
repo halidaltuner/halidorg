@@ -827,8 +827,8 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
 .aw-index-line a { font-size: var(--fs-18); font-weight: 600; color: var(--text); text-decoration: none; }
 .aw-index-line a:hover { color: var(--link); }
 .aw-index-line .mono { font-size: var(--fs-12); color: var(--text-muted); }
-.aw-index-children { display: flex; flex-wrap: wrap; gap: var(--sp-4) var(--sp-16); font-size: var(--fs-13); }
-.aw-index-children a { color: var(--link); text-decoration: none; }
+.aw-index-parent { font-size: var(--fs-12); color: var(--text-muted); }
+.aw-index-parent a { color: var(--link); text-decoration: none; }
 .aw-toc { display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-16); font-size: var(--fs-13); }
 .aw-toc a { color: var(--link); text-decoration: none; }
 .aw-section { display: flex; flex-direction: column; gap: var(--sp-12); scroll-margin-top: var(--sp-24); }

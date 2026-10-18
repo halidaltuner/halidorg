@@ -188,12 +188,13 @@ func TestAwesomeIndex(t *testing.T) {
 		`<h1>awesome</h1>`,
 		// architecture counts its own 2 links and the 1 in books.
 		`<a href="/en/awesome/architecture">awesome architecture</a><span class="mono">3 links</span>`,
-		`<div class="aw-index-children mono"><a href="/en/awesome/arch-books">books · 1</a></div>`,
+		`<a href="/en/awesome/arch-books">awesome books</a><span class="mono">1 link</span>`,
+		`<div class="aw-index-parent mono">part of <a href="/en/awesome/architecture">architecture</a></div>`,
 		`<a href="/en/awesome/postgres">awesome postgres</a><span class="mono">1 link</span>`,
 		`<link rel="canonical" href="https://halid.org/en/awesome">`,
 	)
-	if strings.Contains(body, `href="/en/awesome/arch-books">awesome books`) {
-		t.Error("a child category listed as a top-level list")
+	if i, j := strings.Index(body, "awesome architecture"), strings.Index(body, "awesome books"); i < 0 || j < i {
+		t.Error("lists not in category order")
 	}
 	_, body = get(t, mux, "/tr/awesome")
 	must(t, body, `Burada henüz bağlantı yok.`)

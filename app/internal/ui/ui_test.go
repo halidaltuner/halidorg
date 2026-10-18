@@ -163,3 +163,26 @@ func TestDeployHeader(t *testing.T) {
 		}
 	}
 }
+
+// A binary with a build SHA names its own commit, whatever the Worker
+// says: during a rollout an old container must not claim the new deploy.
+func TestBuildSHAWins(t *testing.T) {
+	before, prev := buildSHA, deploySHA.Load()
+	t.Cleanup(func() { buildSHA = before; deploySHA.Store(prev) })
+	buildSHA = "ee45ac5c8bf76bcf861d06e8138cb3a2de485f59"
+	h := DeployHeader(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte(Deploy())) }))
+	req := httptest.NewRequest("GET", "/en/", nil)
+	req.Header.Set("X-Deploy-Sha", "bc5bbc19561cdee7620cf0e6a7975e98e6f1e053")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Body.String() != "ee45ac5" || rec.Header().Get(BuildHeader) != buildSHA {
+		t.Fatalf("footer %q, header %q", rec.Body.String(), rec.Header().Get(BuildHeader))
+	}
+	// Without one, the Worker's header still names the deploy (local, tests).
+	buildSHA = ""
+	rec = httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Body.String() != "bc5bbc1" || rec.Header().Get(BuildHeader) != "" {
+		t.Fatalf("fallback footer %q, header %q", rec.Body.String(), rec.Header().Get(BuildHeader))
+	}
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta } from "../src/cache";
+import { cacheKey, etagMatches, isCacheableRequest, isCacheableResponse, isStale, type PageMeta, renderedBy } from "../src/cache";
 
 const req = (path: string, init?: RequestInit) => new Request(`https://halid.org${path}`, init);
 const html = (headers: Record<string, string>, status = 200) =>
@@ -67,5 +67,20 @@ describe("isStale", () => {
 		expect(isStale(meta("new"), "new")).toBe(false);
 		expect(isStale(meta("old"), undefined)).toBe(false);
 		expect(isStale(meta("old"), "")).toBe(false);
+	});
+});
+
+describe("renderedBy", () => {
+	const res = (sha?: string) => new Response("x", { headers: sha === undefined ? {} : { "X-Build-Sha": sha } });
+	it("names the container's build when it sends one", () => {
+		expect(renderedBy(res("ee45ac5c8bf76bcf861d06e8138cb3a2de485f59"), "bc5bbc1")).toBe("ee45ac5c8bf76bcf861d06e8138cb3a2de485f59");
+	});
+	it("falls back to the deploy for missing or bad values", () => {
+		expect(renderedBy(res(), "bc5bbc1")).toBe("bc5bbc1");
+		expect(renderedBy(res("not a sha"), "bc5bbc1")).toBe("bc5bbc1");
+	});
+	it("keeps an old container's page stale under the new deploy", () => {
+		const meta = { etag: "", contentType: "text/html", storedAt: 0, deploy: renderedBy(res("ee45ac5"), "bc5bbc1") };
+		expect(isStale(meta, "bc5bbc1")).toBe(true);
 	});
 });
