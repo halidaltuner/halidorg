@@ -382,6 +382,7 @@ type smAlt struct {
 }
 
 type smRow struct {
+	Kind      string `json:"kind"`
 	Lang      string `json:"lang"`
 	Slug      string `json:"slug"`
 	Group     string `json:"translation_group_id"`
@@ -389,13 +390,36 @@ type smRow struct {
 }
 
 func (h *Handlers) sitemapRows(ctx context.Context) ([]smRow, error) {
-	res, err := h.db.Query(ctx, `SELECT lang, slug, translation_group_id, updated_at FROM entries
-WHERE kind = 'post' AND status = 'published' AND visibility = 'public' ORDER BY published_at DESC LIMIT 5000`)
+	res, err := h.db.Query(ctx, `SELECT kind, lang, slug, translation_group_id, updated_at FROM entries
+WHERE kind IN ('post', 'note', 'snippet') AND status = 'published' AND visibility = 'public'
+ORDER BY published_at DESC LIMIT 5000`)
 	if err != nil {
 		return nil, err
 	}
 	return store.Scan[smRow](res)
 }
+
+// awesomeRows lists the awesome pages that render: link categories, and
+// their parents, with published public links in a language.
+func (h *Handlers) awesomeRows(ctx context.Context) ([]smRow, error) {
+	res, err := h.db.Query(ctx, `SELECT DISTINCT e.lang, c.slug FROM links l
+JOIN entries e ON e.id = l.entry_id JOIN categories c ON c.id = l.category_id
+WHERE e.status = 'published' AND e.visibility = 'public'
+UNION
+SELECT DISTINCT e.lang, p.slug FROM links l
+JOIN entries e ON e.id = l.entry_id JOIN categories c ON c.id = l.category_id JOIN categories p ON p.id = c.parent_id
+WHERE e.status = 'published' AND e.visibility = 'public'
+ORDER BY 1, 2`)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[smRow](res)
+}
+
+// itemSegments are the kinds with a page per entry and their URL segment.
+var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets"}
+
+func itemPath(r smRow) string { return "/" + r.Lang + "/" + itemSegments[r.Kind] + "/" + r.Slug }
 
 func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	rows, err := h.sitemapRows(r.Context())
@@ -405,8 +429,8 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
-	// Home and post list exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts"} {
+	// Home and the list pages exist in every language: alternate each other.
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})
@@ -420,13 +444,22 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 		groups[row.Group] = append(groups[row.Group], row)
 	}
 	for _, row := range rows {
-		u := smURL{Loc: h.origin + "/" + row.Lang + "/posts/" + row.Slug, LastMod: time.Unix(row.UpdatedAt, 0).UTC().Format("2006-01-02")}
+		u := smURL{Loc: h.origin + itemPath(row), LastMod: time.Unix(row.UpdatedAt, 0).UTC().Format("2006-01-02")}
 		if sibs := groups[row.Group]; len(sibs) > 1 {
 			for _, s := range sibs {
-				u.Alts = append(u.Alts, smAlt{Rel: "alternate", Hreflang: s.Lang, Href: h.origin + "/" + s.Lang + "/posts/" + s.Slug})
+				u.Alts = append(u.Alts, smAlt{Rel: "alternate", Hreflang: s.Lang, Href: h.origin + itemPath(s)})
 			}
 		}
 		set.URLs = append(set.URLs, u)
+	}
+	awesome, err := h.awesomeRows(r.Context())
+	if err != nil {
+		slog.Error("sitemap", "err", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	for _, a := range awesome {
+		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + a.Lang + "/awesome/" + a.Slug})
 	}
 	h.writeXML(w, r, "application/xml; charset=utf-8", set)
 }

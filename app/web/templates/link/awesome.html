@@ -1,0 +1,18 @@
+{{define "content"}}<main class="list-page aw-page">
+<header class="list-head tone-{{.Tone}}">
+<span class="eyebrow mono">↗ // awesome</span>
+<h1>awesome {{.Name}}</h1>
+<a class="mono back" href="/{{.Lang}}/links">← {{tr .Lang "nav.links"}}</a>
+</header>
+{{- if gt (len .Sections) 1}}
+<nav class="aw-toc mono" aria-label="{{tr .Lang "awesome.sections"}}">{{range .Sections}}<a href="#{{.ID}}">{{.Name}}</a>{{end}}</nav>
+{{- end}}
+{{- range .Sections}}
+<section class="aw-section" id="{{.ID}}">
+<h2>{{.Name}}</h2>
+<ul>
+{{- range .Items}}<li><a href="{{.URL}}">{{.Title}}</a> <span class="mono">{{.Domain}}</span>{{with .Comment}}<span class="aw-comment">{{.}}</span>{{end}}</li>{{end}}
+</ul>
+</section>
+{{- end}}
+</main>{{end}}

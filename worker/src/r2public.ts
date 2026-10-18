@@ -2,6 +2,7 @@
 // container (CLAUDE.md: public pages must not depend on a warm container):
 //   /og/...    OG cards rendered by the entry.changed job (render/og)
 //   /media/... images from the admin media library (internal/media)
+//   /favicons/{domain}.{ext} link favicons fetched by the entry.changed job
 
 export interface R2PublicEnv {
 	MEDIA: R2Bucket;
@@ -10,13 +11,22 @@ export interface R2PublicEnv {
 const KEYS = [
 	/^og\/[a-z]{2}\/(?:[a-z0-9-]+\/)?[a-z0-9-]+\.png$/,
 	/^media\/[0-9A-Z]{26}\/[a-z0-9-]+\.(?:png|jpg|gif|webp)$/,
+	/^favicons\/[a-z0-9-]+(?:\.[a-z0-9-]+)+\.(?:png|jpg|gif|webp|ico)$/,
 ];
 
-const TYPES: Record<string, string> = { png: "image/png", jpg: "image/jpeg", gif: "image/gif", webp: "image/webp" };
+const PREFIXES = ["/og/", "/media/", "/favicons/"];
 
-/** Returns the object for /og/ and /media/ paths, or null for other paths. */
+const TYPES: Record<string, string> = {
+	png: "image/png",
+	jpg: "image/jpeg",
+	gif: "image/gif",
+	webp: "image/webp",
+	ico: "image/x-icon",
+};
+
+/** Returns the object for /og/, /media/ and /favicons/ paths, or null for other paths. */
 export async function serveR2Public(req: Request, url: URL, env: R2PublicEnv): Promise<Response | null> {
-	if (!url.pathname.startsWith("/og/") && !url.pathname.startsWith("/media/")) return null;
+	if (!PREFIXES.some((p) => url.pathname.startsWith(p))) return null;
 	if (req.method !== "GET" && req.method !== "HEAD") {
 		return new Response("Method Not Allowed", { status: 405, headers: { Allow: "GET, HEAD" } });
 	}
@@ -25,13 +35,15 @@ export async function serveR2Public(req: Request, url: URL, env: R2PublicEnv): P
 	const obj = await env.MEDIA.get(key);
 	if (!obj) return notFound();
 	// Media keys carry a ULID and never change; OG cards are versioned by ?v=.
+	// A favicon keeps its key when the job fetches it again.
 	const immutable = key.startsWith("media/") || url.searchParams.has("v");
+	const maxAge = key.startsWith("favicons/") ? 86400 : 3600;
 	const ext = key.slice(key.lastIndexOf(".") + 1);
 	const headers = new Headers({
 		// The type comes from the extension the app chose after sniffing, not
 		// from what an uploader claimed.
 		"Content-Type": TYPES[ext] ?? "application/octet-stream",
-		"Cache-Control": immutable ? "public, max-age=31536000, immutable" : "public, max-age=3600",
+		"Cache-Control": immutable ? "public, max-age=31536000, immutable" : `public, max-age=${maxAge}`,
 		ETag: obj.httpEtag,
 		"X-Content-Type-Options": "nosniff",
 		"Content-Security-Policy": "default-src 'none'; sandbox",

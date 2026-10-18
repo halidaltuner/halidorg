@@ -33,7 +33,8 @@ type EntryJobs struct {
 	search store.DB
 	blob   store.Blob
 	warm   *Warmer
-	origin string // PUBLIC_ORIGIN: absolute links on it count as internal
+	origin string   // PUBLIC_ORIGIN: absolute links on it count as internal
+	icons  Favicons // nil: links keep the initial instead of a favicon
 }
 
 // NewEntryJobs wires the handler; register it with jobs.Handle. blob is
@@ -66,6 +67,7 @@ type entryRow struct {
 	DataJSON   *string `json:"data_json"`
 	Extra      *string `json:"extra"`
 	Tags       *string `json:"tags"`
+	Categories *string `json:"categories"`
 	Published  *int64  `json:"published_at"`
 	Minutes    *int    `json:"reading_minutes"`
 }
@@ -80,6 +82,9 @@ func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
   CASE e.kind WHEN 'link' THEN (SELECT l.domain || ' ' || l.url FROM links l WHERE l.entry_id = e.id)
               WHEN 'fav' THEN (SELECT coalesce(f.author, '') || ' ' || f.fav_type FROM favs f WHERE f.entry_id = e.id) END AS extra,
   (SELECT reading_minutes FROM posts WHERE entry_id = e.id) AS reading_minutes,
+  -- a link's category and its parent: both awesome pages list it
+  (SELECT c.slug || coalesce(' ' || p.slug, '') FROM links l JOIN categories c ON c.id = l.category_id
+     LEFT JOIN categories p ON p.id = c.parent_id WHERE l.entry_id = e.id) AS categories,
   (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tags
 FROM entries e
 LEFT JOIN revisions r ON r.id = CASE WHEN e.status = 'published' THEN e.published_revision_id ELSE e.current_revision_id END
@@ -102,8 +107,17 @@ func (r *entryRow) tags() []string {
 }
 
 func (r *entryRow) ref() Ref {
-	return Ref{Kind: r.Kind, Lang: r.Lang, Slug: r.Slug, Tags: r.tags(),
+	ref := Ref{Kind: r.Kind, Lang: r.Lang, Slug: r.Slug, Tags: r.tags(), Title: r.Title,
 		Listed: r.Status == content.Published && r.Visibility == content.Public}
+	if r.Categories != nil {
+		ref.Categories = strings.Fields(*r.Categories)
+	}
+	if r.Kind == "snippet" && r.DataJSON != nil {
+		for _, f := range snippetFiles(*r.DataJSON) {
+			ref.Files = append(ref.Files, f.Filename)
+		}
+	}
+	return ref
 }
 
 // RefOf snapshots an entry before a write, for EntryChanged.Prev.
@@ -140,7 +154,15 @@ func (e *EntryJobs) changed(ctx context.Context, raw json.RawMessage) error {
 		}
 		c.Linked = linked
 	}
-	// Cards first: the pages warmed next point og:image at them.
+	if PeersChanged(c) {
+		if c.Peers, err = peers(ctx, e.db, c); err != nil {
+			return err
+		}
+	}
+	// Favicon and cards first: the pages warmed next show them.
+	if err := e.favicon(ctx, row); err != nil {
+		return err
+	}
 	if err := e.cards(ctx, c, row); err != nil {
 		return err
 	}
@@ -271,6 +293,32 @@ func snippetFiles(dataJSON string) []snippetFile {
 	}
 	_ = json.Unmarshal([]byte(dataJSON), &d)
 	return d.Files
+}
+
+// peers lists the other listed snippets in the languages of c, newest
+// first, as many as the snippet list shows (public.snippetList).
+func peers(ctx context.Context, db store.DB, c Change) ([]Ref, error) {
+	langs := map[string]bool{}
+	for _, r := range []*Ref{c.Now, c.Prev} {
+		if r != nil {
+			langs[r.Lang] = true
+		}
+	}
+	var out []Ref
+	for l := range langs {
+		res, err := db.Query(ctx, `SELECT kind, lang, slug FROM entries
+WHERE kind = 'snippet' AND lang = ? AND status = 'published' AND visibility = 'public'
+ORDER BY published_at DESC, id DESC LIMIT 50`, l)
+		if err != nil {
+			return nil, err
+		}
+		rows, err := store.Scan[Ref](res)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, rows...)
+	}
+	return out, nil
 }
 
 func siblings(ctx context.Context, db store.DB, row *entryRow) ([]Ref, error) {

@@ -17,14 +17,22 @@ func NewRepo(db store.DB) *Repo { return &Repo{db: db} }
 const selectNote = `SELECT ` + content.EntryColumns + `, n.source_url, n.til
 FROM entries e JOIN notes n ON n.entry_id = e.id`
 
+// selectPublished adds the published body for the public reads.
+const selectPublished = `SELECT ` + content.EntryColumns + `, n.source_url, n.til, r.body_html
+FROM entries e JOIN notes n ON n.entry_id = e.id JOIN revisions r ON r.id = e.published_revision_id`
+
 type row struct {
 	content.Entry
 	SourceURL *string `json:"source_url"`
 	TIL       int     `json:"til"`
+	BodyHTML  *string `json:"body_html"`
 }
 
 func (r row) note() Note {
 	n := Note{Entry: r.Entry, TIL: r.TIL == 1}
+	if r.BodyHTML != nil {
+		n.HTML = *r.BodyHTML
+	}
 	if r.SourceURL != nil {
 		n.SourceURL = *r.SourceURL
 	}
@@ -121,13 +129,18 @@ func (r *Repo) Get(ctx context.Context, id string) (Note, error) {
 	return r.one(ctx, "e.id = ?", id)
 }
 
-// GetPublished loads a public note by language and slug.
+// GetPublished loads a public note by language and slug, with the body of
+// its published revision.
 func (r *Repo) GetPublished(ctx context.Context, lang, slug string) (Note, error) {
-	return r.one(ctx, "e.lang = ? AND e.slug = ? AND e.status = 'published' AND e.visibility <> 'private'", lang, slug)
+	return r.query(ctx, selectPublished, "e.lang = ? AND e.slug = ? AND e.status = 'published' AND e.visibility <> 'private'", lang, slug)
 }
 
 func (r *Repo) one(ctx context.Context, where string, args ...any) (Note, error) {
-	res, err := r.db.Query(ctx, selectNote+" WHERE "+where+" LIMIT 1", args...)
+	return r.query(ctx, selectNote, where, args...)
+}
+
+func (r *Repo) query(ctx context.Context, sel, where string, args ...any) (Note, error) {
+	res, err := r.db.Query(ctx, sel+" WHERE "+where+" LIMIT 1", args...)
 	if err != nil {
 		return Note{}, err
 	}
@@ -141,12 +154,13 @@ func (r *Repo) one(ctx context.Context, where string, args ...any) (Note, error)
 	return rows[0].note(), nil
 }
 
-// List returns published public notes in lang, newest first.
+// List returns published public notes in lang, newest first, with their
+// published bodies.
 func (r *Repo) List(ctx context.Context, lang string, limit int) ([]Note, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
-	res, err := r.db.Query(ctx, selectNote+` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
+	res, err := r.db.Query(ctx, selectPublished+` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
 ORDER BY e.published_at DESC, e.id DESC LIMIT ?`, lang, limit)
 	if err != nil {
 		return nil, err

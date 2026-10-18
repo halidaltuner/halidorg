@@ -185,7 +185,25 @@ func (r *Repo) GetPublished(ctx context.Context, lang, slug string) (Snippet, er
 		return Snippet{}, err
 	}
 	s.Files = FilesOf(rev.DataJSON)
+	s.HTML = rev.BodyHTML
 	return s, nil
+}
+
+// List returns published public snippets in lang, newest first, with the
+// language of the first published file.
+func (r *Repo) List(ctx context.Context, lang string, limit int) ([]Item, error) {
+	if limit <= 0 || limit > 100 {
+		limit = 50
+	}
+	res, err := r.db.Query(ctx, `SELECT e.slug, e.title, e.published_at,
+  coalesce(json_extract(r.data_json, '$.files[0].language'), '') AS language
+FROM entries e JOIN snippets s ON s.entry_id = e.id JOIN revisions r ON r.id = e.published_revision_id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
+ORDER BY e.published_at DESC, e.id DESC LIMIT ?`, lang, limit)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[Item](res)
 }
 
 func (r *Repo) one(ctx context.Context, where string, args ...any) (Snippet, error) {

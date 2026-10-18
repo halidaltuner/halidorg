@@ -1,0 +1,7 @@
+{{define "content"}}<main class="list-page notes-page note-one">
+<a class="mono back" href="/{{.Lang}}/notes">← {{tr .Lang "notes.all"}}</a>
+{{- if .Untranslated}}
+<div class="banner-untranslated">{{tr .Lang "notes.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
+{{- end}}
+<div class="note-list" lang="{{.ArticleLang}}">{{template "note-card" dict "n" .Note "lang" .Lang}}</div>
+</main>{{end}}

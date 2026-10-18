@@ -15,8 +15,10 @@ func TestNavShowsOnlyEnabledSections(t *testing.T) {
 	if len(c.Nav) != 1 || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts" {
 		t.Fatalf("nav %+v", c.Nav)
 	}
-	if len(c.More) != 0 {
-		t.Fatalf("more %+v, want none until those sections exist", c.More)
+	// Phase 2.3: notes, snippets, links and favs have pages; certificates
+	// do not yet.
+	if len(c.More) != 4 || c.More[0].Href != "/en/notes" || c.More[3].Href != "/en/favs" {
+		t.Fatalf("more %+v", c.More)
 	}
 	if !c.Search {
 		t.Error("the palette ships in Phase 1: public pages load it")
@@ -75,7 +77,12 @@ func TestHeader(t *testing.T) {
 			t.Errorf("missing %s in\n%s", want, out)
 		}
 	}
-	if strings.Contains(out, "nav-more") {
+	if !strings.Contains(out, `<details class="nav-more">`) || strings.Contains(out, `href="/en/certificates"`) {
+		t.Error("more menu must list only the sections that exist")
+	}
+	empty := NewChrome("en", "posts", false, same)
+	empty.More = nil
+	if strings.Contains(render(t, "header", empty), "nav-more") {
 		t.Error("empty more menu must not render")
 	}
 	if out = render(t, "header", NewChrome("en", "", true, same)); !strings.Contains(out, `<details class="nav-more">`) {

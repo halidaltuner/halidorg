@@ -60,6 +60,13 @@ func TestKindFeeds(t *testing.T) {
 	if code, _, body := get("/en/snippets/atom.xml"); code != 200 || !strings.Contains(body, "halid.org · snippets") {
 		t.Fatalf("empty snippets atom %d", code)
 	}
+	// Notes have pages: they and the list pages are in the sitemap; links
+	// are not, and an uncategorized link makes no awesome page.
+	if _, _, sm := get("/sitemap.xml"); !strings.Contains(sm, "<loc>https://halid.org/en/notes/til-1</loc>") ||
+		!strings.Contains(sm, "<loc>https://halid.org/tr/snippets</loc>") || !strings.Contains(sm, "<loc>https://halid.org/tr/links</loc>") ||
+		strings.Contains(sm, "grug") || strings.Contains(sm, "/awesome/") {
+		t.Errorf("sitemap:\n%s", sm)
+	}
 	// The language feeds stay posts only.
 	if _, _, body := get("/en/feed.xml"); strings.Contains(body, "til-1") || strings.Contains(body, "grugbrain") {
 		t.Error("short-form entries in the posts feed")

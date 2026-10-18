@@ -1,0 +1,26 @@
+{{define "content"}}<main class="cur-page fv-page" data-filter="type"{{with .Type}} data-filtered="{{.}}"{{end}}>
+<header class="cur-head">
+<div class="cur-title">
+<h1>{{tr .Lang "nav.favs"}}</h1>
+<p>{{tr .Lang "favs.intro"}}</p>
+</div>
+{{- template "filter-chips" dict "chips" .Chips "label" (tr .Lang "favs.filter")}}
+</header>
+{{- if .Favs}}
+<div class="fv-grid">
+{{- range .Favs}}
+{{if .URL}}<a class="fv-card" id="{{.Slug}}" href="{{.URL}}" data-filter-value="{{.Type}}">{{else}}<article class="fv-card" id="{{.Slug}}" data-filter-value="{{.Type}}">{{end}}
+<div class="fv-cover mono" aria-hidden="true">{{.TypeLabel}}</div>
+<div class="fv-body">
+<div class="fv-type mono"><span class="kdot" aria-hidden="true"></span>{{.TypeLabel}}</div>
+<div class="fv-title">{{.Title}}</div>
+{{- with .Author}}<div class="fv-author">{{.}}</div>{{end}}
+{{- if .Squares}}<div class="fv-rating" role="img" aria-label="{{.Rating}}">{{range .Squares}}<span{{if .}} class="on"{{end}}></span>{{end}}</div>{{end}}
+</div>
+{{if .URL}}</a>{{else}}</article>{{end}}
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "favs.empty"}}</p>
+{{- end}}
+</main>{{end}}

@@ -1,0 +1,11 @@
+{{define "content"}}<main class="list-page notes-page">
+<header class="list-head tone-indigo">
+<span class="eyebrow mono">~ // {{tr .Lang "nav.notes"}}</span>
+<h1>{{tr .Lang "notes.title"}}</h1>
+</header>
+{{- if .Notes}}
+<div class="note-list">{{range .Notes}}{{template "note-card" dict "n" . "lang" $.Lang}}{{end}}</div>
+{{- else}}
+<p class="empty">{{tr .Lang "notes.empty"}}</p>
+{{- end}}
+</main>{{end}}

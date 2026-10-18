@@ -1,0 +1,27 @@
+{{define "content"}}<main class="cur-page lk-page" data-filter="status"{{with .Status}} data-filtered="{{.}}"{{end}}>
+<header class="cur-head">
+<div class="cur-title">
+<h1>{{tr .Lang "nav.links"}}</h1>
+<p>{{tr .Lang "links.intro"}}</p>
+</div>
+{{- template "filter-chips" dict "chips" .Chips "label" (tr .Lang "links.filter")}}
+</header>
+{{- range .Groups}}
+<section class="lk-group" data-filter-group>
+<h2 class="mono">{{if .Href}}<a href="{{.Href}}">{{.Name}}</a>{{else}}{{.Name}}{{end}} · <span data-filter-count>{{len .Items}}</span></h2>
+{{- range .Items}}
+<div class="lk-row" data-filter-value="{{if .Read}}read{{else}}unread{{end}}">
+{{- if .Favicon}}<img class="lk-icon" src="{{.Favicon}}" alt="" width="16" height="16" loading="lazy">{{else}}<span class="lk-icon lk-initial mono" aria-hidden="true">{{.Initial}}</span>{{end}}
+<div class="lk-body">
+<div class="lk-line"><a class="lk-title" href="{{.URL}}">{{.Title}}</a><span class="lk-domain mono">{{.Domain}}</span></div>
+{{- with .Comment}}<p>{{.}}</p>{{end}}
+</div>
+<span class="lk-status mono{{if .Read}} is-read{{end}}" data-link-id="{{.ID}}" data-label-read="{{tr $.Lang "links.read"}}" data-label-unread="{{tr $.Lang "links.unread"}}" data-toggle-title="{{tr $.Lang "links.toggle"}}">{{if .Read}}{{tr $.Lang "links.read"}}{{else}}{{tr $.Lang "links.unread"}}{{end}}</span>
+</div>
+{{- end}}
+</section>
+{{- else}}
+<p class="empty">{{tr .Lang "links.empty"}}</p>
+{{- end}}
+<p class="empty" data-filter-empty hidden>{{tr .Lang "links.empty"}}</p>
+</main>{{end}}
