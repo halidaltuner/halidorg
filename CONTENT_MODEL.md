@@ -139,10 +139,11 @@ The token owner's public data, synced every 6h (migrations/0009_github.sql, `int
 - `gh_languages(repo_id, language, bytes)` replaced per repo on each sync; the language bar sums non-fork, non-gone repos.
 - `gh_weekly(week_start, contributions)` 52-week strip (3 intensity buckets computed at render), replaced when the calendar was read.
 - `gh_activity(id, type release|repo, repo, title, note, url, occurred_at)` notable activity: published releases (`release:{node id}`, the note is the first line of the description) and new non-fork repos (`repo:{node id}`). Ids are stable, so a re-sync adds nothing twice.
+- Search: homelab builds are indexed with kind `homelab` (palette `h:`), software projects with `project` (`pr:`). The Worker reads both kinds for either prefix and keeps the rows whose type in the main database matches, so builds indexed before 4.5 are found without a reindex.
 - Synced via GraphQL (`viewer`: pins, contribution calendar, public owned repos, 100 per page, up to 5 pages). The cron Worker enqueues `github.sync` at `17 */6 * * *`; `/admin/github` "run now" enqueues it too. The token is the Worker secret `GITHUB_TOKEN`, sent with each job delivery. Rate limits and network errors retry; a partial answer writes what came and fails the run so `job_runs` shows it. After a sync it queues `pages.changed` for `/{lang}/projects` and linked project pages.
 
 ### Stream
-A D1 view unioning published `entries` + `gh_activity` + `radar_history`, cursor-paginated, filterable by kind (`?kind=`).
+Two queries merged in Go (`public.streamRows`), newest first: published public entries (post, note, snippet, link, fav, project, and build logs under a published project) in the page language, and `gh_activity` (the same rows in both languages; repos marked gone are left out). `radar_history` joins in Phase 6. Stream kinds: homelab builds and their logs are `homelab`, software projects, their logs and GitHub rows are `project`. Filterable by kind (`?kind=`), 30 rows a page, cursor-paginated by `?before={unix}.{id}` (rows older than the last one shown, ties broken by id). A GitHub row opens the published project in that language linked to its repo, else GitHub.
 
 ### Site settings
 `site_settings(key, value_json)` homelab stats, social links, footer tagline, 500px profile URL, default lang.

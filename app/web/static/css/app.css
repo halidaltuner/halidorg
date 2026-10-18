@@ -646,6 +646,14 @@ body.dark { background: var(--dk-bg); }
 .home { max-width: var(--w-default); margin: 0 auto; padding: 0 var(--gutter); }
 .home-section { margin-top: var(--sp-64); display: flex; flex-direction: column; gap: var(--sp-20); }
 .home .stream { max-width: var(--w-narrow); }
+.stream-more { margin: 0; text-align: right; font-size: var(--fs-13); }
+.stream-more a, .stream-pager a { color: var(--link); text-decoration: none; }
+
+/* /stream (derive): the home stream as its own page. */
+.list-page.stream-page { max-width: calc(var(--w-narrow) + 2 * var(--gutter)); }
+.stream-page .stream { display: flex; flex-direction: column; gap: var(--sp-20); }
+.stream-pager { display: flex; justify-content: space-between; font-size: var(--fs-13); }
+.stream-pager .older { margin-left: auto; }
 
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); gap: var(--sp-20); }
 .post-card {
@@ -678,6 +686,8 @@ body.dark { background: var(--dk-bg); }
 .k-snippet { --t-tint: var(--tone-amber-tint); --t-ink: var(--tone-amber-ink); }
 .k-link { --t-tint: var(--surface-2); --t-ink: var(--text-muted); }
 .k-fav { --t-tint: var(--tone-rose-tint); --t-ink: var(--tone-rose-ink); }
+.k-project { --t-tint: var(--tone-green-tint); --t-ink: var(--tone-green-ink); }
+.k-homelab { --t-tint: var(--tone-orange-tint); --t-ink: var(--tone-orange-ink); }
 .k-all { --t-tint: var(--text); --t-ink: var(--text); }
 .stream-chip[aria-current] { background: var(--t-tint); color: var(--t-ink); border-color: var(--t-ink); }
 .stream-chip.k-all[aria-current] { color: var(--surface); }
@@ -1610,6 +1620,8 @@ html.pal-open { overflow: hidden; }
 .gh { display: flex; flex-direction: column; gap: var(--sp-24); margin-top: var(--sp-40); }
 .gh-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--sp-16); flex-wrap: wrap; }
 .gh-head h2 { margin: 0; font-size: var(--fs-28); font-weight: 600; letter-spacing: -0.01em; }
+.gh-head h2 a { color: inherit; text-decoration: none; }
+.gh-head h2 a:hover { color: var(--link); }
 .gh-head .mono { font-size: var(--fs-13); color: var(--text-muted); }
 .gh-strip { display: flex; flex-direction: column; gap: var(--sp-8); padding: var(--sp-20); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); }
 .gh-bars { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; height: 40px; align-items: end; }
@@ -1641,3 +1653,9 @@ html.pal-open { overflow: hidden; }
 .gh-rel .t { font-size: var(--fs-14); }
 .gh-rel .dt { font-size: var(--fs-12); color: var(--text-muted); }
 .gh-rel .nt { grid-column: span 2; font-size: var(--fs-14); color: var(--text-muted); }
+
+/* /github (derive): the section on its own, then every activity row. */
+.gh-page .gh { margin-top: 0; }
+.gh-activity { display: flex; flex-direction: column; gap: var(--sp-16); margin-top: var(--sp-40); max-width: var(--w-narrow); }
+.gh-activity h2 { margin: 0; font-size: var(--fs-28); font-weight: 600; letter-spacing: -0.01em; }
+.gh-note { color: var(--text-muted); }

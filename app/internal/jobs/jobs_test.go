@@ -22,7 +22,7 @@ func TestPaths(t *testing.T) {
 	got := Paths(Change{Now: now, Prev: prev, Siblings: []Ref{{Kind: "post", Lang: "tr", Slug: "htmx-tr"}, {Kind: "radar_item", Lang: "en", Slug: "x"}}})
 	want := []string{
 		"/en/", "/en/atom.xml", "/en/feed.json", "/en/feed.xml", "/en/posts", "/en/posts/htmx", "/en/posts/htmx-old",
-		"/en/tags/admin", "/en/tags/admin/feed.xml", "/en/tags/go", "/en/tags/go/feed.xml",
+		"/en/stream", "/en/tags/admin", "/en/tags/admin/feed.xml", "/en/tags/go", "/en/tags/go/feed.xml",
 		"/en/tags/htmx", "/en/tags/htmx/feed.xml", "/sitemap.xml", "/tr/posts/htmx", "/tr/posts/htmx-old", "/tr/posts/htmx-tr",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -32,15 +32,15 @@ func TestPaths(t *testing.T) {
 	if got := Paths(Change{Prev: &Ref{Kind: "post", Lang: "tr", Slug: "x"}}); !contains(got, "/tr/posts/x") || !contains(got, "/sitemap.xml") {
 		t.Errorf("delete paths = %v", got)
 	}
-	// A note: its page and fallback, the notes list and the notes feeds, not
-	// the post feeds.
+	// A note: its page and fallback, the notes list and the notes feeds, the
+	// stream, not the post feeds.
 	notePaths := Paths(Change{Now: &Ref{Kind: "note", Lang: "en", Slug: "til", Listed: true}})
-	if want := []string{"/en/", "/en/notes", "/en/notes/atom.xml", "/en/notes/feed.json", "/en/notes/feed.xml", "/en/notes/til", "/sitemap.xml", "/tr/notes/til"}; !reflect.DeepEqual(notePaths, want) {
+	if want := []string{"/en/", "/en/notes", "/en/notes/atom.xml", "/en/notes/feed.json", "/en/notes/feed.xml", "/en/notes/til", "/en/stream", "/sitemap.xml", "/tr/notes/til"}; !reflect.DeepEqual(notePaths, want) {
 		t.Errorf("note paths =\n%v\nwant\n%v", notePaths, want)
 	}
 	// A link has no page of its own: the list and its feeds.
 	linkPaths := Paths(Change{Now: &Ref{Kind: "link", Lang: "tr", Slug: "grug", Listed: true}})
-	if want := []string{"/sitemap.xml", "/tr/", "/tr/links", "/tr/links/atom.xml", "/tr/links/feed.json", "/tr/links/feed.xml"}; !reflect.DeepEqual(linkPaths, want) {
+	if want := []string{"/sitemap.xml", "/tr/", "/tr/links", "/tr/links/atom.xml", "/tr/links/feed.json", "/tr/links/feed.xml", "/tr/stream"}; !reflect.DeepEqual(linkPaths, want) {
 		t.Errorf("link paths =\n%v\nwant\n%v", linkPaths, want)
 	}
 	if got := Paths(Change{Now: &Ref{Kind: "fav", Lang: "en", Slug: "ddia"}}); !contains(got, "/en/favs") || contains(got, "/en/favs/ddia") {
@@ -52,15 +52,15 @@ func TestPaths(t *testing.T) {
 		Prev: &Ref{Kind: "project", Lang: "en", Slug: "rack-old", Listed: true, Homelab: true, Logs: []string{"brackets"}}})
 	if want := []string{"/en/", "/en/homelab", "/en/projects", "/en/projects/atom.xml", "/en/projects/feed.json", "/en/projects/feed.xml",
 		"/en/projects/rack", "/en/projects/rack-old", "/en/projects/rack-old/log/brackets", "/en/projects/rack/log/brackets",
-		"/sitemap.xml", "/tr/projects/rack", "/tr/projects/rack-old"}; !reflect.DeepEqual(proj, want) {
+		"/en/stream", "/sitemap.xml", "/tr/projects/rack", "/tr/projects/rack-old"}; !reflect.DeepEqual(proj, want) {
 		t.Errorf("project paths =\n%v\nwant\n%v", proj, want)
 	}
 	if got := Paths(Change{Now: &Ref{Kind: "project", Lang: "en", Slug: "site", Listed: true}}); contains(got, "/en/homelab") {
 		t.Errorf("software project on the homelab page: %v", got)
 	}
-	// A build log: its page under the project, the project page, home.
+	// A build log: its page under the project, the project page, the stream.
 	logPaths := Paths(Change{Now: &Ref{Kind: "buildlog", Lang: "en", Slug: "brackets", Parent: "rack", Listed: true}})
-	if want := []string{"/en/", "/en/projects/rack", "/en/projects/rack/log/brackets"}; !reflect.DeepEqual(logPaths, want) {
+	if want := []string{"/en/", "/en/projects/rack", "/en/projects/rack/log/brackets", "/en/stream"}; !reflect.DeepEqual(logPaths, want) {
 		t.Errorf("buildlog paths =\n%v\nwant\n%v", logPaths, want)
 	}
 	// Kinds without pages yet contribute nothing.

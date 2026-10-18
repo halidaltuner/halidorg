@@ -376,7 +376,13 @@ func (e *EntryJobs) index(ctx context.Context, id string, row *entryRow) error {
 	if row.Extra != nil {
 		text += "\n" + *row.Extra
 	}
-	doc := search.Doc{EntryID: row.ID, Kind: row.Kind, Lang: row.Lang, Status: row.Status, Visibility: row.Visibility,
+	// Homelab builds are projects, indexed under their own kind so the
+	// palette's h: and pr: prefixes tell them apart.
+	kind := row.Kind
+	if row.Homelab != nil && *row.Homelab == 1 {
+		kind = "homelab"
+	}
+	doc := search.Doc{EntryID: row.ID, Kind: kind, Lang: row.Lang, Status: row.Status, Visibility: row.Visibility,
 		Slug: row.Slug, Title: row.Title, Summary: row.Summary, Body: text, Tags: row.tags()}
 	_, err := e.search.Batch(ctx, doc.Upsert()...)
 	return err

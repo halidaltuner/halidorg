@@ -1,0 +1,6 @@
+{{define "stream-box"}}<div class="stream-box">
+{{- range .}}
+<div class="stream-day" data-filter-group><div class="stream-date mono">{{.Day}}</div><div class="stream-items">
+{{- range .Items}}<a class="stream-row" href="{{.Href}}" data-filter-value="{{.Kind}}"><span class="glyph k-{{.Kind}} mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
+</div></div>{{end}}
+</div>{{end}}

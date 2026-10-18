@@ -215,3 +215,112 @@ func TestProjectsGitHubSection(t *testing.T) {
 		`<span class="t mono">site v0.4.0</span><span class="dt mono">2025-11-02</span><span class="nt">Webmentions.</span>`,
 	)
 }
+
+func TestStreamAndGitHubPages(t *testing.T) {
+	mux, db := newSite(t)
+	seedProjects(t, db)
+	ctx := context.Background()
+	created := time.Date(2025, 11, 2, 0, 0, 0, 0, time.UTC)
+	rel := time.Date(2026, 10, 9, 0, 0, 0, 0, time.UTC)
+	snap := github.Snapshot{Complete: true, Weeks: []github.Week{{Start: created, Contributions: 3}},
+		Repos: []github.Repo{
+			{ID: "R1", FullName: "halid/site", Name: "site", URL: "https://github.com/halid/site", CreatedAt: &created,
+				Releases: []github.Release{{ID: "V1", Tag: "v0.4.0", URL: "https://github.com/halid/site/releases/v0.4.0", Note: "Webmentions.", PublishedAt: rel}}},
+			{ID: "R2", FullName: "halid/tool", Name: "tool", URL: "https://github.com/halid/tool", CreatedAt: &created},
+		}}
+	if err := github.Write(ctx, db, snap, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+
+	_, body := get(t, mux, "/en/")
+	must(t, body,
+		`<a class="chip stream-chip k-homelab" href="/en/?kind=homelab" data-filter-key="homelab">homelab</a>`,
+		`<a class="stream-row" href="/en/projects/rack/log/switch" data-filter-value="homelab"><span class="glyph k-homelab mono" aria-hidden="true">⌁</span><span class="stream-title">log switch</span><span class="stream-meta mono">build log</span></a>`,
+		`<a class="stream-row" href="/en/projects/rack" data-filter-value="homelab"><span class="glyph k-homelab mono" aria-hidden="true">⌁</span><span class="stream-title">3-node rack</span><span class="stream-meta mono">running</span></a>`,
+		`<a class="stream-row" href="/en/projects/site" data-filter-value="project"><span class="glyph k-project mono" aria-hidden="true">◆</span><span class="stream-title">halid.org</span><span class="stream-meta mono">maintained</span></a>`,
+		// GitHub rows open the linked project, else GitHub.
+		`<a class="stream-row" href="/en/projects/site" data-filter-value="project"><span class="glyph k-project mono" aria-hidden="true">◆</span><span class="stream-title">site v0.4.0</span><span class="stream-meta mono">release</span></a>`,
+		`<a class="stream-row" href="https://github.com/halid/tool" data-filter-value="project"><span class="glyph k-project mono" aria-hidden="true">◆</span><span class="stream-title">tool</span><span class="stream-meta mono">new repo</span></a>`,
+		`<p class="stream-more"><a class="mono" href="/en/stream">whole stream →</a></p>`,
+	)
+	if strings.Contains(body, "draft project") {
+		t.Error("draft in the stream")
+	}
+
+	code, body := get(t, mux, "/en/stream")
+	if code != 200 {
+		t.Fatalf("stream %d", code)
+	}
+	must(t, body, `<h1>Stream</h1>`, `<link rel="canonical" href="https://halid.org/en/stream">`,
+		`<a class="chip stream-chip k-fav" href="/en/stream?kind=fav">fav</a>`, `log brackets`)
+	if strings.Contains(body, "stream-pager") || strings.Contains(body, "noindex") {
+		t.Error("pager or noindex on a short first page")
+	}
+	_, body = get(t, mux, "/en/stream?kind=homelab")
+	must(t, body, `aria-current="true">homelab</a>`, `log switch`, `3-node rack`, `<meta name="robots" content="noindex">`)
+	if strings.Contains(body, "site v0.4.0") || strings.Contains(body, ">halid.org<") {
+		t.Error("project rows under homelab")
+	}
+	_, body = get(t, mux, "/en/stream?kind=project")
+	must(t, body, `site v0.4.0`, `>halid.org<`)
+
+	// Pages follow one another without gaps or repeats.
+	all, err := streamRows(ctx, db, "en", "", streamCursor{}, 100)
+	if err != nil || len(all) < 6 {
+		t.Fatalf("rows %d %v", len(all), err)
+	}
+	var paged []string
+	var cur streamCursor
+	for {
+		rows, err := streamRows(ctx, db, "en", "", cur, 2)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, r := range rows {
+			paged = append(paged, r.ID)
+		}
+		if len(rows) < 2 {
+			break
+		}
+		cur = streamCursor{At: at(rows[1]), ID: rows[1].ID}
+	}
+	if len(paged) != len(all) {
+		t.Fatalf("paged %d rows, want %d", len(paged), len(all))
+	}
+	for i := range all {
+		if paged[i] != all[i].ID {
+			t.Fatalf("row %d: %s, want %s", i, paged[i], all[i].ID)
+		}
+	}
+	if c := parseCursor(cur.String()); c != cur {
+		t.Errorf("cursor round trip %v", c)
+	}
+	if c := parseCursor("x.y"); c.ID != "" {
+		t.Errorf("bad cursor read %v", c)
+	}
+
+	code, body = get(t, mux, "/en/github")
+	if code != 200 {
+		t.Fatalf("github %d", code)
+	}
+	must(t, body, `<h1>github</h1>`, `<section class="gh">`, `<h2>activity</h2>`,
+		`<div class="stream-date mono">2026-10</div>`,
+		`<a class="stream-row" href="https://github.com/halid/site/releases/v0.4.0"><span class="glyph k-project mono" aria-hidden="true">◆</span><span class="stream-title">site v0.4.0 <span class="gh-note">Webmentions.</span></span><span class="stream-meta mono">release · 2026-10-09</span></a>`,
+		`<span class="stream-meta mono">new repo · 2025-11-02</span>`)
+	if strings.Contains(body, `<h2>github</h2>`) || strings.Contains(body, `href="/en/github">github</a>`) {
+		t.Error("section heading repeats the page title")
+	}
+	_, body = get(t, mux, "/en/projects")
+	must(t, body, `<h2><a href="/en/github">github</a></h2>`)
+}
+
+func TestGitHubPageBeforeSync(t *testing.T) {
+	mux, _ := newSite(t)
+	code, body := get(t, mux, "/tr/github")
+	if code != 200 {
+		t.Fatalf("github %d", code)
+	}
+	must(t, body, `GitHub verisi henüz senkronlanmadı.`)
+	_, body = get(t, mux, "/tr/stream")
+	must(t, body, `Henüz yayınlanmış bir şey yok.`)
+}

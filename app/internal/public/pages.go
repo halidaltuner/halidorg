@@ -147,14 +147,14 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
 		p.Latest = cs[:min(3, len(cs))]
 	}
 	// Stream: every short-form kind too, grouped by day (design/Home.dc.html).
-	rows, err := streamRows(r.Context(), h.db, lang)
+	rows, err := streamRows(r.Context(), h.db, lang, "", streamCursor{}, streamSize)
 	if err != nil {
 		h.fail(w, r, err)
 		return
 	}
 	p.StreamKind = streamKind(r)
 	p.Stream = stream(lang, p.StreamKind, rows)
-	p.Chips = streamChips(lang, p.StreamKind, rows)
+	p.Chips = streamChips(lang, "/"+lang+"/", p.StreamKind, rows)
 	p.HasStream = len(rows) > 0
 	if p.Tiles, err = h.tiles(r, lang); err != nil {
 		h.fail(w, r, err)
@@ -208,7 +208,7 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets"}
 
 // glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
-var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆"}
+var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆", "homelab": "⌁"}
 
 // --- Post -------------------------------------------------------------------
 

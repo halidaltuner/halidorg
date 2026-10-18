@@ -27,12 +27,8 @@
 <section class="home-section stream" data-filter="kind"{{with .StreamKind}} data-filtered="{{.}}"{{end}}>
 <div class="section-head"><h2>{{tr .Lang "home.stream"}}</h2>
 <nav class="chips" aria-label="{{tr .Lang "home.stream"}}">{{range .Chips}}<a class="chip stream-chip k-{{or .Key "all"}}" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav></div>
-<div class="stream-box">
-{{- range .Stream}}
-<div class="stream-day" data-filter-group><div class="stream-date mono">{{.Day}}</div><div class="stream-items">
-{{- range .Items}}<a class="stream-row" href="{{.Href}}" data-filter-value="{{.Kind}}"><span class="glyph k-{{.Kind}} mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
-</div></div>{{end}}
-</div>
+{{template "stream-box" .Stream}}
+<p class="stream-more"><a class="mono" href="/{{.Lang}}/stream">{{tr .Lang "stream.all_link"}} →</a></p>
 </section>
 {{- end}}
 {{- if not (or .Latest .HasStream)}}
