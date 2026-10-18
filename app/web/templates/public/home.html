@@ -1,0 +1,35 @@
+{{define "content"}}<section class="home-hero dark">
+<div class="home-hero-inner">
+<div class="home-hero-copy">
+<span class="eyebrow mono">// {{tr .Lang "home.eyebrow"}}</span>
+<h1>{{tr .Lang "home.title1"}} <span class="c">{{tr .Lang "home.title2"}}</span> {{tr .Lang "home.title3"}} <span class="r">{{tr .Lang "home.title4"}}</span>.</h1>
+<p>{{tr .Lang "home.sub"}}</p>
+<div class="home-ctas"><a class="cta-primary" href="/{{.Lang}}/posts">{{tr .Lang "home.cta_posts"}} →</a></div>
+</div>
+{{- with .Featured}}
+<a class="featured" href="{{.Href}}">
+<div class="featured-cover">{{template "cover" dict "tone" .Tone}}</div>
+<div class="featured-body"><span class="mono">{{tr $.Lang "home.featured"}} · {{.Date}} · {{.Minutes}}</span><span class="featured-title">{{.Title}}</span></div>
+</a>{{end}}
+</div>
+</section>
+<main class="home">
+{{- if .Latest}}
+<section class="home-section">
+<div class="section-head"><h2>{{tr .Lang "home.latest"}}</h2><a class="mono" href="/{{.Lang}}/posts">{{tr .Lang "home.all"}} →</a></div>
+<div class="card-grid">{{range .Latest}}{{template "post-card" .}}{{end}}</div>
+</section>
+<section class="home-section stream">
+<div class="section-head"><h2>{{tr .Lang "home.stream"}}</h2>
+<div class="chips"><span class="chip tone-cyan" aria-current="true">{{tr .Lang "stream.all"}}</span></div></div>
+<div class="stream-box">
+{{- range .Stream}}
+<div class="stream-day"><div class="stream-date mono">{{.Day}}</div><div class="stream-items">
+{{- range .Items}}<a class="stream-row" href="{{.Href}}"><span class="glyph tone-cyan mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
+</div></div>{{end}}
+</div>
+</section>
+{{- else}}
+<section class="home-section"><p class="empty">{{tr .Lang "home.empty"}}</p></section>
+{{- end}}
+</main>{{end}}

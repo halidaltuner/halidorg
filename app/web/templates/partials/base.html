@@ -3,12 +3,23 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{template "title" .}}</title>
-{{range .Alternates}}<link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">
-{{end}}<link rel="stylesheet" href="/static/css/tokens.css">
+<title>{{.Head.Title}}</title>
+{{with .Head.Description}}<meta name="description" content="{{.}}">
+{{end}}{{if .Head.Noindex}}<meta name="robots" content="noindex">
+{{end}}{{with .Head.Canonical}}<link rel="canonical" href="{{.}}">
+<meta property="og:url" content="{{.}}">
+{{end}}{{range .Head.Alternates}}<link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">
+{{end}}<meta property="og:site_name" content="halid.org">
+<meta property="og:title" content="{{.Head.Title}}">
+{{with .Head.Description}}<meta property="og:description" content="{{.}}">
+{{end}}<meta property="og:type" content="{{or .Head.OGType "website"}}">
+<link rel="alternate" type="application/rss+xml" title="{{tr .Lang "feed.posts"}}" href="/{{.Lang}}/feed.xml">
+<link rel="stylesheet" href="/static/css/tokens.css">
 <link rel="stylesheet" href="/static/css/app.css">
 <script src="/static/js/header.js" defer></script>
-</head>
+<script src="/static/js/code.js" defer></script>
+{{range .Head.Scripts}}<script src="{{.}}" defer></script>
+{{end}}</head>
 <body>
 {{template "header" .}}
 {{template "content" .}}

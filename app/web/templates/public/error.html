@@ -1,0 +1,13 @@
+{{define "content"}}<main class="error-page dark">
+<div class="error-inner">
+<span class="error-code mono">{{.Code}}</span>
+{{- if eq .Code 410}}
+<h1>{{tr .Lang "error.410.title"}}</h1>
+<p>{{tr .Lang "error.410.body"}}</p>
+{{- else}}
+<h1>{{tr .Lang "error.404.title"}}</h1>
+<p>{{tr .Lang "error.404.body"}}</p>
+{{- end}}
+<a class="cta-primary" href="/{{.Lang}}/">← {{tr .Lang "error.home"}}</a>
+</div>
+</main>{{end}}

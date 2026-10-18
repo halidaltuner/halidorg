@@ -116,8 +116,8 @@ Kind dots (more menu squares, palette rows; from `Header.dc.html`): post `#0891B
 | Screen | Phase | Notes |
 |---|---|---|
 | Mobile nav sheet, header under 900px | 1 | derived in 1.1: `<details>` sheet under 900px, nav + more as one list, 44px rows, lang switch at the bottom, works without JS |
-| Post list, tag page | 1 | reuse latest-post cards + chips |
-| 404 / 410 | 1 | dark band, palette hint |
+| Post list, tag page | 1 | derived in 1.4: list head (eyebrow, 48px H1) over the latest-post card grid |
+| 404 / 410 | 1 | derived in 1.4: dark band with grid, mono status code in cyan, short copy, home CTA; noindex, never cached |
 | Admin entry list, media library, revisions diff | 1 | dashboard density |
 | Notes list and note permalink | 2 | indigo tone |
 | Admin categories, tags | 2 | |
@@ -147,3 +147,9 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 
 ## 10. Do not port
 `design/support.js`, `design/image-slot.js` and inline styles in `.dc.html` are prototype tooling. Rebuild in Go templates + one CSS bundle.
+
+## 11. Implementation notes (Phase 1.4)
+- Prose blocks share one measure, `--w-measure` (46rem, 68ch of the 18px body face). The prototype sets `max-width: 68ch` on each block, which makes code, terminal and callouts narrower than paragraphs because their type is smaller.
+- The post TOC is hidden under 900px; above the title it pushes the article down a screen. Headings keep their anchors.
+- Reading time: `N min` on cards, stream rows and the featured card; `N min read` on the post page.
+

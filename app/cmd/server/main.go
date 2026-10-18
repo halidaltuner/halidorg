@@ -13,6 +13,7 @@ import (
 
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
+	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/public"
@@ -31,7 +32,7 @@ func main() {
 
 func run() error {
 	start := time.Now()
-	mux, err := routes()
+	mux, err := routes(store.FromEnv())
 	if err != nil {
 		return err
 	}
@@ -68,13 +69,13 @@ func run() error {
 
 // routes builds the full mux. ServeMux panics on conflicting patterns, so
 // main_test.go calls this to catch them before a deploy does.
-func routes() (*http.ServeMux, error) {
-	stores := store.FromEnv()
-	pub, err := public.New()
+func routes(stores store.Stores) (*http.ServeMux, error) {
+	pub, err := public.New(stores.DB)
 	if err != nil {
 		return nil, err
 	}
-	adm, err := admin.New(auth.New(auth.ConfigFromEnv(), stores.DB))
+	authn := auth.New(auth.ConfigFromEnv(), stores.DB)
+	adm, err := admin.New(authn)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +101,10 @@ func routes() (*http.ServeMux, error) {
 	runner := jobs.New(stores.DB, stores.Queue)
 	jobs.NewEntryJobs(stores.DB, stores.Search, jobs.NewWarmer(mux, stores.KV)).Register(runner)
 	runner.Register(mux)
+
+	seed := authn.RequireSession(devseed.New(stores.DB, runner))
+	mux.Handle("GET /admin/dev/seed", seed)
+	mux.Handle("POST /admin/dev/seed", seed)
 	// Two segments, not /static/: that pattern overlaps /{lang}/{$} and ServeMux panics.
 	mux.Handle("GET /static/{dir}/{file}", staticHandler())
 	return mux, nil

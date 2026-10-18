@@ -1,0 +1,12 @@
+{{define "content"}}<main class="list-page">
+<header class="list-head">
+<span class="eyebrow mono">¶ // {{if .Tag}}{{tr .Lang "list.tag"}}{{else}}{{tr .Lang "nav.posts"}}{{end}}</span>
+<h1>{{.Title}}</h1>
+{{- if .Tag}}<a class="mono back" href="/{{.Lang}}/posts">← {{tr .Lang "list.all_posts"}}</a>{{end}}
+</header>
+{{- if .Cards}}
+<div class="card-grid">{{range .Cards}}{{template "post-card" .}}{{end}}</div>
+{{- else}}
+<p class="empty">{{tr .Lang "list.empty"}}</p>
+{{- end}}
+</main>{{end}}

@@ -5,17 +5,28 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/store/storetest"
 )
 
 func newMux(t *testing.T) *http.ServeMux {
 	t.Helper()
-	h, err := New()
+	mux, _ := newSite(t)
+	return mux
+}
+
+func newSite(t *testing.T) (*http.ServeMux, store.DB) {
+	t.Helper()
+	t.Setenv("PUBLIC_ORIGIN", "https://halid.org")
+	db := storetest.NewDB(t)
+	h, err := New(db)
 	if err != nil {
 		t.Fatal(err)
 	}
 	mux := http.NewServeMux()
 	h.Register(mux)
-	return mux
+	return mux, db
 }
 
 func TestRootRedirectsByAcceptLanguage(t *testing.T) {
@@ -41,20 +52,21 @@ func TestRootRedirectsByAcceptLanguage(t *testing.T) {
 	}
 }
 
-func TestHello(t *testing.T) {
+func TestHomeEmpty(t *testing.T) {
 	mux := newMux(t)
-	for lang, want := range map[string]string{"tr": "Merhaba", "en": "Hello"} {
+	for lang, want := range map[string]string{"tr": "Henüz yayınlanmış yazı yok.", "en": "No posts published yet."} {
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, httptest.NewRequest("GET", "/"+lang+"/", nil))
 		body := rec.Body.String()
 		if rec.Code != http.StatusOK {
 			t.Fatalf("%s: status %d", lang, rec.Code)
 		}
-		if !strings.Contains(body, "<h1>"+want+"</h1>") || !strings.Contains(body, `<html lang="`+lang+`">`) {
+		if !strings.Contains(body, want) || !strings.Contains(body, `<html lang="`+lang+`">`) {
 			t.Errorf("%s: unexpected body:\n%s", lang, body)
 		}
-		if !strings.Contains(body, `hreflang="tr"`) || !strings.Contains(body, `hreflang="en"`) {
-			t.Errorf("%s: missing hreflang alternates", lang)
+		if !strings.Contains(body, `hreflang="tr"`) || !strings.Contains(body, `hreflang="en"`) ||
+			!strings.Contains(body, `<link rel="canonical" href="https://halid.org/`+lang+`/">`) {
+			t.Errorf("%s: missing hreflang or canonical", lang)
 		}
 		if cc := rec.Header().Get("Cache-Control"); !strings.HasPrefix(cc, "public") {
 			t.Errorf("%s: Cache-Control %q, want public opt-in", lang, cc)
@@ -141,7 +153,7 @@ func TestHomeHasChrome(t *testing.T) {
 	body := rec.Body.String()
 	for _, want := range []string{
 		`<header class="site-header">`,
-		`<a href="/en/posts/" data-s="posts">posts</a>`,
+		`<a href="/en/posts" data-s="posts">posts</a>`,
 		`<details class="nav-sheet">`,
 		`<footer class="site-footer">`,
 		`<span class="sha">a3f91c2</span>`,

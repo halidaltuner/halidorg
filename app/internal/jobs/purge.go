@@ -58,6 +58,15 @@ func Paths(c Change) []string {
 			continue
 		}
 		add(ItemPath(*r))
+		// The same slug under the other languages serves the "not translated
+		// yet" page (public.post), which renders this entry.
+		for _, l := range i18n.Supported {
+			if l != r.Lang {
+				o := *r
+				o.Lang = l
+				add(ItemPath(o))
+			}
+		}
 		if seg, ok := kindPath[r.Kind]; ok && i18n.IsSupported(r.Lang) {
 			l := "/" + r.Lang
 			add(l + "/")

@@ -305,3 +305,111 @@ WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
 	}
 	return out, nil
 }
+
+// Translation is a published sibling of a post in another language.
+type Translation struct {
+	Lang string `json:"lang"`
+	Slug string `json:"slug"`
+}
+
+// Translations lists the published, non-private siblings of p.
+func (r *Repo) Translations(ctx context.Context, p Post) ([]Translation, error) {
+	res, err := r.db.Query(ctx, `SELECT lang, slug FROM entries
+WHERE translation_group_id = ? AND id <> ? AND kind = 'post' AND status = 'published' AND visibility <> 'private'
+ORDER BY lang`, p.TranslationGroupID, p.ID)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[Translation](res)
+}
+
+// SeriesNav is a post's place in its series, in the post's language.
+type SeriesNav struct {
+	Slug  string
+	Title string
+	Index int // 1-based
+	Total int
+	Prev  *Post
+	Next  *Post
+}
+
+// Series returns p's series navigation, or nil when p is not in a series.
+func (r *Repo) Series(ctx context.Context, p Post) (*SeriesNav, error) {
+	if p.SeriesID == nil {
+		return nil, nil
+	}
+	res, err := r.db.Query(ctx, `SELECT slug, title_tr, title_en FROM series WHERE id = ?`, *p.SeriesID)
+	if err != nil {
+		return nil, err
+	}
+	meta, err := store.Scan[struct {
+		Slug    string `json:"slug"`
+		TitleTR string `json:"title_tr"`
+		TitleEN string `json:"title_en"`
+	}](res)
+	if err != nil || len(meta) == 0 {
+		return nil, err
+	}
+	res, err = r.db.Query(ctx, selectPost+` WHERE e.series_id = ? AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
+ORDER BY COALESCE(e.series_order, 1000000), e.published_at`, *p.SeriesID, p.Lang)
+	if err != nil {
+		return nil, err
+	}
+	parts, err := scan(res)
+	if err != nil {
+		return nil, err
+	}
+	nav := &SeriesNav{Slug: meta[0].Slug, Title: meta[0].TitleEN, Total: len(parts)}
+	if p.Lang == "tr" && meta[0].TitleTR != "" {
+		nav.Title = meta[0].TitleTR
+	}
+	for i := range parts {
+		if parts[i].ID != p.ID {
+			continue
+		}
+		nav.Index = i + 1
+		if i > 0 {
+			nav.Prev = &parts[i-1]
+		}
+		if i+1 < len(parts) {
+			nav.Next = &parts[i+1]
+		}
+	}
+	if nav.Index == 0 {
+		return nil, nil
+	}
+	return nav, nil
+}
+
+// PublishedBody returns the HTML and TOC of p's published revision.
+func (r *Repo) PublishedBody(ctx context.Context, p Post) (content.Revision, error) {
+	if p.PublishedRevisionID == nil {
+		return content.Revision{}, content.NotFound("revision", p.ID)
+	}
+	return content.GetRevision(ctx, r.db, *p.PublishedRevisionID)
+}
+
+// TagNames maps tag slugs to their display names in lang.
+func (r *Repo) TagNames(ctx context.Context, lang string, slugs []string) (map[string]string, error) {
+	out := map[string]string{}
+	if len(slugs) == 0 {
+		return out, nil
+	}
+	ph := strings.TrimSuffix(strings.Repeat("?,", len(slugs)), ",")
+	args := make([]any, len(slugs))
+	for i, s := range slugs {
+		args[i] = s
+	}
+	res, err := r.db.Query(ctx, `SELECT id, slug, name_tr, name_en, tone FROM tags WHERE slug IN (`+ph+`)`, args...)
+	if err != nil {
+		return nil, err
+	}
+	tags, err := store.Scan[content.Tag](res)
+	if err != nil {
+		return nil, err
+	}
+	for _, t := range tags {
+		out[t.Slug] = t.Name(lang)
+	}
+	return out, nil
+}
