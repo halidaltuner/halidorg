@@ -164,3 +164,16 @@ func TestRawHTMLAndEmpty(t *testing.T) {
 		t.Errorf("raw html dropped: %q", out.HTML)
 	}
 }
+
+func TestCodeNumbersLines(t *testing.T) {
+	out := Code("go", "package main\n\n// x\n")
+	if strings.Count(out, `<span class="ln">`) != 3 || !strings.Contains(out, `<span class="ln">3</span>`) {
+		t.Fatalf("lines: %s", out)
+	}
+	if !strings.Contains(out, `<span class="c1">// x`) {
+		t.Errorf("not highlighted: %s", out)
+	}
+	if got := Code("", "<b>"); !strings.Contains(got, "&lt;b&gt;") {
+		t.Errorf("not escaped: %s", got)
+	}
+}

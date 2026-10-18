@@ -15,7 +15,9 @@ import (
 	"strings"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/note"
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
@@ -37,6 +39,11 @@ type Head struct {
 	OGType      string
 	Image       string // absolute og:image URL (render/og)
 	Scripts     []string
+	Feeds       []feedLink // the page's own feeds, after the language feed
+}
+
+type feedLink struct {
+	Title, Href string
 }
 
 type page struct {
@@ -46,23 +53,29 @@ type page struct {
 
 // Handlers holds parsed templates and the post repository.
 type Handlers struct {
-	db       store.DB
-	searchDB store.DB
-	posts    *post.Repo
-	origin   string
-	tmpl     map[string]*template.Template
+	db          store.DB
+	searchDB    store.DB
+	posts       *post.Repo
+	snippetRepo *snippet.Repo
+	noteRepo    *note.Repo
+	origin      string
+	tmpl        map[string]*template.Template
 }
 
 // New parses the public templates. It fails at startup rather than per request.
 func New(db, searchDB store.DB) (*Handlers, error) {
-	h := &Handlers{db: db, searchDB: searchDB, posts: post.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
+	h := &Handlers{db: db, searchDB: searchDB, posts: post.NewRepo(db), snippetRepo: snippet.NewRepo(db), noteRepo: note.NewRepo(db),
+		origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
-		"home":  "templates/public/home.html",
-		"post":  "templates/post/show.html",
-		"list":  "templates/post/list.html",
-		"error": "templates/public/error.html",
+		"home":     "templates/public/home.html",
+		"post":     "templates/post/show.html",
+		"list":     "templates/post/list.html",
+		"error":    "templates/public/error.html",
+		"snippets": "templates/snippet/index.html",
+		"notes":    "templates/note/list.html",
+		"note":     "templates/note/show.html",
 	} {
-		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", file)
+		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
 			return nil, err
 		}
@@ -97,6 +110,11 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 			}
 			h.list(w, r, lang, tag)
 		})
+		mux.HandleFunc("GET /"+lang+"/snippets", func(w http.ResponseWriter, r *http.Request) { h.snippets(w, r, lang, "") })
+		mux.HandleFunc("GET /"+lang+"/snippets/{slug}", func(w http.ResponseWriter, r *http.Request) { h.snippets(w, r, lang, r.PathValue("slug")) })
+		mux.HandleFunc("GET /"+lang+"/snippets/{slug}/raw/{file}", func(w http.ResponseWriter, r *http.Request) { h.snippetRaw(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/notes", func(w http.ResponseWriter, r *http.Request) { h.notes(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/notes/{slug}", func(w http.ResponseWriter, r *http.Request) { h.note(w, r, lang) })
 	}
 	// Everything else: redirects table, then the styled 404.
 	mux.HandleFunc("GET /", h.fallback)
@@ -151,9 +169,15 @@ func (h *Handlers) fail(w http.ResponseWriter, r *http.Request, err error) {
 // the opt-in signal the Worker checks; max-age=0 keeps browsers revalidating
 // so a purge is visible on the next request.
 func writeCacheable(w http.ResponseWriter, r *http.Request, body []byte) {
+	writeCacheableType(w, r, "text/html; charset=utf-8", body)
+}
+
+// writeCacheableType is writeCacheable for another content type the Worker
+// stores (worker/src/cache.ts CACHEABLE_TYPES).
+func writeCacheableType(w http.ResponseWriter, r *http.Request, contentType string, body []byte) {
 	sum := sha256.Sum256(body)
 	etag := `"` + hex.EncodeToString(sum[:8]) + `"`
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Cache-Control", "public, max-age=0, must-revalidate")
 	w.Header().Set("ETag", etag)
 	if r.Header.Get("If-None-Match") == etag {

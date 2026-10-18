@@ -1,0 +1,41 @@
+{{define "content"}}<main class="snip-page">
+<aside class="snip-aside">
+<h1>{{tr .Lang "nav.snippets"}}</h1>
+<p>{{tr .Lang "snippets.intro"}}</p>
+{{- if .List}}
+<nav class="snip-list" aria-label="{{tr .Lang "nav.snippets"}}">
+{{- range .List}}<a href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="snip-list-title">{{.Title}}</span><span class="snip-list-meta mono">{{.Meta}}</span></a>{{end}}
+</nav>
+{{- end}}
+</aside>
+{{- with .Cur}}
+<section class="snip-view" lang="{{.Lang}}">
+{{- if $.Untranslated}}
+<div class="banner-untranslated" lang="{{$.Lang}}">{{tr $.Lang "snippets.untranslated"}} <a href="{{$.OtherURL}}">{{tr $.Lang "post.read_original"}} →</a></div>
+{{- end}}
+<div class="snip-kind mono"><span class="kdot" aria-hidden="true"></span><span>{{tr $.Lang "palette.kind.snippet"}}{{with .Date}} · <time>{{.}}</time>{{end}}{{range .Tags}} #{{.}}{{end}}</span></div>
+<h2>{{.Title}}</h2>
+{{- if .Desc}}<div class="snip-desc">{{.Desc}}</div>{{end}}
+{{- if .Files}}
+<figure class="snip-code" data-snippet>
+<div class="snip-bar">
+<div class="snip-tabs" role="tablist" aria-label="{{tr $.Lang "snippets.files"}}">
+{{- range $i, $f := .Files}}<a class="snip-tab" role="tab" href="#{{$f.ID}}" id="{{$f.ID}}-tab" aria-controls="{{$f.ID}}" aria-selected="{{if eq $i 0}}true{{else}}false{{end}}" data-lang="{{$f.Lang}}" data-raw="{{$f.Raw}}">{{$f.Name}}</a>{{end}}
+</div>
+<div class="snip-tools">
+{{- with index .Files 0}}<span class="snip-lang"{{if not .Lang}} hidden{{end}}>{{.Lang}}</span>{{end}}
+<button type="button" class="snip-btn" data-snippet-lines aria-pressed="true" aria-label="{{tr $.Lang "snippets.lines"}}" hidden>#</button>
+<a class="snip-raw" href="{{(index .Files 0).Raw}}">{{tr $.Lang "snippets.raw"}}</a>
+<button type="button" class="snip-btn snip-copy" data-snippet-copy data-copied="{{tr $.Lang "snippets.copied"}}" hidden>{{tr $.Lang "snippets.copy"}}</button>
+</div>
+</div>
+{{- range .Files}}
+<pre class="chroma snip-panel" role="tabpanel" id="{{.ID}}" aria-labelledby="{{.ID}}-tab" tabindex="0"><code>{{.Code}}</code></pre>
+{{- end}}
+</figure>
+{{- end}}
+</section>
+{{- else}}
+<section class="snip-view"><p class="empty">{{tr .Lang "snippets.empty"}}</p></section>
+{{- end}}
+</main>{{end}}

@@ -150,7 +150,7 @@ A D1 view unioning published `entries` + `gh_activity` + `radar_history`, cursor
 | note | `/{lang}/notes`, `/{lang}/notes/{slug}` |
 | garden | `/{lang}/garden/{slug}` |
 | runbook | `/{lang}/runbooks/{slug}` |
-| snippet | `/{lang}/snippets`, `/{lang}/snippets/{slug}` |
+| snippet | `/{lang}/snippets`, `/{lang}/snippets/{slug}`, `/{lang}/snippets/{slug}/raw/{filename}` (text/plain) |
 | link | `/{lang}/links?status=unread` |
 | fav | `/{lang}/favs?type=tool` |
 | project | `/{lang}/projects`, `/{lang}/projects/{slug}` |

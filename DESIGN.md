@@ -79,7 +79,7 @@ Kind dots (more menu squares, palette rows; from `Header.dc.html`): post `#0891B
 | Command palette | Header | ⌘K / Ctrl+K, subsequence fuzzy, prefixes `p: n: s: l: f: pr: h:`, ↑↓ ↵ Esc |
 | Chips / filters | all | off: white, muted, border; on: section ink bg, white text; filter state reflected in URL |
 | Code block (light) | Post | `--surface-2` body, white header with filename, wrap, copy |
-| Code block (dark) | Post, Snippets | file tabs, language badge, copy (shows "copied" 1.4s), line numbers; chroma theme mapped to dark band tokens |
+| Code block (dark) | Post | file tabs, language badge, copy (shows "copied" 1.4s), line numbers; chroma theme mapped to dark band tokens |
 | Terminal block | Post | three dots, cyan path, rose `$`, green output |
 | Callout | Post | white, 3px left rule: tip success, warning warning, note info, danger accent-2 |
 | Side note | Post | 220px aside, wraps under paragraph on narrow screens |
@@ -119,7 +119,7 @@ Kind dots (more menu squares, palette rows; from `Header.dc.html`): post `#0891B
 | Post list, tag page | 1 | derived in 1.4: list head (eyebrow, 48px H1) over the latest-post card grid |
 | 404 / 410 | 1 | derived in 1.4: dark band with grid, mono status code in cyan, short copy, home CTA; noindex, never cached |
 | Admin entry list, media library, revisions diff | 1 | dashboard density |
-| Notes list and note permalink | 2 | indigo tone |
+| Notes list and note permalink | 2 | derived in 2.2: indigo tone, see §16 |
 | Admin categories, tags | 2 | |
 | Admin import (Ghost dry-run), redirects | 3 | |
 | Stream full page `/stream`, GitHub standalone | 4 | Home stream row pattern |
@@ -176,3 +176,9 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 ## 15. Implementation notes (command palette)
 - The palette matches `Header.dc.html`: overlay at 32% of `--text`, 620px panel 12vh from the top, mono input with a rose `>`, rows with kind dot, title and kind, and a hints footer. Results come from `GET /x/search` (FTS5 prefix search, ADR-010) instead of the prototype's client-side subsequence match; results in the page language come first, others are marked with their language.
 - The header button is hidden until `palette.js` runs: the palette needs JS. The no-JS search page arrives with full-site search (ROADMAP Phase 4).
+
+## 16. Implementation notes (Phase 2.2)
+- Snippets follow `Snippets.dc.html`: a light viewer (white file bar, `--surface-2` code area), not the dark code block the component table listed for it. Tokens are colored with the light chroma classes of the post code blocks; the prototype only mutes comment lines.
+- The active file tab has a 2px `--kind-snippet` underline. Without JS every file shows, one under the other, and the tabs are links to them; `snippet.js` shows one file, moves the language badge and raw link with the tab, and unhides `#` (line numbers) and copy.
+- `/{lang}/snippets` shows the newest snippet; `/{lang}/snippets/{slug}` the chosen one with the same list. Below about 616px the list stacks above the viewer.
+- Notes (derive): the post list head with an indigo eyebrow, then a 860px column of white cards. A card has the `~` glyph tile, the publish time as the permalink (`--link`), a TIL pill, the title in body size at weight 500, the body, tags and the source domain.

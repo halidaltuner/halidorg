@@ -31,6 +31,13 @@ func TestRoutes(t *testing.T) {
 		"/tr/feed.xml":                                       http.StatusOK,
 		"/sitemap.xml":                                       http.StatusOK,
 		"/en/posts/missing":                                  http.StatusNotFound,
+		"/en/snippets":                                       http.StatusOK,
+		"/tr/notes":                                          http.StatusOK,
+		"/en/snippets/missing":                               http.StatusNotFound,
+		"/en/snippets/missing/raw/main.go":                   http.StatusNotFound,
+		"/en/notes/missing":                                  http.StatusNotFound,
+		"/en/snippets/feed.xml":                              http.StatusOK,
+		"/static/js/snippet.js":                              http.StatusOK,
 	}
 	for path, want := range cases {
 		rec := httptest.NewRecorder()

@@ -589,15 +589,15 @@ body.dark { background: var(--dk-bg); }
 
 .prose pre.mermaid { padding: var(--sp-16); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); font-family: var(--font-mono); font-size: var(--fs-14); white-space: pre-wrap; }
 
-/* Chroma token classes. Light: comments muted, keywords info, names link,
+/* Chroma token classes (light also colors snippet files). Light: comments muted, keywords info, names link,
    numbers warning (Post.dc.html). Dark: tags rose, attributes indigo,
    strings green, comments muted. */
-.code-light .c, .code-light .c1, .code-light .cm, .code-light .cs, .code-light .cp { color: var(--text-muted); }
-.code-light .k, .code-light .kd, .code-light .kn, .code-light .kr, .code-light .kt, .code-light .kc { color: var(--info); }
-.code-light .nf, .code-light .nc, .code-light .nt, .code-light .fm { color: var(--link); }
-.code-light .s, .code-light .s1, .code-light .s2, .code-light .sb, .code-light .sc, .code-light .sr { color: var(--success); }
-.code-light .m, .code-light .mi, .code-light .mf, .code-light .mh { color: var(--warning); }
-.code-light .na { color: var(--info); }
+:is(.code-light, .snip-code) .c, :is(.code-light, .snip-code) .c1, :is(.code-light, .snip-code) .cm, :is(.code-light, .snip-code) .cs, :is(.code-light, .snip-code) .cp { color: var(--text-muted); }
+:is(.code-light, .snip-code) .k, :is(.code-light, .snip-code) .kd, :is(.code-light, .snip-code) .kn, :is(.code-light, .snip-code) .kr, :is(.code-light, .snip-code) .kt, :is(.code-light, .snip-code) .kc { color: var(--info); }
+:is(.code-light, .snip-code) .nf, :is(.code-light, .snip-code) .nc, :is(.code-light, .snip-code) .nt, :is(.code-light, .snip-code) .fm { color: var(--link); }
+:is(.code-light, .snip-code) .s, :is(.code-light, .snip-code) .s1, :is(.code-light, .snip-code) .s2, :is(.code-light, .snip-code) .sb, :is(.code-light, .snip-code) .sc, :is(.code-light, .snip-code) .sr { color: var(--success); }
+:is(.code-light, .snip-code) .m, :is(.code-light, .snip-code) .mi, :is(.code-light, .snip-code) .mf, :is(.code-light, .snip-code) .mh { color: var(--warning); }
+:is(.code-light, .snip-code) .na { color: var(--info); }
 .code-dark .c, .code-dark .c1, .code-dark .cm, .code-dark .cs, .code-dark .cp { color: var(--dk-muted); }
 .code-dark .nt { color: var(--dk-rose); }
 .code-dark .na { color: var(--dk-indigo); }
@@ -686,6 +686,79 @@ body.dark { background: var(--dk-bg); }
 .list-head { display: flex; flex-direction: column; gap: var(--sp-12); }
 .list-head h1 { margin: 0; font-size: var(--fs-48); line-height: 1.08; font-weight: 600; letter-spacing: -0.025em; text-wrap: balance; }
 .list-head .back { font-size: var(--fs-13); color: var(--link); text-decoration: none; }
+
+/* Snippets (design/Snippets.dc.html): list on the left, viewer on the right. */
+.snip-page {
+  max-width: var(--w-snippets); margin: 0 auto; padding: var(--sp-64) var(--gutter) 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--sp-48); align-items: start;
+}
+.snip-aside { display: flex; flex-direction: column; gap: var(--sp-16); max-width: 320px; min-width: 0; }
+.snip-aside h1 { margin: 0; font-size: var(--fs-36); line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; }
+.snip-aside > p { margin: 0; font-size: var(--fs-16); line-height: 1.6; color: var(--text-muted); }
+.snip-list { display: flex; flex-direction: column; gap: 2px; margin-top: var(--sp-8); }
+.snip-list a { display: flex; flex-direction: column; gap: 2px; padding: 10px var(--sp-12); border-radius: var(--radius-1); text-decoration: none; }
+.snip-list a:hover, .snip-list a[aria-current] { background: var(--surface-2); }
+.snip-list-title { font-size: var(--fs-15); color: var(--text); }
+.snip-list-meta { font-size: var(--fs-12); color: var(--text-muted); }
+.snip-view { grid-column: span 2; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-16); }
+.snip-view .banner-untranslated { margin-bottom: 0; }
+.snip-kind { display: flex; align-items: center; gap: 10px; font-size: var(--fs-13); color: var(--text-muted); }
+.snip-kind .kdot { --k: var(--kind-snippet); }
+.snip-view h2 { margin: 0; font-size: var(--fs-28); line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; text-wrap: balance; }
+.snip-desc { max-width: var(--w-prose); font-size: var(--fs-16); line-height: 1.6; color: var(--text-muted); }
+.snip-desc > * { margin: 0; }
+.snip-desc > * + * { margin-top: var(--sp-8); }
+.snip-desc a { color: var(--link); }
+.snip-code { margin: 0; border: 1px solid var(--border); border-radius: var(--radius-1); overflow: hidden; background: var(--surface-2); }
+.snip-bar {
+  display: flex; align-items: stretch; justify-content: space-between; flex-wrap: wrap;
+  background: var(--surface); border-bottom: 1px solid var(--border); font-family: var(--font-mono); font-size: var(--fs-13);
+}
+.snip-tabs { display: flex; overflow-x: auto; }
+.snip-tab {
+  border-right: 1px solid var(--border); border-bottom: 2px solid transparent; padding: 10px 14px;
+  background: var(--surface); color: var(--text-muted); text-decoration: none; white-space: nowrap;
+}
+.snip-tab[aria-selected="true"] { background: var(--surface-2); color: var(--text); border-bottom-color: var(--kind-snippet); }
+.snip-tools { display: flex; align-items: center; gap: 14px; padding: 0 var(--sp-12); color: var(--text-muted); }
+.snip-lang { font-size: var(--fs-11); padding: 2px 6px; border: 1px solid var(--border); border-radius: var(--radius-1); }
+.snip-btn { border: 0; background: none; padding: 0; font: inherit; cursor: pointer; color: var(--text-muted); }
+.snip-btn[aria-pressed="true"] { color: var(--text); }
+.snip-raw { color: var(--text-muted); text-decoration: none; }
+.snip-raw:hover { color: var(--text); }
+.snip-btn.snip-copy { color: var(--link); }
+.snip-panel {
+  margin: 0; padding: var(--sp-16) 0; overflow: auto; color: var(--text);
+  font-family: var(--font-mono); font-size: var(--fs-15); line-height: 1.6; tab-size: 4;
+}
+/* Without JS every file shows, one under the other; the island shows one. */
+.snip-panel + .snip-panel { border-top: 1px solid var(--border); }
+.snip-panel[hidden] { display: none; }
+.snip-panel .line { display: block; padding-right: var(--sp-16); }
+.snip-panel .ln { display: inline-block; width: 44px; padding-right: var(--sp-16); text-align: right; color: var(--text-muted); user-select: none; }
+.snip-panel .cl { padding-left: var(--sp-16); }
+.snip-code.no-ln .ln { display: none; }
+/* One track below ~616px: a span of 2 would add an implicit column. */
+@media (max-width: 640px) { .snip-view { grid-column: auto; } }
+
+/* Notes (derive: indigo tone, card without title emphasis, time as permalink) */
+.list-head.tone-indigo .eyebrow { color: var(--t-ink); }
+.notes-page { max-width: var(--w-narrow); }
+.notes-page .back { font-size: var(--fs-13); color: var(--link); text-decoration: none; }
+.note-one .banner-untranslated { margin-bottom: 0; }
+.note-list { display: flex; flex-direction: column; gap: var(--sp-16); }
+.note-card {
+  display: flex; flex-direction: column; gap: var(--sp-12); padding: var(--sp-20) var(--sp-24);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); box-shadow: var(--shadow-card);
+}
+.note-meta { display: flex; align-items: center; gap: 10px; font-size: var(--fs-13); color: var(--text-muted); }
+.note-time { color: var(--link); text-decoration: none; }
+.note-time:hover { text-decoration: underline; }
+.note-title { margin: 0; font-size: var(--fs-16); line-height: 1.6; font-weight: 500; }
+.note-card .prose { font-size: var(--fs-16); line-height: 1.6; gap: var(--sp-12); }
+.note-one .note-card .prose { font-size: var(--fs-18); line-height: 1.7; }
+.note-foot { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; font-size: var(--fs-12); }
+.note-source { color: var(--link); text-decoration: none; margin-left: auto; }
 
 /* Post (design/Post.dc.html) */
 .post-cover { position: relative; height: clamp(240px, 38vw, 440px); background: var(--dk-bg); }

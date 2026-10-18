@@ -164,13 +164,14 @@ func TestHomeHasChrome(t *testing.T) {
 		`<footer class="site-footer">`,
 		`<span class="sha">a3f91c2</span>`,
 		`/static/js/header.js`,
+		`<a href="/en/notes" data-s="notes"><span class="sq"`,
 	} {
 		if !strings.Contains(body, want) {
 			t.Errorf("missing %s", want)
 		}
 	}
-	// Only posts exists in Phase 1, and home is not a section page.
-	for _, absent := range []string{`aria-current="page"`, "nav-more", "/en/projects/"} {
+	// Sections without pages stay out, and home is not a section page.
+	for _, absent := range []string{`aria-current="page"`, "/en/projects", "/en/favs"} {
 		if strings.Contains(body, absent) {
 			t.Errorf("unexpected %s", absent)
 		}
