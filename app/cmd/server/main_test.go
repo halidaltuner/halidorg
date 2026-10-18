@@ -3,9 +3,11 @@ package main
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"halid.org/engine/internal/store/storetest"
+	"halid.org/engine/web"
 )
 
 func TestRoutes(t *testing.T) {
@@ -52,6 +54,30 @@ func TestRoutes(t *testing.T) {
 		if rec.Code != want {
 			t.Errorf("%s: got %d, want %d", path, rec.Code, want)
 		}
+	}
+}
+
+// Versioned assets (web.Asset) are immutable; plain paths stay short.
+func TestStaticCaching(t *testing.T) {
+	mux, err := routes(storetest.Stores(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for path, want := range map[string]string{
+		web.Asset("/static/css/app.css"): "public, max-age=31536000, immutable",
+		"/static/css/app.css":            "public, max-age=3600",
+	} {
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, httptest.NewRequest("GET", path, nil))
+		if rec.Code != 200 || rec.Header().Get("Cache-Control") != want {
+			t.Errorf("%s: %d %q", path, rec.Code, rec.Header().Get("Cache-Control"))
+		}
+	}
+	// Pages link the versioned URL.
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest("GET", "/en/", nil))
+	if !strings.Contains(rec.Body.String(), `href="`+web.Asset("/static/css/app.css")+`"`) {
+		t.Error("home does not link the versioned stylesheet")
 	}
 }
 

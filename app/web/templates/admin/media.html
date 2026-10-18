@@ -13,7 +13,7 @@
 <div class="md-grid" id="md-grid">
 {{- range .Cards}}{{template "media-card" .}}{{else}}<p class="adm-empty" id="md-empty">{{tr .Lang "admin.media.empty"}}</p>{{end}}
 </div>
-<script src="/static/js/media.js" defer></script>
+<script src="{{asset "/static/js/media.js"}}" defer></script>
 {{end}}
 
 {{define "media-card"}}<article class="md-card" id="m-{{.Item.ID}}">

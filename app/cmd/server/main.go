@@ -135,7 +135,13 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 func staticHandler() http.Handler {
 	files := http.FileServerFS(web.Static)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cache-Control", "public, max-age=3600")
+		// Templates link CSS and JS with a content hash (web.Asset): those
+		// URLs never change content. Unversioned ones (fonts from CSS) stay short.
+		if r.URL.Query().Has("v") {
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
 		files.ServeHTTP(w, r)
 	})
 }
