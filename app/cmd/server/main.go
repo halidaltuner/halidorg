@@ -28,6 +28,7 @@ import (
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/media"
 	"halid.org/engine/internal/public"
+	"halid.org/engine/internal/settings"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/styleguide"
 	"halid.org/engine/internal/taxonomy"
@@ -135,6 +136,11 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	tax.Register(mux)
+	setAdmin, err := settings.NewAdmin(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	setAdmin.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

@@ -45,7 +45,10 @@ func NewEntryJobs(db, searchDB store.DB, blob store.Blob, warm *Warmer) *EntryJo
 }
 
 // Register adds the entry handlers to j.
-func (e *EntryJobs) Register(j *Jobs) { j.Handle(TypeEntryChanged, e.changed) }
+func (e *EntryJobs) Register(j *Jobs) {
+	j.Handle(TypeEntryChanged, e.changed)
+	j.Handle(TypePagesChanged, e.pages)
+}
 
 // Enqueue is what write paths call after their batch commits.
 func Enqueue(ctx context.Context, j *Jobs, entryID string, prev *Ref) error {

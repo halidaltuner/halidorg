@@ -4,7 +4,7 @@
 <span class="eyebrow mono">// {{tr .Lang "home.eyebrow"}}</span>
 <h1>{{tr .Lang "home.title1"}} <span class="c">{{tr .Lang "home.title2"}}</span> {{tr .Lang "home.title3"}} <span class="r">{{tr .Lang "home.title4"}}</span>.</h1>
 <p>{{tr .Lang "home.sub"}}</p>
-<div class="home-ctas"><a class="cta-primary" href="/{{.Lang}}/posts">{{tr .Lang "home.cta_posts"}} →</a></div>
+<div class="home-ctas"><a class="cta-primary" href="/{{.Lang}}/posts">{{tr .Lang "home.cta_posts"}} →</a><a class="cta-outline" href="/{{.Lang}}/projects">{{tr .Lang "home.tile.projects"}} →</a></div>
 </div>
 {{- with .Featured}}
 <a class="featured" href="{{.Href}}">
@@ -14,6 +14,9 @@
 </div>
 </section>
 <main class="home">
+{{- with .Tiles}}
+<nav class="home-tiles" aria-label="{{tr $.Lang "home.sections"}}">{{range .}}<a class="home-tile tone-{{.Tone}}" href="{{.Href}}"><span class="g mono" aria-hidden="true">{{.Glyph}}</span><span class="l">{{.Label}}</span><span class="n mono">{{.Count}}</span></a>{{end}}</nav>
+{{- end}}
 {{- if .Latest}}
 <section class="home-section">
 <div class="section-head"><h2>{{tr .Lang "home.latest"}}</h2><a class="mono" href="/{{.Lang}}/posts">{{tr .Lang "home.all"}} →</a></div>

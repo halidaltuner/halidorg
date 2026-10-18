@@ -2,6 +2,7 @@ package public
 
 import (
 	"errors"
+	"fmt"
 	"html/template"
 	"log/slog"
 	"net/http"
@@ -94,6 +95,38 @@ type homePage struct {
 	Chips      []filterChip
 	StreamKind string // server-side filter (no-JS path)
 	HasStream  bool   // anything published in the stream kinds
+	Tiles      []tile
+}
+
+// tile is one section tile under the home hero (design/Home.dc.html). Only
+// sections with a page get one: projects and homelab since Phase 4.3.
+type tile struct {
+	Href, Glyph, Label, Count, Tone string
+}
+
+// tiles counts the live software projects (active, maintained, running)
+// and the homelab builds in lang.
+func (h *Handlers) tiles(r *http.Request, lang string) ([]tile, error) {
+	res, err := h.db.Query(r.Context(), `SELECT
+  coalesce(sum(p.project_type = 'software' AND p.project_status IN ('active', 'maintained', 'running')), 0) AS live,
+  coalesce(sum(p.project_type = 'homelab'), 0) AS builds
+FROM entries e JOIN projects p ON p.entry_id = e.id
+WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`, lang)
+	if err != nil {
+		return nil, err
+	}
+	rows, err := store.Scan[struct {
+		Live   int `json:"live"`
+		Builds int `json:"builds"`
+	}](res)
+	if err != nil || len(rows) == 0 {
+		return nil, err
+	}
+	n := func(key string, v int) string { return fmt.Sprintf(i18n.T(lang, key), v) }
+	return []tile{
+		{Href: "/" + lang + "/projects", Glyph: "◆", Label: i18n.T(lang, "home.tile.projects"), Count: n("home.tile.projects_n", rows[0].Live), Tone: "green"},
+		{Href: "/" + lang + "/homelab", Glyph: "⌁", Label: i18n.T(lang, "home.tile.homelab"), Count: n("home.tile.homelab_n", rows[0].Builds), Tone: "orange"},
+	}, nil
 }
 
 func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
@@ -123,6 +156,10 @@ func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
 	p.Stream = stream(lang, p.StreamKind, rows)
 	p.Chips = streamChips(lang, p.StreamKind, rows)
 	p.HasStream = len(rows) > 0
+	if p.Tiles, err = h.tiles(r, lang); err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	p.Head.Scripts = []string{"/static/js/filter.js"}
 	h.render(w, r, "home", p)
 }

@@ -1,0 +1,37 @@
+{{define "content"}}<main class="hl tone-orange" data-filter="category"{{with .Category}} data-filtered="{{.}}"{{end}}>
+<section class="hl-hero">
+<div class="hl-hero-in">
+<div class="hl-intro">
+<span class="hl-eyebrow mono">⌁ {{tr .Lang "homelab.eyebrow"}}</span>
+<h1>{{tr .Lang "homelab.title"}}</h1>
+<p>{{tr .Lang "homelab.sub"}}</p>
+<dl class="hl-stats">{{range .Stats}}<div><dd>{{.Value}}</dd><dt class="mono">{{.Key}}</dt></div>{{end}}</dl>
+</div>
+{{- with .Featured}}
+<a class="hl-featured" href="{{.Href}}">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}<span class="hl-plate"><span>{{tr $.Lang "homelab.featured"}}: {{.Name}}</span><span class="mono">→</span></span></a>
+{{- end}}
+</div>
+</section>
+<div class="hl-body">
+{{- if .Builds}}
+{{- if gt (len .Chips) 2}}
+<nav class="chips hl-chips" aria-label="{{tr .Lang "homelab.filter"}}">{{range .Chips}}<a class="chip tone-{{.Tone}}" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>
+{{- end}}
+<div class="hl-grid">
+{{- range .Builds}}
+<a class="hl-card" href="{{.Href}}" data-filter-value="{{.CategoryKey}}">
+<div class="hl-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
+<div class="hl-card-body">
+<div class="hl-card-meta mono"><span class="tone-{{.Tone}}">{{.Category}}</span><span>{{.Status}}</span></div>
+<h2>{{.Name}}</h2>
+{{- with .Tagline}}<p>{{.}}</p>{{end}}
+{{- if or .Cost .Time}}<div class="hl-card-foot mono">{{with .Cost}}<span>{{.}}</span>{{end}}{{with .Time}}<span>{{.}}</span>{{end}}</div>{{end}}
+</div>
+</a>
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "homelab.empty"}}</p>
+{{- end}}
+</div>
+</main>{{end}}

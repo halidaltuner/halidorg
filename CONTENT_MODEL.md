@@ -79,7 +79,7 @@ Every link category is an awesome list at `/{lang}/awesome/{category}` (Phase 2.
 - `project_gallery(project_id, media_id, sort)` images with both alt texts; a media item in a gallery cannot be deleted
 - Homelab categories (`categories.kind = 'homelab'`, seeded by 0007 with the prototype tones): homelab orange, electronics violet, 3d print cyan, woodwork amber, network green. A homelab project needs one; a software project has none.
 - Each revision keeps the facts, stack, parts, links and gallery in `data_json`, so a restore brings them back; public pages read the published revision's copy.
-- Homelab stats tiles (builds, nodes, idle W, uptime): `builds` is computed; the rest live in `site_settings` as manual values
+- Homelab stats tiles (builds, nodes, idle W, uptime): `builds` is computed; the rest live in `site_settings` under `homelab_stats` (`{"nodes","idle","uptime"}`, free text), edited at `/admin/settings`
 
 ### buildlog
 `buildlogs(entry_id, project_entry_id, log_date, hours_spent nullable)` rendered as the project timeline and at `/{lang}/projects/{project}/log/{slug}`. A log is in its project's language; deleting a project deletes its logs.
