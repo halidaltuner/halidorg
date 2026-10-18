@@ -40,5 +40,7 @@ jobs:
       # Migrations first: the new container expects the new schema. They must
       # stay backward compatible, since the old container serves until deploy ends.
       - run: npx wrangler d1 migrations apply DB --remote --env "$WRANGLER_ENV" -c ../wrangler.jsonc
+      # Search index database (ADR-010); derived data, rebuildable from DB.
+      - run: npx wrangler d1 migrations apply SEARCH --remote --env "$WRANGLER_ENV" -c ../wrangler.jsonc
       # Docker on the runner builds the container image; wrangler pushes it.
       - run: npx wrangler deploy --env "$WRANGLER_ENV" -c ../wrangler.jsonc --var "DEPLOY_SHA:$GITHUB_SHA"

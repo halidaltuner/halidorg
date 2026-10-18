@@ -43,6 +43,21 @@ npx wrangler d1 migrations apply DB --remote --env staging -c ../wrangler.jsonc
 npx wrangler d1 migrations apply DB --remote --env prod -c ../wrangler.jsonc
 ```
 
+The search index lives in its own database (ADR-010), binding `SEARCH`,
+migrations in `migrations-search/`. Created on 2026-10-18:
+
+| Env | Database | `database_id` |
+|---|---|---|
+| staging | `halidorg-search-staging` | `d6c10762-47ac-4a2e-869e-4466f69ddf39` |
+| prod | `halidorg-search-prod` | `e0381f89-ed14-40f3-ac58-36e06c29d9ae` |
+
+```bash
+npx wrangler d1 migrations apply SEARCH --remote --env staging -c ../wrangler.jsonc
+npx wrangler d1 migrations apply SEARCH --remote --env prod -c ../wrangler.jsonc
+```
+
+It is never exported or backed up: a rebuild job recreates it from `DB`.
+
 ## 2. Secrets
 
 | Secret | Value |
