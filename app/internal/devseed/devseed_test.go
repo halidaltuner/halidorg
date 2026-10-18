@@ -22,4 +22,8 @@ func TestSeedIsIdempotent(t *testing.T) {
 	if err != nil || n != 0 {
 		t.Fatalf("second seed: %d %v", n, err)
 	}
+	// Existing samples are re-rendered, not created again.
+	if got := len(s.Queue.(*storetest.Queue).Sent); got != 8 {
+		t.Errorf("queued %d jobs after reseed, want 8", got)
+	}
 }
