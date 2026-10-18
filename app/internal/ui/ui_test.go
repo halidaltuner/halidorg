@@ -16,8 +16,8 @@ func TestNavShowsOnlyEnabledSections(t *testing.T) {
 	if len(c.More) != 0 {
 		t.Fatalf("more %+v, want none until those sections exist", c.More)
 	}
-	if c.Search {
-		t.Error("search must stay hidden until the palette ships")
+	if !c.Search {
+		t.Error("the palette ships in Phase 1: public pages load it")
 	}
 }
 

@@ -222,4 +222,3 @@ func TestDeadAfterMaxAndUnknownType(t *testing.T) {
 		t.Errorf("unknown type: %s %q", st, e)
 	}
 }
-

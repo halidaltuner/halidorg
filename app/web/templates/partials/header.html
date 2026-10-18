@@ -14,7 +14,9 @@
     </details>{{end}}
   </nav>
   <div class="site-header-tools">
-    <button type="button" class="search-btn" data-palette{{if not .Search}} hidden{{end}}>
+    {{- /* palette.js unhides it: the palette needs JS (no-JS search page: Phase 4). */}}
+    <button type="button" class="search-btn" data-palette hidden aria-haspopup="dialog"
+      data-placeholder="{{tr .Lang "palette.placeholder"}}" data-empty="{{tr .Lang "palette.empty"}}" data-label="{{tr .Lang "palette.label"}}" data-lang="{{.Lang}}">
       <span>{{tr .Lang "search.label"}}</span><kbd>⌘K</kbd>
     </button>
     {{template "lang-switch" .}}

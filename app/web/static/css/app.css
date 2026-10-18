@@ -1077,3 +1077,28 @@ body.dark { background: var(--dk-bg); }
 .rv-table tr.add td.r, .rv-table tr.chg td.r { background: var(--tone-green-tint); }
 .rv-table tr.skip td { text-align: center; color: var(--text-muted); background: var(--bg); padding: 4px; }
 @media (max-width: 960px) { .rv { grid-template-columns: minmax(0, 1fr); } }
+
+/* Command palette (design/Header.dc.html) */
+.pal {
+  position: fixed; inset: 0; z-index: 100; display: flex; justify-content: center; align-items: flex-start;
+  padding: 12vh 16px 16px; background: color-mix(in srgb, var(--text) 32%, transparent);
+}
+.pal[hidden] { display: none; }
+html.pal-open { overflow: hidden; }
+.pal-panel {
+  width: 100%; max-width: 620px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2);
+  box-shadow: 0 12px 40px color-mix(in srgb, var(--text) 18%, transparent); overflow: hidden;
+}
+.pal-input { display: flex; align-items: center; gap: var(--sp-12); padding: 14px var(--sp-16); border-bottom: 1px solid var(--border); }
+.pal-prompt { font-family: var(--font-mono); font-weight: 700; font-size: var(--fs-15); color: var(--accent-2); }
+.pal-input input { flex: 1; min-width: 0; border: 0; outline: none; font-family: var(--font-mono); font-size: var(--fs-15); color: var(--text); background: transparent; }
+.pal-input kbd { font-family: var(--font-mono); font-size: var(--fs-12); color: var(--text-muted); }
+.pal-list { max-height: 360px; overflow: auto; padding: 6px; }
+.pal-list:empty { display: none; }
+.pal-row { display: flex; align-items: center; gap: var(--sp-12); padding: 9px 10px; border-radius: var(--radius-1); text-decoration: none; color: var(--text); }
+.pal-row[aria-selected="true"] { background: var(--surface-2); }
+.pal-row .kdot { flex: none; }
+.pal-row .t { flex: 1; min-width: 0; font-size: var(--fs-15); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pal-row .k { font-family: var(--font-mono); font-size: var(--fs-12); color: var(--text-muted); }
+.pal-empty { margin: 0; padding: 16px 16px; font-family: var(--font-mono); font-size: var(--fs-13); color: var(--text-muted); }
+.pal-hints { display: flex; gap: var(--sp-16); flex-wrap: wrap; padding: 10px var(--sp-16); border-top: 1px solid var(--border); background: var(--bg); font-family: var(--font-mono); font-size: var(--fs-12); color: var(--text-muted); }
