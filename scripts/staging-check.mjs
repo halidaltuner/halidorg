@@ -23,6 +23,8 @@ const results = [];
 function check(name, ok, detail = "") {
 	results.push({ name, ok, detail });
 	console.log(`${ok ? "PASS" : "FAIL"}  ${name}${detail ? "  · " + detail : ""}`);
+	// Annotations are readable through the checks API, where logs are not.
+	if (process.env.GITHUB_ACTIONS) console.log(`::${ok ? "notice" : "error"} title=${ok ? "PASS" : "FAIL"}::${name}${detail ? " · " + String(detail).replace(/\n/g, " ") : ""}`);
 }
 
 async function get(path, extra = {}) {

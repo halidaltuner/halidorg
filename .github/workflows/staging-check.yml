@@ -9,7 +9,7 @@ on:
     branches: [phase-1/check] # runs before the workflow is on main; drop after merge
 
 permissions:
-  contents: read
+  contents: write # pushes the report and screenshots to the checks/staging branch
 
 jobs:
   check:
@@ -33,6 +33,16 @@ jobs:
           CF_ACCESS_CLIENT_ID: ${{ secrets.CF_ACCESS_CLIENT_ID }}
           CF_ACCESS_CLIENT_SECRET: ${{ secrets.CF_ACCESS_CLIENT_SECRET }}
         run: node staging-check.mjs out
+      # Results also go to an orphan branch, readable with git where
+      # artifact and log downloads are not (blob storage behind a proxy).
+      - name: Publish results to checks/staging
+        if: always()
+        run: |
+          cd scripts/out
+          git init -q -b checks/staging
+          git -c user.name=staging-check -c user.email=actions@users.noreply.github.com add -A
+          git -c user.name=staging-check -c user.email=actions@users.noreply.github.com commit -qm "staging-check ${GITHUB_SHA::7} run ${GITHUB_RUN_ID}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${GITHUB_REPOSITORY}.git" checks/staging
       - uses: actions/upload-artifact@v4
         if: always()
         with:
