@@ -6,6 +6,9 @@ import (
 	"errors"
 	"html/template"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/web"
@@ -68,7 +71,11 @@ func NewChrome(lang, active string, all bool, switchTo func(string) string) Chro
 		More:   items(more, lang, active, all),
 		Switch: i18n.Switcher(lang, switchTo),
 		Footer: Footer{
-			Links:  []Link{{Label: i18n.T(lang, "footer.admin"), Href: "/admin", Muted: true}},
+			Links: []Link{
+				{Label: "rss", Href: "/" + lang + "/feed.xml"},
+				{Label: "json feed", Href: "/" + lang + "/feed.json"},
+				{Label: i18n.T(lang, "footer.admin"), Href: "/admin", Muted: true},
+			},
 			Deploy: Deploy(),
 		},
 	}
@@ -83,7 +90,7 @@ func items(list []section, lang, active string, all bool) []NavItem {
 		out = append(out, NavItem{
 			Slug:   s.slug,
 			Label:  i18n.T(lang, "nav."+s.slug),
-			Href:   "/" + lang + "/" + s.slug + "/",
+			Href:   "/" + lang + "/" + s.slug,
 			Active: s.slug == active,
 		})
 	}
@@ -109,7 +116,34 @@ func Env() string {
 
 // Funcs is the FuncMap every template set parses with.
 func Funcs() template.FuncMap {
-	return template.FuncMap{"tr": i18n.T, "dict": dict}
+	return template.FuncMap{
+		"tr": i18n.T, "dict": dict, "date": Date, "minutes": Minutes,
+		"add": func(a, b int) int { return a + b },
+		"sub": func(a, b int) int { return a - b },
+	}
+}
+
+// Date formats unix seconds (int64 or *int64) as 2006-01-02, UTC.
+func Date(v any) string {
+	switch t := v.(type) {
+	case int64:
+		return time.Unix(t, 0).UTC().Format("2006-01-02")
+	case *int64:
+		if t != nil {
+			return time.Unix(*t, 0).UTC().Format("2006-01-02")
+		}
+	}
+	return ""
+}
+
+// MinutesShort is the compact reading time on cards and rows ("12 min").
+func MinutesShort(lang string, n int) string {
+	return strings.Replace(i18n.T(lang, "post.min_short"), "%d", strconv.Itoa(max(n, 1)), 1)
+}
+
+// Minutes is the reading time label ("12 min read", "12 dk okuma").
+func Minutes(lang string, n int) string {
+	return strings.Replace(i18n.T(lang, "post.minutes"), "%d", strconv.Itoa(max(n, 1)), 1)
 }
 
 // dict lets a template pass named arguments to a partial:

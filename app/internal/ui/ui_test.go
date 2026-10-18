@@ -10,7 +10,7 @@ func same(string) string { return "/x" }
 
 func TestNavShowsOnlyEnabledSections(t *testing.T) {
 	c := NewChrome("en", "posts", false, same)
-	if len(c.Nav) != 1 || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts/" {
+	if len(c.Nav) != 1 || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts" {
 		t.Fatalf("nav %+v", c.Nav)
 	}
 	if len(c.More) != 0 {
@@ -31,7 +31,7 @@ func TestNavAllForStyleguide(t *testing.T) {
 			t.Errorf("%s active=%v", n.Slug, n.Active)
 		}
 	}
-	if c.Nav[0].Label != "yazılar" || c.More[0].Href != "/tr/notes/" {
+	if c.Nav[0].Label != "yazılar" || c.More[0].Href != "/tr/notes" {
 		t.Errorf("labels %q %q", c.Nav[0].Label, c.More[0].Href)
 	}
 }
@@ -64,7 +64,7 @@ func TestHeader(t *testing.T) {
 	out := render(t, "header", NewChrome("en", "posts", false, same))
 	for _, want := range []string{
 		`class="wordmark" href="/en/"`,
-		`<a href="/en/posts/" data-s="posts" aria-current="page">posts</a>`,
+		`<a href="/en/posts" data-s="posts" aria-current="page">posts</a>`,
 		`<details class="nav-sheet">`,
 		`data-palette hidden`,
 		`class="lang-switch"`,

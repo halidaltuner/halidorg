@@ -4,10 +4,12 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"halid.org/engine/internal/store/storetest"
 )
 
 func TestRoutes(t *testing.T) {
-	mux, err := routes()
+	mux, err := routes(storetest.Stores(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +26,11 @@ func TestRoutes(t *testing.T) {
 		"/static/":                                           http.StatusNotFound,
 		"/robots.txt":                                        http.StatusOK,
 		"/lang/en":                                           http.StatusSeeOther,
-		"/internal/jobs":                                     http.StatusMethodNotAllowed,
+		"/internal/jobs":                                     http.StatusNotFound,
+		"/en/posts":                                          http.StatusOK,
+		"/tr/feed.xml":                                       http.StatusOK,
+		"/sitemap.xml":                                       http.StatusOK,
+		"/en/posts/missing":                                  http.StatusNotFound,
 	}
 	for path, want := range cases {
 		rec := httptest.NewRecorder()
@@ -37,7 +43,7 @@ func TestRoutes(t *testing.T) {
 
 func TestStyleguideIs404InProd(t *testing.T) {
 	t.Setenv("APP_ENV", "prod")
-	mux, err := routes()
+	mux, err := routes(storetest.Stores(t))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,7 +56,7 @@ func TestStyleguideIs404InProd(t *testing.T) {
 
 // The jobs endpoint only answers the Worker's queue consumer.
 func TestInternalJobsNeedsHeader(t *testing.T) {
-	mux, err := routes()
+	mux, err := routes(storetest.Stores(t))
 	if err != nil {
 		t.Fatal(err)
 	}

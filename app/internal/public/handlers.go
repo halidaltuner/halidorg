@@ -1,17 +1,23 @@
-// Package public serves the public site.
+// Package public serves the public site: home, posts, post lists, tag
+// pages, the language switch and the styled 404/410 pages.
 package public
 
 import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"html/template"
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 
+	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/i18n"
+	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
 )
 
@@ -20,30 +26,76 @@ type alternate struct {
 	Href string
 }
 
-type page struct {
-	ui.Chrome
-	Alternates []alternate
+// Head is what partials/base.html puts in <head>.
+type Head struct {
+	Title       string
+	Description string
+	Canonical   string
+	Alternates  []alternate
+	Noindex     bool
+	OGType      string
+	Scripts     []string
 }
 
-// Handlers holds parsed templates for public pages.
+type page struct {
+	ui.Chrome
+	Head Head
+}
+
+// Handlers holds parsed templates and the post repository.
 type Handlers struct {
-	hello *template.Template
+	db     store.DB
+	posts  *post.Repo
+	origin string
+	tmpl   map[string]*template.Template
 }
 
 // New parses the public templates. It fails at startup rather than per request.
-func New() (*Handlers, error) {
-	hello, err := ui.Parse("hello", "templates/partials/base.html", "templates/public/hello.html")
-	if err != nil {
-		return nil, err
+func New(db store.DB) (*Handlers, error) {
+	h := &Handlers{db: db, posts: post.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
+	for name, file := range map[string]string{
+		"home":  "templates/public/home.html",
+		"post":  "templates/post/show.html",
+		"list":  "templates/post/list.html",
+		"error": "templates/public/error.html",
+	} {
+		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", file)
+		if err != nil {
+			return nil, err
+		}
+		h.tmpl[name] = t
 	}
-	return &Handlers{hello: hello}, nil
+	return h, nil
 }
 
-// Register adds the public routes to mux.
+func origin() string {
+	if o := strings.TrimRight(os.Getenv("PUBLIC_ORIGIN"), "/"); o != "" {
+		return o
+	}
+	return "http://localhost:8787"
+}
+
+// Register adds the public routes. Language routes are literal per language
+// (CLAUDE.md): a /{lang}/posts pattern would overlap /lang/{lang}.
 func (h *Handlers) Register(mux *http.ServeMux) {
 	mux.HandleFunc("GET /{$}", h.root)
-	mux.HandleFunc("GET /{lang}/{$}", h.home)
 	mux.HandleFunc("GET /lang/{lang}", setLang)
+	for _, l := range i18n.Supported {
+		lang := l
+		mux.HandleFunc("GET /"+lang+"/{$}", func(w http.ResponseWriter, r *http.Request) { h.home(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/posts", func(w http.ResponseWriter, r *http.Request) { h.list(w, r, lang, "") })
+		mux.HandleFunc("GET /"+lang+"/posts/{slug}", func(w http.ResponseWriter, r *http.Request) { h.post(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/tags/{tag}", func(w http.ResponseWriter, r *http.Request) {
+			tag := r.PathValue("tag")
+			if !content.ValidSlug(tag) {
+				h.notFound(w, r)
+				return
+			}
+			h.list(w, r, lang, tag)
+		})
+	}
+	// Everything else: redirects table, then the styled 404.
+	mux.HandleFunc("GET /", h.fallback)
 }
 
 func (h *Handlers) root(w http.ResponseWriter, r *http.Request) {
@@ -54,29 +106,45 @@ func (h *Handlers) root(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/"+lang+"/", http.StatusFound)
 }
 
-func (h *Handlers) home(w http.ResponseWriter, r *http.Request) {
-	lang := r.PathValue("lang")
-	if !i18n.IsSupported(lang) {
-		http.NotFound(w, r)
-		return
+// newPage builds the chrome and head shared by public pages. path is the
+// language-free part of the URL ("/posts"); alternates come from it unless
+// the page has its own (posts link to their translations).
+func (h *Handlers) newPage(lang, active, title, path string, switchTo func(string) string) page {
+	if switchTo == nil {
+		switchTo = func(l string) string { return "/" + l + path }
 	}
 	alts := make([]alternate, 0, len(i18n.Supported))
 	for _, l := range i18n.Supported {
-		alts = append(alts, alternate{Lang: l, Href: "/" + l + "/"})
+		alts = append(alts, alternate{Lang: l, Href: h.origin + "/" + l + path})
 	}
+	return page{
+		Chrome: ui.NewChrome(lang, active, false, switchTo),
+		Head:   Head{Title: title, Canonical: h.origin + "/" + lang + path, Alternates: alts, OGType: "website"},
+	}
+}
+
+func (h *Handlers) render(w http.ResponseWriter, r *http.Request, name string, data any) {
 	var buf bytes.Buffer
-	chrome := ui.NewChrome(lang, "", false, func(l string) string { return "/" + l + "/" })
-	if err := h.hello.ExecuteTemplate(&buf, "base", page{Chrome: chrome, Alternates: alts}); err != nil {
-		slog.Error("render hello", "lang", lang, "err", err)
+	if err := h.tmpl[name].ExecuteTemplate(&buf, "base", data); err != nil {
+		slog.Error("render", "page", name, "path", r.URL.Path, "err", err)
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 		return
 	}
 	writeCacheable(w, r, buf.Bytes())
 }
 
-// writeCacheable sends HTML the edge Worker may store in KV. `public` is the
-// opt-in signal the Worker checks; max-age=0 keeps browsers revalidating so a
-// purge is visible on the next request.
+func (h *Handlers) fail(w http.ResponseWriter, r *http.Request, err error) {
+	if errors.Is(err, content.ErrNotFound) {
+		h.notFound(w, r)
+		return
+	}
+	slog.Error("public", "path", r.URL.Path, "err", err)
+	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+}
+
+// writeCacheable sends a page the edge Worker may store in KV. `public` is
+// the opt-in signal the Worker checks; max-age=0 keeps browsers revalidating
+// so a purge is visible on the next request.
 func writeCacheable(w http.ResponseWriter, r *http.Request, body []byte) {
 	sum := sha256.Sum256(body)
 	etag := `"` + hex.EncodeToString(sum[:8]) + `"`

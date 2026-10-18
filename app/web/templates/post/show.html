@@ -1,0 +1,34 @@
+{{define "content"}}<div class="post-cover">{{template "cover" dict "tone" .Tone}}</div>
+<div class="post-layout">
+{{- if .TOC}}
+<aside class="toc" aria-label="{{tr .Lang "post.contents"}}">
+<div class="toc-label mono">{{tr .Lang "post.contents"}}</div>
+{{- range .TOC}}<a class="toc-l{{.Level}}" href="#{{.ID}}">{{.Text}}</a>{{end}}
+</aside>
+{{- end}}
+<article class="post" lang="{{.ArticleLang}}">
+{{- if .Untranslated}}
+<div class="banner-untranslated" lang="{{.Lang}}">{{tr .Lang "post.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
+{{- end}}
+<header class="post-head">
+<a class="post-crumb mono" href="/{{.Lang}}/posts">← {{tr .Lang "nav.posts"}}{{with .Series}} · {{tr $.Lang "post.series"}}: {{.Title}} ({{.Index}}/{{.Total}}){{end}}</a>
+<h1>{{.Post.Title}}</h1>
+<div class="post-meta mono">
+{{- with .Post.PublishedAt}}<time>{{date .}}</time>{{end}}
+<span>{{minutes $.Lang .Post.ReadingMinutes}}</span>
+{{- if .Tags}}<span>{{range .Tags}}<a href="{{.Href}}">#{{.Name}}</a> {{end}}</span>{{end}}
+{{- range .Translations}}<span lang="{{.Lang}}">{{if .Missing}}{{.Lang}}: {{tr $.Lang "post.not_yet"}}{{else}}<a href="{{.Href}}" hreflang="{{.Lang}}">{{.Lang}} ↗</a>{{end}}</span>{{end}}
+</div>
+</header>
+<div class="prose">{{.Body}}</div>
+{{- with .Series}}{{if or .Prev .Next}}
+<nav class="series-nav" aria-label="{{tr $.Lang "post.series"}}">
+{{- with .Prev}}<a href="/{{.Lang}}/posts/{{.Slug}}"><span class="mono">← {{sub $.Series.Index 1}}/{{$.Series.Total}}</span><span>{{.Title}}</span></a>{{else}}<span></span>{{end}}
+{{- with .Next}}<a class="next" href="/{{.Lang}}/posts/{{.Slug}}"><span class="mono">{{add $.Series.Index 1}}/{{$.Series.Total}} →</span><span>{{.Title}}</span></a>{{end}}
+</nav>{{end}}{{end}}
+<section class="backlinks" id="backlinks">
+<h3 class="mono">{{tr .Lang "post.backlinks"}} · 0</h3>
+<p>{{tr .Lang "post.backlinks_empty"}}</p>
+</section>
+</article>
+</div>{{end}}

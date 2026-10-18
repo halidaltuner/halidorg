@@ -25,7 +25,7 @@ func TestPaths(t *testing.T) {
 	want := []string{
 		"/en/", "/en/atom.xml", "/en/feed.json", "/en/feed.xml", "/en/posts", "/en/posts/htmx", "/en/posts/htmx-old",
 		"/en/tags/admin", "/en/tags/admin/feed.xml", "/en/tags/go", "/en/tags/go/feed.xml",
-		"/en/tags/htmx", "/en/tags/htmx/feed.xml", "/sitemap.xml", "/tr/posts/htmx-tr",
+		"/en/tags/htmx", "/en/tags/htmx/feed.xml", "/sitemap.xml", "/tr/posts/htmx", "/tr/posts/htmx-old", "/tr/posts/htmx-tr",
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Paths =\n%v\nwant\n%v", got, want)
