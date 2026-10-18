@@ -16,6 +16,10 @@
 <label>{{tr .Lang "admin.photo.title_tr"}}<input name="title_tr" value="{{.Photo.TitleTR}}" lang="tr"></label>
 <label>{{tr .Lang "admin.photo.title_en"}}<input name="title_en" value="{{.Photo.TitleEN}}" lang="en"></label>
 </div>
+<div class="ent-two">
+<label>{{tr .Lang "admin.photo.desc_tr"}}<textarea name="description_tr" rows="4" lang="tr" maxlength="2000">{{.Photo.DescTR}}</textarea></label>
+<label>{{tr .Lang "admin.photo.desc_en"}}<textarea name="description_en" rows="4" lang="en" maxlength="2000">{{.Photo.DescEN}}</textarea></label>
+</div>
 <label>{{tr .Lang "admin.photo.url"}}<input name="url_500px" value="{{.URL}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://500px.com/photo/…"></label>
 <fieldset class="ent-rows"><legend>EXIF</legend>
 <p class="ent-hint">{{tr .Lang "admin.photo.exif_hint"}}</p>

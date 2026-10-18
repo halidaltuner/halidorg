@@ -83,7 +83,7 @@ func TestAdmin(t *testing.T) {
 		t.Fatalf("album %d %s", rec.Code, rec.Body.String())
 	}
 	albums, _ := photo.NewRepo(s.DB, nil).Albums(ctx)
-	f := url.Values{"image": {img.ID}, "album": {albums[0].ID}, "title_en": {"Simit vendor"}, "row_span": {"2"}, "col_span": {"1"}, "published": {"1"}}
+	f := url.Values{"image": {img.ID}, "album": {albums[0].ID}, "title_en": {"Simit vendor"}, "description_tr": {" Sabah, Eminönü. "}, "row_span": {"2"}, "col_span": {"1"}, "published": {"1"}}
 	// "Fill from EXIF" shows the camera without saving.
 	f.Set("action", "exif")
 	body := do("POST", "/admin/photos", f).Body.String()
@@ -104,7 +104,7 @@ func TestAdmin(t *testing.T) {
 		t.Fatalf("save %d %s", rec.Code, rec.Body.String())
 	}
 	all, _ := photo.NewRepo(s.DB, nil).All(ctx)
-	if len(all) != 1 || all[0].Camera != "X100V" {
+	if len(all) != 1 || all[0].Camera != "X100V" || all[0].DescTR != "Sabah, Eminönü." || all[0].Description("en") != "Sabah, Eminönü." {
 		t.Fatalf("saved %+v", all)
 	}
 	if !strings.Contains(do("GET", "/admin/photos", nil).Body.String(), `<span class="ent-title">Simit vendor</span>`) {

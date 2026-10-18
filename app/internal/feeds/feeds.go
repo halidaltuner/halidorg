@@ -220,6 +220,9 @@ func (h *Handlers) photoItems(ctx context.Context, lang string) ([]item, error) 
 		created := x.CreatedAt
 		meta := strings.Trim(strings.Join([]string{x.Place, x.Camera, x.Exposure}, " · "), " ·")
 		body := "<p>" + template.HTMLEscapeString(meta) + "</p>"
+		if d := x.Description(lang); d != "" {
+			body = "<p>" + strings.ReplaceAll(template.HTMLEscapeString(d), "\n", "<br>") + "</p>" + body
+		}
 		if im, ok := imgs[x.MediaID]; ok {
 			if im.alt == "" {
 				im.alt = x.Title(lang)

@@ -1864,6 +1864,7 @@ a.ph-profile:hover { color: var(--surface); opacity: .92; }
 .ph-info-head > span { color: var(--dk-violet); }
 a.ph-close { color: var(--dk-muted); text-decoration: none; }
 .ph-info h2 { margin: 0; font-size: var(--fs-24); font-weight: 600; }
+.ph-desc { margin: 0; font-size: var(--fs-14); line-height: 1.65; color: var(--dk-text-soft); white-space: pre-line; overflow-wrap: anywhere; }
 .ph-exif { display: grid; grid-template-columns: auto 1fr; gap: 6px var(--sp-16); margin: 0; font-size: var(--fs-12); }
 .ph-exif dt { color: var(--dk-muted); }
 .ph-exif dd { margin: 0; }

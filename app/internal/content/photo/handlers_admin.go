@@ -196,6 +196,7 @@ func read(r *http.Request, p *Photo) {
 	p.AlbumID = r.FormValue("album")
 	p.MediaID = r.FormValue("image")
 	p.TitleTR, p.TitleEN = r.FormValue("title_tr"), r.FormValue("title_en")
+	p.DescTR, p.DescEN = r.FormValue("description_tr"), r.FormValue("description_en")
 	p.URL500px = shortadmin.Ptr(r, "url_500px")
 	p.Camera, p.Lens, p.Exposure, p.Place = r.FormValue("camera"), r.FormValue("lens"), r.FormValue("exposure"), r.FormValue("place")
 	p.TakenAt = nil

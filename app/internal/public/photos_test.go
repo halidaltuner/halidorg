@@ -39,7 +39,8 @@ func seedPhotos(t *testing.T, db store.DB) []photo.Photo {
 	var out []photo.Photo
 	for _, p := range []photo.Photo{
 		{AlbumID: ist.ID, MediaID: img.ID, TitleEN: "Galata at blue hour", TitleTR: "Mavi saatte Galata", URL500px: &url, Camera: "X-T5",
-			Lens: "23mm f/1.4", Exposure: "1/30 · f/2 · ISO 800", Place: "Karaköy", RowSpan: 3, Published: true},
+			Lens: "23mm f/1.4", Exposure: "1/30 · f/2 · ISO 800", Place: "Karaköy", RowSpan: 3, Published: true,
+			DescEN: "Shot from the Karaköy pier.\nTripod, 30 seconds."},
 		{AlbumID: ist.ID, MediaID: img.ID, TitleEN: "Ferry wake", Published: true},
 		{AlbumID: mnt.ID, MediaID: img.ID, TitleEN: "Fog over Uludağ", RowSpan: 2, ColSpan: 2, Published: true},
 		{AlbumID: mnt.ID, MediaID: img.ID, TitleEN: "Draft frame"},
@@ -75,6 +76,8 @@ func TestPhotosPage(t *testing.T) {
 		`<figure class="ph-tile r3 c1" data-filter-value="istanbul">`, `<figure class="ph-tile r2 c2" data-filter-value="mountains">`,
 		`alt="Galata at blue hour"`, `<a class="ph-open mono" href="#p-`+ps[0].ID+`">Galata at blue hour ↗</a>`,
 		`<div class="ph-box" id="p-`+ps[0].ID+`" role="dialog" aria-modal="true" aria-label="Galata at blue hour">`,
+		`<h2>Galata at blue hour</h2><p class="ph-desc">Shot from the Karaköy pier.
+Tripod, 30 seconds.</p>`,
 		`<dt>camera</dt><dd>X-T5</dd><dt>lens</dt><dd>23mm f/1.4</dd><dt>exposure</dt><dd>1/30 · f/2 · ISO 800</dd><dt>place</dt><dd>Karaköy</dd>`,
 		`<a class="ph-500" href="https://500px.com/photo/1/galata" rel="noopener">view on 500px ↗</a>`,
 		`/static/js/photos.js`, `href="/en/photos/feed.xml"`,
@@ -88,7 +91,7 @@ func TestPhotosPage(t *testing.T) {
 		t.Error("filter kept another album")
 	}
 	_, body = get(t, mux, "/tr/photos")
-	must(t, body, `Mavi saatte Galata ↗`, `alt="Mavi saatte Galata"`, `Ferry wake ↗`) // tr falls back to en
+	must(t, body, `Mavi saatte Galata ↗`, `alt="Mavi saatte Galata"`, `Ferry wake ↗`, `Shot from the Karaköy pier.`) // tr falls back to en
 
 	// An image without alt text (uploaded from an album) takes the title.
 	if _, err := media.NewRepo(db, nil).SetAlt(context.Background(), ps[0].MediaID, "", ""); err != nil {
