@@ -6,3 +6,7 @@
 {{- if .image}}<img src="{{.image}}" alt="{{.alt}}" loading="lazy" decoding="async">
 {{- else}}<span class="cover-stripes" aria-hidden="true"></span><span class="cover-ring" aria-hidden="true"></span><span class="cover-ring ab" aria-hidden="true"></span>{{end -}}
 </div>{{end}}
+
+{{/* pres-slide is the title-slide card drawn when a presentation has no
+cover image: the event and title on the tone tint. */}}
+{{define "pres-slide"}}<div class="pr-slide tone-{{.tone}}" aria-hidden="true"><span class="pr-slide-event mono">{{.event}}</span><span class="pr-slide-title">{{.title}}</span></div>{{end}}

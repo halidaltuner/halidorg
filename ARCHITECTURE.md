@@ -89,6 +89,7 @@ flowchart LR
 - Decks are self-contained HTML uploaded to R2 and served from `decks.halid.org`, never from `halid.org`.
 - Embedded with `<iframe sandbox="allow-scripts allow-same-origin">` on the deck origin only; the main site keeps a strict CSP.
 - Slide control from the outline uses `postMessage` with origin checks; decks without the listener still render, only the outline jump is lost.
+- Implementation (Phase 5.4): the same Worker answers the decks host (`DECKS_ORIGIN`: `decks-staging.halid.org` on staging, `decks.halid.org` on prod from the Phase 3 cutover) from `worker/src/decks.ts` and nothing else: no KV pages, no container. Decks get `frame-ancestors` for the site only. The iframe is `sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"`; same-origin there is the decks origin, which holds no cookies or pages. The page (`deck.js`) and the deck (the bridge script from `presentation.Bridge`, shown in the editor) exchange `{deck: "go" | "next" | "prev" | "hello"}` and `{deck: "state", slide, total}`; the page accepts only messages from the iframe's window and origin. The main site sends no CSP, so the iframe needs no allowlist yet.
 
 ### ADR-008: Light-only theme, prototypes are the visual source of truth
 - No dark theme or toggle. Dark appears only as designed bands.

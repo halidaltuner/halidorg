@@ -32,7 +32,7 @@ type section struct {
 // public page exists; disabled ones are not rendered at all.
 var (
 	nav = []section{
-		{"posts", true}, {"projects", true}, {"homelab", true}, {"presentations", false},
+		{"posts", true}, {"projects", true}, {"homelab", true}, {"presentations", true},
 		{"photos", true}, {"radar", false}, {"now", true}, {"about", true},
 	}
 	more = []section{

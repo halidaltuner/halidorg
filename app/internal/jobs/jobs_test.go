@@ -58,6 +58,14 @@ func TestPaths(t *testing.T) {
 	if got := Paths(Change{Now: &Ref{Kind: "project", Lang: "en", Slug: "site", Listed: true}}); contains(got, "/en/homelab") {
 		t.Errorf("software project on the homelab page: %v", got)
 	}
+	// A presentation: its page, the list and its feeds, About (its card).
+	pres := Paths(Change{Now: &Ref{Kind: "presentation", Lang: "tr", Slug: "htmx", Listed: true}})
+	for _, want := range []string{"/tr/presentations/htmx", "/tr/presentations", "/tr/presentations/feed.xml", "/tr/presentations/atom.xml",
+		"/tr/presentations/feed.json", "/tr/about", "/tr/", "/sitemap.xml"} {
+		if !contains(pres, want) {
+			t.Errorf("presentation paths %v: no %s", pres, want)
+		}
+	}
 	// A build log: its page under the project, the project page, the
 	// projects feeds, the stream.
 	logPaths := Paths(Change{Now: &Ref{Kind: "buildlog", Lang: "en", Slug: "brackets", Parent: "rack", Listed: true}})

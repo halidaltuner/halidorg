@@ -102,21 +102,23 @@ func RawPath(r Ref, file string) string {
 // kindPath is the URL segment of the kinds that have a page per entry
 // (CONTENT_MODEL.md §5).
 var kindPath = map[string]string{
-	"post":    "posts",
-	"note":    "notes",
-	"snippet": "snippets",
-	"project": "projects",
+	"post":         "posts",
+	"note":         "notes",
+	"snippet":      "snippets",
+	"project":      "projects",
+	"presentation": "presentations",
 }
 
 // listPath is the URL segment of each kind's list page and per-kind feeds.
 // Links and favs have no item pages: their list is where they live.
 var listPath = map[string]string{
-	"post":    "posts",
-	"note":    "notes",
-	"snippet": "snippets",
-	"link":    "links",
-	"fav":     "favs",
-	"project": "projects",
+	"post":         "posts",
+	"note":         "notes",
+	"snippet":      "snippets",
+	"link":         "links",
+	"fav":          "favs",
+	"project":      "projects",
+	"presentation": "presentations",
 }
 
 // ListSegment is the URL segment of a kind's list page, or "".
@@ -235,8 +237,8 @@ func Paths(c Change) []string {
 			if r.Kind == "project" && r.Homelab {
 				add(l + "/homelab")
 			}
-			if r.Kind == "project" {
-				add(l + "/about") // its cards count projects and builds
+			if r.Kind == "project" || r.Kind == "presentation" {
+				add(l + "/about") // its cards count projects, builds and decks
 			}
 			if r.Kind == "link" && len(r.Categories) > 0 {
 				add(l + "/awesome") // the index counts the category's links

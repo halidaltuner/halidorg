@@ -56,13 +56,14 @@ var (
 	rose    = rgb(0xFB, 0x71, 0x85)
 	cyan    = rgb(0x22, 0xD3, 0xEE)
 	kindDot = map[string]color.RGBA{
-		"post":      cyan,
-		"note":      rgb(0xA5, 0xB4, 0xFC),
-		"snippet":   rgb(0xFB, 0xBF, 0x24),
-		"link":      muted,
-		"fav":       rose,
-		"project":   rgb(0x4A, 0xDE, 0x80),
-		"build log": rgb(0x4A, 0xDE, 0x80), // a project's log: the project dot
+		"post":         cyan,
+		"note":         rgb(0xA5, 0xB4, 0xFC),
+		"snippet":      rgb(0xFB, 0xBF, 0x24),
+		"link":         muted,
+		"fav":          rose,
+		"project":      rgb(0x4A, 0xDE, 0x80),
+		"presentation": rose,
+		"build log":    rgb(0x4A, 0xDE, 0x80), // a project's log: the project dot
 	}
 )
 

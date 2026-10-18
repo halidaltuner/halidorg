@@ -1,0 +1,59 @@
+{{define "content"}}{{$p := .Pres}}<main class="prd tone-rose">
+<section class="prd-hero">
+<div class="prd-hero-in">
+<div class="prd-top"><a class="prd-back mono" href="{{$p.BackHref}}">← {{tr .Lang "pres.back"}}</a>{{with $p.Meta}}<span class="prd-meta mono">{{.}}</span>{{end}}</div>
+<h1{{if .Untranslated}} lang="{{.ArticleLang}}"{{end}}>{{$p.Title}}</h1>
+{{- if .Untranslated}}
+<div class="banner-untranslated">{{tr .Lang "pres.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
+{{- end}}
+{{- if $p.DeckURL}}
+<div class="prd-deck" data-deck data-deck-origin="{{$p.DeckOrigin}}" data-total="{{$p.Slides}}">
+<div class="prd-frame"><iframe src="{{$p.DeckURL}}" title="{{printf (tr .Lang "pres.deck_title") $p.Title}}" sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox" allow="fullscreen" referrerpolicy="no-referrer"></iframe></div>
+<div class="prd-bar mono">
+<button type="button" class="prd-btn" data-deck-prev aria-label="{{tr .Lang "pres.prev"}}" disabled>←</button>
+<button type="button" class="prd-btn" data-deck-next aria-label="{{tr .Lang "pres.next"}}" disabled>→</button>
+<span class="prd-count" data-deck-count aria-live="polite">{{if $p.Slides}}1 / {{$p.Slides}}{{end}}</span>
+<span class="prd-progress" aria-hidden="true"><span data-deck-progress></span></span>
+<a class="prd-full" href="{{$p.DeckURL}}" rel="noopener" data-deck-full>{{tr .Lang "pres.fullscreen"}} ↗</a>
+</div>
+</div>
+{{- else}}
+<div class="prd-deck prd-nodeck">
+<div class="prd-frame">{{if $p.Cover}}{{template "cover" dict "tone" $p.Tone "image" $p.Cover.URL "alt" $p.Cover.Alt}}{{else}}{{template "pres-slide" dict "tone" $p.Tone "title" $p.Title "event" $p.Event}}{{end}}</div>
+<p class="prd-bar mono">{{tr .Lang "pres.no_deck"}}</p>
+</div>
+{{- end}}
+</div>
+</section>
+<div class="prd-body">
+<article class="prd-main"{{if .Untranslated}} lang="{{.ArticleLang}}"{{end}}>
+{{- if .Body}}
+<h2>{{tr .Lang "pres.abstract"}}</h2>
+<div class="prose prd-abstract">{{.Body}}</div>
+{{- end}}
+{{- if $p.Outline}}
+<h2>{{tr .Lang "pres.outline"}}</h2>
+<ol class="prd-outline">
+{{- range $i, $o := $p.Outline}}
+<li>{{if $p.DeckURL}}<button type="button" data-deck-go="{{$o.N}}">{{else}}<span class="prd-row">{{end}}<span class="prd-n mono">{{printf "%02d" (add $i 1)}}</span><span>{{$o.Title}}</span><span class="prd-s mono">{{printf (tr $.Lang "pres.slide_n") $o.N}}</span>{{if $p.DeckURL}}</button>{{else}}</span>{{end}}</li>
+{{- end}}
+</ol>
+{{- end}}
+</article>
+<aside class="prd-aside">
+{{- if or $p.DeckURL $p.Recording}}
+<div class="prd-actions">
+{{- with $p.DeckURL}}<a class="prd-primary" href="{{.}}" rel="noopener">{{tr $.Lang "pres.open_deck"}} ↗</a>{{end}}
+{{- with $p.Download}}<a class="prd-secondary" href="{{.}}" download>{{tr $.Lang "pres.download"}}</a>{{end}}
+{{- with $p.Recording}}<a class="prd-secondary" href="{{.}}" rel="noopener">{{tr $.Lang "pres.recording"}}{{with $p.Minutes}} · {{.}}{{end}}</a>{{end}}
+</div>
+{{- end}}
+{{- with $p.Related}}
+<div class="prd-related">
+<h3 class="mono">{{tr $.Lang "pres.related"}}</h3>
+{{- range .}}<a href="{{.URL}}"{{if eq .Glyph "↗"}} rel="noopener"{{end}}><span aria-hidden="true">{{.Glyph}}</span> {{.Label}}</a>{{end}}
+</div>
+{{- end}}
+</aside>
+</div>
+</main>{{end}}

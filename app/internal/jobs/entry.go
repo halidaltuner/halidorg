@@ -92,7 +92,10 @@ func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
               -- a project's tagline and stack, a build log's project
               WHEN 'project' THEN (SELECT p.tagline || ' ' || p.kind_line || coalesce(' ' || (SELECT group_concat(s.name, ' ')
                 FROM project_stack s WHERE s.project_id = p.entry_id), '') FROM projects p WHERE p.entry_id = e.id)
-              WHEN 'buildlog' THEN (SELECT pe.title FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id) END AS extra,
+              WHEN 'buildlog' THEN (SELECT pe.title FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id)
+              -- a presentation's event, city and outline titles
+              WHEN 'presentation' THEN (SELECT p.event || ' ' || p.city || ' ' || coalesce((SELECT group_concat(json_extract(o.value, '$.title'), ' ')
+                FROM json_each(p.outline_json) o), '') FROM presentations p WHERE p.entry_id = e.id) END AS extra,
   (SELECT p.project_type = 'homelab' FROM projects p WHERE p.entry_id = e.id) AS homelab,
   (SELECT pe.slug FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id) AS parent,
   (SELECT group_concat(le.slug, ' ') FROM buildlogs b JOIN entries le ON le.id = b.entry_id WHERE b.project_entry_id = e.id) AS logs,

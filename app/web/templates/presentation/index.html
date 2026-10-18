@@ -1,0 +1,32 @@
+{{define "content"}}<main class="pr tone-rose" data-filter="type"{{with .Type}} data-filtered="{{.}}"{{end}}>
+<section class="pr-hero">
+<div class="pr-hero-in">
+<span class="pr-eyebrow mono">▶ {{tr .Lang "pres.title"}}</span>
+<h1>{{tr .Lang "pres.h1"}}</h1>
+<p>{{tr .Lang "pres.sub"}}</p>
+</div>
+</section>
+<div class="pr-body">
+{{- if .Cards}}
+{{- if gt (len .Chips) 2}}
+<nav class="chips pr-chips" aria-label="{{tr .Lang "kind.presentation.type"}}">{{range .Chips}}<a class="chip tone-rose" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>
+{{- end}}
+<div class="pr-grid">
+{{- range .Cards}}
+<a class="pr-card" href="{{.Href}}" data-filter-value="{{.Type}}">
+<div class="pr-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "pres-slide" dict "tone" .Tone "title" .Title "event" .Event}}{{end}}
+{{- if .Slides}}<span class="pr-badge mono">{{printf (tr $.Lang "pres.slides_html") .Slides}}</span>{{end}}</div>
+<div class="pr-card-body">
+<div class="pr-card-top mono"><span class="pr-event">{{.Event}}</span><span>{{.Lang}}</span></div>
+<h2>{{.Title}}</h2>
+{{- with .Desc}}<p>{{.}}</p>{{end}}
+<div class="pr-card-foot mono">{{.Date}}{{if and .Date .City}} · {{end}}{{.City}}</div>
+</div>
+</a>
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "pres.empty"}}</p>
+{{- end}}
+</div>
+</main>{{end}}
