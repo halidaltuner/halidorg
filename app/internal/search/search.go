@@ -1,6 +1,7 @@
 package search
 
 import (
+	"math"
 	"strings"
 	"unicode"
 
@@ -35,6 +36,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 	}
 }
 
+// Insert adds the row without removing others first: photos have one row
+// per language under the same id.
+func (d Doc) Insert() store.Stmt {
+	return d.Upsert()[1]
+}
+
 // Delete removes the entry's row.
 func Delete(entryID string) store.Stmt {
 	return store.Stmt{SQL: `DELETE FROM search_fts WHERE entry_id = ?`, Args: []any{entryID}}
@@ -50,6 +57,34 @@ var kindPrefixes = map[string]string{
 	"pr": "project",
 	"h":  "homelab", // homelab builds: projects indexed under their own kind
 	"t":  "presentation",
+	"g":  "garden",
+	"rb": "runbook",
+	"gl": "term",
+	"b":  "book",
+	"rd": "radar_item",
+	"ph": "photo",
+	"c":  "certificate",
+}
+
+// Rows that are not entries: photos and certificates are indexed by title
+// (and issuer) only, under these kinds, with their own ids as entry_id.
+const (
+	KindPhoto       = "photo"
+	KindCertificate = "certificate"
+)
+
+// Score turns an FTS5 bm25 rank (lower is better, negative) into a score
+// (higher is better) with a recency boost: up to half again for something
+// published today, fading over about a year. Ties keep FTS order.
+func Score(rank float64, publishedAt, now int64) float64 {
+	s := -rank
+	if publishedAt > 0 && now > publishedAt {
+		days := float64(now-publishedAt) / 86400
+		s *= 1 + 0.5*math.Exp(-days/365)
+	} else if publishedAt > 0 {
+		s *= 1.5
+	}
+	return s
 }
 
 // Query is a parsed user query.

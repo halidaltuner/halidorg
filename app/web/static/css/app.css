@@ -121,6 +121,7 @@ a.wordmark:hover { text-shadow: -2.5px 0 var(--ab-rose-hover), 2.5px 0 var(--ab-
   border-radius: var(--radius-1);
   padding: 6px 8px 6px 12px;
   cursor: pointer;
+  text-decoration: none;
 }
 .search-btn[hidden] { display: none; }
 .search-btn span { white-space: nowrap; }
@@ -2100,6 +2101,14 @@ html.ph-locked { overflow: hidden; }
 
 /* Tech radar (design/Radar.dc.html). */
 .k-radar, .k-radar_item { --t-tint: var(--tone-indigo-tint); --t-ink: var(--tone-indigo-ink); }
+.k-photo { --t-tint: var(--tone-violet-tint); --t-ink: var(--tone-violet-ink); }
+.k-certificate { --t-tint: var(--tone-cyan-tint); --t-ink: var(--tone-cyan-ink); }
+.k-page, .k-book { --t-tint: var(--surface-2); --t-ink: var(--text); }
+/* /search (derive: stream rows). */
+.search-form { display: flex; gap: var(--sp-8); max-width: 620px; }
+.search-form input { flex: 1; min-width: 0; height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--radius-1); background: var(--surface); font-size: var(--fs-15); color: var(--text); }
+.search-form button { height: 40px; padding: 0 16px; border: 0; border-radius: var(--radius-1); background: var(--text); color: var(--surface); font: inherit; font-size: var(--fs-14); cursor: pointer; }
+.search-results { max-width: var(--w-links); }
 .r-adopt { --ring: var(--ring-adopt); --ring-tint: var(--ring-adopt-tint); }
 .r-trial { --ring: var(--ring-trial); --ring-tint: var(--ring-trial-tint); }
 .r-assess { --ring: var(--ring-assess); --ring-tint: var(--ring-assess-tint); }
@@ -2157,3 +2166,4 @@ html.ph-locked { overflow: hidden; }
 .rdr-hist li.is-off .rdr-tag { color: var(--accent-2); }
 @media (prefers-reduced-motion: reduce) { .rdr-blip .rdr-mark { transition: none; } }
 .rdr-item article { display: flex; flex-direction: column; gap: var(--sp-40); }
+.search-hints { margin: 0; max-width: 620px; font-size: var(--fs-12); line-height: 1.7; color: var(--text-muted); }

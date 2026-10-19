@@ -97,6 +97,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	if err != nil {
 		return nil, err
 	}
+	pub.WithSearch(stores.Search)
 	authn := auth.New(auth.ConfigFromEnv(), stores.DB)
 	runner := jobs.New(stores.DB, stores.Queue)
 	adminUI := admin.NewUI(stores.DB)

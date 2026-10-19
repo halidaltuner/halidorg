@@ -1,11 +1,12 @@
 // Command palette (design/Header.dc.html): ⌘K / Ctrl+K or the header button
-// opens it, Esc closes it, ↑↓ moves, ↵ opens. Results come from
+// opens it, Esc closes it, ↑↓ moves, ↵ opens (with nothing selected, the
+// search page with every result). Results come from
 // GET /x/search (FTS5 with prefixes, answered by the Worker, ADR-010) as
 // JSON; kind labels and prefix hints come from the button's data-* (i18n).
 (() => {
 	const btn = document.querySelector("[data-palette]");
 	if (!btn) return;
-	btn.hidden = false;
+	btn.setAttribute("role", "button");
 	const lang = btn.dataset.lang || document.documentElement.lang;
 	let root, input, list, empty, sel = -1, timer, ctrl, last = "";
 
@@ -118,11 +119,15 @@
 		if (e.key === "ArrowDown" && n) { e.preventDefault(); select((sel + 1) % n); }
 		else if (e.key === "ArrowUp" && n) { e.preventDefault(); select((sel - 1 + n) % n); }
 		else if (e.key === "Enter" && sel >= 0) { e.preventDefault(); location.href = list.children[sel].href; }
+		else if (e.key === "Enter" && input.value.trim()) { e.preventDefault(); location.href = btn.href + "?q=" + encodeURIComponent(input.value.trim()); }
 		else if (e.key === "Escape") { e.preventDefault(); close(); }
 		else if (e.key === "Tab") { e.preventDefault(); } // focus stays in the palette
 	}
 
-	btn.addEventListener("click", open);
+	btn.addEventListener("click", (e) => {
+		e.preventDefault(); // the link is the no-JS search page
+		open();
+	});
 	document.addEventListener("keydown", (e) => {
 		if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
 			e.preventDefault();

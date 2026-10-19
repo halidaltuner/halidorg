@@ -67,6 +67,16 @@ func TestHomelabStatsAdmin(t *testing.T) {
 	if rec := do("POST", "/admin/settings/homelab", url.Values{"nodes": {strings.Repeat("9", 17)}}); rec.Code != http.StatusUnprocessableEntity {
 		t.Errorf("too long %d", rec.Code)
 	}
+
+	// Rebuilding the search index enqueues the first page of the rebuild.
+	n := len(s.Queue.(*storetest.Queue).Sent)
+	if rec := do("POST", "/admin/settings/search", url.Values{}); rec.Code != http.StatusSeeOther || rec.Header().Get("Location") != "/admin/settings?saved=search" {
+		t.Fatalf("rebuild %d %s", rec.Code, rec.Header().Get("Location"))
+	}
+	if sent := s.Queue.(*storetest.Queue).Sent; len(sent) != n+1 || !strings.Contains(string(sent[n]), `"search.rebuild"`) {
+		t.Errorf("rebuild job not enqueued")
+	}
+	must(do("GET", "/admin/settings?saved=search", nil).Body.String(), "The index is being rebuilt.")
 }
 
 func mustJSON(t *testing.T, v any) []byte {

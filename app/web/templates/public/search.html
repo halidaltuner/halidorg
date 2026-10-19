@@ -1,0 +1,20 @@
+{{define "content"}}<main class="list-page search-page">
+<header class="list-head">
+<span class="eyebrow mono">&gt; // {{tr .Lang "search.title"}}</span>
+<h1>{{tr .Lang "search.h1"}}</h1>
+<form class="search-form" method="get" action="/{{.Lang}}/search" role="search">
+<input type="search" name="q" value="{{.Query}}" class="mono" aria-label="{{tr .Lang "search.title"}}" placeholder="{{tr .Lang "palette.placeholder"}}" autocomplete="off" spellcheck="false">
+<button type="submit">{{tr .Lang "search.go"}}</button>
+</form>
+<p class="search-hints mono">{{tr .Lang "palette.hints_long"}}</p>
+</header>
+{{- if .Query}}
+{{- if .Results}}
+<div class="stream-items search-results" aria-live="polite">
+{{- range .Results}}<a class="stream-row" href="{{.Href}}"><span class="glyph k-{{.Kind}} mono" aria-hidden="true">{{.Glyph}}</span><span class="stream-title">{{.Title}}</span><span class="stream-meta mono">{{.Meta}}</span></a>{{end}}
+</div>
+{{- else}}
+<p class="empty">{{printf (tr .Lang "search.none") .Query}}</p>
+{{- end}}
+{{- end}}
+</main>{{end}}

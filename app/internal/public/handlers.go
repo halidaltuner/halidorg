@@ -68,6 +68,7 @@ type Handlers struct {
 	projectRepo *project.Repo
 	logRepo     *buildlog.Repo
 	pageRepo    *pages.Repo
+	searchDB    store.DB // nil: /search answers with the form only
 	origin      string
 	tmpl        map[string]*template.Template
 }
@@ -111,6 +112,7 @@ func New(db store.DB) (*Handlers, error) {
 		"photos":        "templates/photo/index.html",
 		"radar":         "templates/radar/index.html",
 		"radar-item":    "templates/radar/item.html",
+		"search":        "templates/public/search.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
@@ -172,6 +174,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/runbooks", func(w http.ResponseWriter, r *http.Request) { h.runbooks(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/runbooks/{slug}", func(w http.ResponseWriter, r *http.Request) { h.article(w, r, lang, post.Runbook) })
 		mux.HandleFunc("GET /"+lang+"/presentations/{slug}", func(w http.ResponseWriter, r *http.Request) { h.presentation(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/search", func(w http.ResponseWriter, r *http.Request) { h.searchResults(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/radar", func(w http.ResponseWriter, r *http.Request) { h.radarIndex(w, r, lang, "") })
 		mux.HandleFunc("GET /"+lang+"/radar/{slug}", func(w http.ResponseWriter, r *http.Request) { h.radarIndex(w, r, lang, r.PathValue("slug")) })
 		mux.HandleFunc("GET /"+lang+"/certificates", func(w http.ResponseWriter, r *http.Request) { h.certificates(w, r, lang) })

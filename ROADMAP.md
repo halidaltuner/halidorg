@@ -84,7 +84,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [x] Admin radar editor **(derive)**, edition snapshot (6.1)
 
 ## Phase 7: Discovery and polish (M)
-- [ ] Full-site search behind the palette (FTS5 or Pagefind), no-JS search results page **(derive)**
+- [x] Full-site search behind the palette (FTS5 or Pagefind), no-JS search results page **(derive)** (7.1: FTS5, photos and certificates indexed, recency boost, rebuild job, `/{lang}/search`)
 - [ ] Mermaid: lazy client render first, server SVG later
 - [ ] Bilingual polish: paired URLs, untranslated fallbacks everywhere
 - [ ] SVG wordmark, favicon and monogram (design needed)

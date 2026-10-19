@@ -15,9 +15,9 @@ import (
 // today's date, so the daily job re-renders the page.
 
 type certCard struct {
-	Name, Issuer, IssuerKey, Tone, Date, Status, StatusKey, Verify string
-	Skills                                                         []string
-	Badge                                                          *image
+	ID, Name, Issuer, IssuerKey, Tone, Date, Status, StatusKey, Verify string
+	Skills                                                             []string
+	Badge                                                              *image
 }
 
 type certStat struct {
@@ -80,7 +80,7 @@ func (h *Handlers) certificates(w http.ResponseWriter, r *http.Request, lang str
 			active++
 		}
 		used[iss.Slug] = true
-		card := certCard{Name: c.Name, Issuer: iss.Name, IssuerKey: iss.Slug, Tone: iss.Tone, Date: certificate.Month(&c.IssuedAt),
+		card := certCard{ID: c.ID, Name: c.Name, Issuer: iss.Name, IssuerKey: iss.Slug, Tone: iss.Tone, Date: certificate.Month(&c.IssuedAt),
 			StatusKey: st, Status: i18n.T(lang, "cert.status."+st), Skills: c.Skills}
 		if c.CredlyURL != nil {
 			card.Verify = *c.CredlyURL
