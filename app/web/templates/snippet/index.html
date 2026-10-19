@@ -34,6 +34,7 @@
 {{- end}}
 </figure>
 {{- end}}
+{{template "connections" dict "c" $.Conn "lang" $.Lang}}
 </section>
 {{- else}}
 <section class="snip-view"><p class="empty">{{tr .Lang "snippets.empty"}}</p></section>

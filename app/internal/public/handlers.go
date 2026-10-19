@@ -54,6 +54,7 @@ type feedLink struct {
 type page struct {
 	ui.Chrome
 	Head Head
+	Conn *connections // detail pages: backlinks and related entries
 }
 
 // Handlers holds parsed templates and the post repository.

@@ -39,6 +39,7 @@
 {{- end}}
 </ol>
 {{- end}}
+{{template "connections" dict "c" .Conn "lang" .Lang}}
 </article>
 <aside class="prd-aside">
 {{- if or $p.DeckURL $p.Recording}}

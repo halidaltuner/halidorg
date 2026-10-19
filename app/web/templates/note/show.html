@@ -4,4 +4,5 @@
 <div class="banner-untranslated">{{tr .Lang "notes.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
 {{- end}}
 <div class="note-list" lang="{{.ArticleLang}}">{{template "note-card" dict "n" .Note "lang" .Lang}}</div>
+{{template "connections" dict "c" .Conn "lang" .Lang}}
 </main>{{end}}

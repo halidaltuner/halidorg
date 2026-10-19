@@ -1,6 +1,7 @@
 package public
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -242,8 +243,8 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 }
 
 // sections maps entry kinds to their public URL segment.
-var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "presentation": "presentations",
-	"garden": "garden", "runbook": "runbooks", "term": "glossary"}
+var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects",
+	"presentation": "presentations", "garden": "garden", "runbook": "runbooks", "term": "glossary"}
 
 // glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
 var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆", "homelab": "⌁",
@@ -264,11 +265,63 @@ type postPage struct {
 	Untranslated bool
 	OtherURL     string
 	Tone         string
-	Backlinks    []backlink
 }
 
 type backlink struct {
 	Href, Title, Context, Lang, Glyph string
+}
+
+// connections is the block under a detail page: the pages linking to the
+// entry and up to three entries in its language sharing the most tags.
+// Always shows the block with its empty message (posts); other kinds show
+// it only when there is something in it.
+type connections struct {
+	Backlinks []backlink
+	Related   []relatedRow
+	Always    bool
+}
+
+type relatedRow struct {
+	Href, Title, Summary, Kind, Glyph string
+}
+
+const relatedSize = 3
+
+// untitled names an entry with no title and no summary, as its own page
+// does: the kind and the day.
+func untitled(lang, title, kind string, published *int64) string {
+	if title != "" {
+		return title
+	}
+	return i18n.T(lang, "palette.kind."+kind) + " · " + date(published)
+}
+
+func (h *Handlers) connections(ctx context.Context, lang string, e content.Entry, always bool) (*connections, error) {
+	bls, err := content.Backlinks(ctx, h.db, e.ID, true)
+	if err != nil {
+		return nil, err
+	}
+	rel, err := content.Related(ctx, h.db, e.ID, e.Lang, relatedSize)
+	if err != nil {
+		return nil, err
+	}
+	c := &connections{Always: always}
+	for _, b := range bls {
+		if seg, ok := sections[b.Kind]; ok {
+			c.Backlinks = append(c.Backlinks, backlink{Href: "/" + b.Lang + "/" + seg + "/" + b.Slug, Title: untitled(lang, b.Title, b.Kind, b.PublishedAt), Context: b.Context, Lang: b.Lang, Glyph: glyphs[b.Kind]})
+		}
+	}
+	for _, x := range rel {
+		seg, ok := sections[x.Kind]
+		if !ok {
+			continue
+		}
+		c.Related = append(c.Related, relatedRow{Href: "/" + x.Lang + "/" + seg + "/" + x.Slug, Title: untitled(lang, x.Title, x.Kind, x.PublishedAt), Summary: x.Summary, Kind: x.Kind, Glyph: glyphs[x.Kind]})
+	}
+	if !always && len(c.Backlinks) == 0 && len(c.Related) == 0 {
+		return nil, nil
+	}
+	return c, nil
 }
 
 type translationLink struct {
@@ -334,7 +387,7 @@ func (h *Handlers) article(w http.ResponseWriter, r *http.Request, lang, kind st
 		h.fail(w, r, err)
 		return
 	}
-	bls, err := content.Backlinks(r.Context(), h.db, p.ID, true)
+	conn, err := h.connections(r.Context(), lang, p.Entry, true)
 	if err != nil {
 		h.fail(w, r, err)
 		return
@@ -364,11 +417,7 @@ func (h *Handlers) article(w http.ResponseWriter, r *http.Request, lang, kind st
 		OtherURL:     where[p.Lang],
 		Tone:         articleTone(p),
 	}
-	for _, b := range bls {
-		if seg, ok := sections[b.Kind]; ok {
-			pg.Backlinks = append(pg.Backlinks, backlink{Href: "/" + b.Lang + "/" + seg + "/" + b.Slug, Title: b.Title, Context: b.Context, Lang: b.Lang, Glyph: glyphs[b.Kind]})
-		}
-	}
+	pg.Conn = conn
 	pg.TOC, _ = decodeTOC(rev.TOCJSON)
 	pg.Head.Description = p.Summary
 	pg.Head.OGType = "article"

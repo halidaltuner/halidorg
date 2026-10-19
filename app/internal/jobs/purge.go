@@ -17,6 +17,8 @@ type Ref struct {
 	Tags   []string `json:"tags,omitempty"`
 	Listed bool     `json:"listed"` // published and public: appears in lists, feeds, sitemap
 	Title  string   `json:"title,omitempty"`
+	// Summary shows under the title in other entries' related blocks.
+	Summary string `json:"summary,omitempty"`
 	// Files are a snippet's file names, in tab order: each has a raw URL.
 	Files []string `json:"files,omitempty"`
 	// Categories are a link's category and its parent, by slug: each has
@@ -67,6 +69,9 @@ type Change struct {
 	Prev     *Ref
 	Siblings []Ref
 	Linked   []Ref // entries it links to, before or after: their backlinks change
+	// Related are listed entries sharing a tag with it, before or after,
+	// set when RelatedChanged: their related block can change.
+	Related []Ref
 	// Peers are the other listed snippets in the entry's language, set when
 	// the snippet list changes (PeersChanged): every snippet page shows it.
 	Peers []Ref
@@ -95,6 +100,22 @@ func PeersChanged(c Change) bool {
 		return false
 	}
 	return now.Title != prev.Title || now.Slug != prev.Slug || now.Lang != prev.Lang || first(now.Files) != first(prev.Files)
+}
+
+// RelatedChanged reports whether c can change the related block on the
+// pages of entries sharing a tag with it: it joins or leaves the site, or
+// its tags, title, summary, slug or language change.
+func RelatedChanged(c Change) bool {
+	now, prev := c.Now, c.Prev
+	listed := func(x *Ref) bool { return x != nil && x.Listed && len(x.Tags) > 0 }
+	if !listed(now) && !listed(prev) {
+		return false
+	}
+	if listed(now) != listed(prev) {
+		return true
+	}
+	return strings.Join(now.Tags, " ") != strings.Join(prev.Tags, " ") || now.Title != prev.Title ||
+		now.Summary != prev.Summary || now.Slug != prev.Slug || now.Lang != prev.Lang
 }
 
 func first(s []string) string {
@@ -291,6 +312,9 @@ func Paths(c Change) []string {
 		add(ItemPath(s))
 	}
 	for _, s := range c.Peers {
+		add(ItemPath(s))
+	}
+	for _, s := range c.Related {
 		add(ItemPath(s))
 	}
 	out := make([]string, 0, len(set))

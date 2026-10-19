@@ -1,0 +1,23 @@
+{{/* connections: the block under a detail page (DESIGN.md §33). Takes dict
+     "c" (*connections) and "lang" (the page language). Backlinks show with
+     their empty message when c.Always (posts); related entries share tags. */}}
+{{define "connections"}}{{with .c}}{{$lang := $.lang}}
+{{- if or .Always .Backlinks}}
+<section class="backlinks" id="backlinks">
+<h3 class="mono">{{tr $lang "post.backlinks"}} · {{len .Backlinks}}</h3>
+{{- range .Backlinks}}
+<a href="{{.Href}}"{{if ne .Lang $lang}} hreflang="{{.Lang}}"{{end}}{{with .Context}} title="{{.}}"{{end}}>{{.Glyph}} {{.Title}}</a>
+{{- else}}
+<p>{{tr $lang "post.backlinks_empty"}}</p>
+{{- end}}
+</section>
+{{- end}}
+{{- with .Related}}
+<section class="backlinks related" id="related">
+<h3 class="mono">{{tr $lang "post.related"}}</h3>
+{{- range .}}
+<a class="related-row" href="{{.Href}}"><span class="glyph k-{{.Kind}} mono" aria-hidden="true">{{.Glyph}}</span><span class="related-text"><span class="related-title">{{.Title}}</span>{{if and .Summary (ne .Summary .Title)}}<span class="related-sum">{{.Summary}}</span>{{end}}</span></a>
+{{- end}}
+</section>
+{{- end}}
+{{- end}}{{end}}

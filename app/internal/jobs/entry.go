@@ -133,7 +133,7 @@ func (r *entryRow) tags() []string {
 }
 
 func (r *entryRow) ref() Ref {
-	ref := Ref{Kind: r.Kind, Lang: r.Lang, Slug: r.Slug, Tags: r.tags(), Title: r.Title,
+	ref := Ref{Kind: r.Kind, Lang: r.Lang, Slug: r.Slug, Tags: r.tags(), Title: r.Title, Summary: r.Summary,
 		Listed: r.Status == content.Published && r.Visibility == content.Public}
 	if r.Categories != nil {
 		ref.Categories = strings.Fields(*r.Categories)
@@ -201,6 +201,11 @@ func (e *EntryJobs) changed(ctx context.Context, raw json.RawMessage) error {
 	}
 	if PeersChanged(c) {
 		if c.Peers, err = peers(ctx, e.db, c); err != nil {
+			return err
+		}
+	}
+	if RelatedChanged(c) {
+		if c.Related, err = tagMates(ctx, e.db, p.EntryID, c); err != nil {
 			return err
 		}
 	}
@@ -359,6 +364,47 @@ func peers(ctx context.Context, db store.DB, c Change) ([]Ref, error) {
 		res, err := db.Query(ctx, `SELECT kind, lang, slug FROM entries
 WHERE kind = 'snippet' AND lang = ? AND status = 'published' AND visibility = 'public'
 ORDER BY published_at DESC, id DESC LIMIT 50`, l)
+		if err != nil {
+			return nil, err
+		}
+		rows, err := store.Scan[Ref](res)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, rows...)
+	}
+	return out, nil
+}
+
+// relatedReach caps how many tag-mates one change re-renders: the newest,
+// which are the ones most likely to show it among their three.
+const relatedReach = 30
+
+// tagMates lists the listed entries with a page sharing a tag with c's
+// entry, before or after, in its language.
+func tagMates(ctx context.Context, db store.DB, id string, c Change) ([]Ref, error) {
+	tags, langs := map[string]bool{}, map[string]bool{}
+	for _, r := range []*Ref{c.Now, c.Prev} {
+		if r != nil && r.Listed {
+			langs[r.Lang] = true
+			for _, t := range r.Tags {
+				tags[t] = true
+			}
+		}
+	}
+	if len(tags) == 0 {
+		return nil, nil
+	}
+	var out []Ref
+	for l := range langs {
+		args := []any{id, l}
+		for t := range tags {
+			args = append(args, t)
+		}
+		res, err := db.Query(ctx, `SELECT DISTINCT e.kind, e.lang, e.slug, e.published_at FROM entries e
+JOIN entry_tags et ON et.entry_id = e.id JOIN tags t ON t.id = et.tag_id
+WHERE e.id <> ? AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public' AND e.kind IN `+content.PageKinds+`
+AND t.slug IN (?`+strings.Repeat(", ?", len(tags)-1)+`) ORDER BY e.published_at DESC LIMIT `+fmt.Sprint(relatedReach), args...)
 		if err != nil {
 			return nil, err
 		}
