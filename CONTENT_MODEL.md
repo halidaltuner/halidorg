@@ -48,10 +48,12 @@ Every content item with its own page has one row here. Type-specific fields live
 `notes(entry_id, source_url nullable, til bool)` (0006). Title optional; `source_url` must be absolute https.
 
 ### garden
-`garden_pages(entry_id, maturity: seedling|budding|evergreen, last_tended_at)`
+`garden_pages(entry_id, maturity: seedling|budding|evergreen, last_tended_at)` (migrations/0015_garden_runbooks.sql). `last_tended_at` is set on every publish.
 
 ### runbook / cheatsheet
-`runbooks(entry_id, platform, prerequisites_md, verified_on, risk: low|med|high)`
+`runbooks(entry_id, platform, prerequisites, verified_on, risk: low|med|high)` (0015). `prerequisites` is plain text, one per line, shown as a checklist above the steps (not Markdown, so it needs no rendering outside the revision). `verified_on` is the day the steps last worked.
+
+Garden pages and runbooks are long-form kinds written in the post editor (`internal/content/post`, `post.Kinds`): each also has a `posts` row (reading time, mermaid), the kind is picked when the entry is created and never changes, and lists, feeds and lookups keep to their kind. A series can mix the long-form kinds.
 
 ### snippet
 `snippets(entry_id, category_id, gist_url nullable)`
@@ -167,8 +169,8 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | home | `/{lang}/` |
 | post | `/{lang}/posts`, `/{lang}/posts/{slug}` |
 | note | `/{lang}/notes`, `/{lang}/notes/{slug}` |
-| garden | `/{lang}/garden/{slug}` |
-| runbook | `/{lang}/runbooks/{slug}` |
+| garden | `/{lang}/garden?stage=evergreen`, `/{lang}/garden/{slug}` |
+| runbook | `/{lang}/runbooks`, `/{lang}/runbooks/{slug}` |
 | snippet | `/{lang}/snippets`, `/{lang}/snippets/{slug}`, `/{lang}/snippets/{slug}/raw/{filename}` (text/plain) |
 | link | `/{lang}/links?status=unread`, `/{lang}/awesome` (index), `/{lang}/awesome/{category}` |
 | fav | `/{lang}/favs?type=tool` |

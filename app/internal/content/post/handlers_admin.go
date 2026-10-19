@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -94,23 +95,36 @@ type newPage struct {
 	Errors []string
 }
 
-type newForm struct{ Title, Slug, Lang string }
+type newForm struct{ Title, Slug, Lang, Kind string }
+
+// kindOf is the long-form kind named in the request (?kind= or the form),
+// else post.
+func kindOf(r *http.Request) string {
+	if k := r.FormValue("kind"); slices.Contains(Kinds, k) {
+		return k
+	}
+	return Kind
+}
+
+// nav is the sidebar key of a long-form kind: posts, garden or runbooks.
+func nav(kind string) string { return Section(kind) }
 
 func (h *Admin) newPage(w http.ResponseWriter, r *http.Request) {
-	sh := h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.posts.new"), "posts")
-	h.ui.Render(w, http.StatusOK, h.newT, newPage{Shell: sh, Form: newForm{Lang: sh.Lang}})
+	kind := kindOf(r)
+	sh := h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.new."+kind), nav(kind))
+	h.ui.Render(w, http.StatusOK, h.newT, newPage{Shell: sh, Form: newForm{Lang: sh.Lang, Kind: kind}})
 }
 
 // create makes an empty draft and opens it in the editor.
 func (h *Admin) create(w http.ResponseWriter, r *http.Request) {
-	f := newForm{Title: strings.TrimSpace(r.FormValue("title")), Slug: strings.TrimSpace(r.FormValue("slug")), Lang: r.FormValue("lang")}
+	f := newForm{Title: strings.TrimSpace(r.FormValue("title")), Slug: strings.TrimSpace(r.FormValue("slug")), Lang: r.FormValue("lang"), Kind: kindOf(r)}
 	if f.Slug == "" {
 		f.Slug = content.Slugify(f.Title)
 	}
-	p, err := h.repo.Create(r.Context(), Draft{Post: Post{Entry: content.Entry{Title: f.Title, Slug: f.Slug, Lang: f.Lang}}})
+	p, err := h.repo.Create(r.Context(), Draft{Post: Post{Entry: content.Entry{Kind: f.Kind, Title: f.Title, Slug: f.Slug, Lang: f.Lang}}})
 	var v content.ValidationError
 	if errors.As(err, &v) {
-		sh := h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.posts.new"), "posts")
+		sh := h.ui.Shell(r, i18n.T(i18n.FromRequest(r), "admin.new."+f.Kind), nav(f.Kind))
 		h.ui.Render(w, http.StatusUnprocessableEntity, h.newT, newPage{Shell: sh, Form: f, Errors: errorList(sh.Lang, v)})
 		return
 	}
@@ -126,6 +140,11 @@ func (h *Admin) create(w http.ResponseWriter, r *http.Request) {
 
 type editorPage struct {
 	Lang, Env  string
+	Kinds      []string // the long-form kinds; Post.Kind is on
+	Section    string   // the kind's public and sidebar segment
+	Maturities []string
+	Risks      []string
+	Verified   string // the runbook's verified_on as a date field
 	Dark       bool
 	Post       Post
 	Markdown   string
@@ -216,8 +235,9 @@ func (h *Admin) edit(w http.ResponseWriter, r *http.Request) {
 func (h *Admin) page(r *http.Request, p Post, md string, tags []string, errs []string) (editorPage, error) {
 	ctx := r.Context()
 	lang := i18n.FromRequest(r)
-	sh := h.ui.Shell(r, "", "posts")
+	sh := h.ui.Shell(r, "", nav(p.Kind))
 	pg := editorPage{
+		Kinds: Kinds, Section: Section(p.Kind), Maturities: Maturities, Risks: Risks, Verified: day(p.VerifiedOn),
 		Lang: lang, Env: sh.Env, Post: p, Markdown: md, Tags: tags, TagsValue: strings.Join(tags, ", "),
 		Words: len(strings.Fields(md)), Status: p.Status, Errors: errs,
 		SEOLen: utf8.RuneCountInString(p.Summary), SaveLabel: h.saveLabel(lang, p, ""),
@@ -240,7 +260,7 @@ func (h *Admin) page(r *http.Request, p Post, md string, tags []string, errs []s
 		return pg, err
 	}
 	pg.Backlinks = len(bl)
-	if p.Status == content.Published && p.PublishedAt != nil {
+	if p.Kind == Kind && p.Status == content.Published && p.PublishedAt != nil {
 		card := og.Post(p.Lang, p.Title, *p.PublishedAt, p.ReadingMinutes)
 		pg.CoverURL = og.URL(og.EntryKey(p.Lang, "posts", p.Slug), card)
 	}
@@ -312,7 +332,7 @@ func (h *Admin) series(ctx context.Context, lang string, p Post) ([]seriesOpt, e
 }
 
 func (h *Admin) others(ctx context.Context, lang string, p Post) ([]otherLang, error) {
-	res, err := h.db.Query(ctx, `SELECT id, lang, status FROM entries WHERE translation_group_id = ? AND id <> ? AND kind = 'post'`, p.TranslationGroupID, p.ID)
+	res, err := h.db.Query(ctx, `SELECT id, lang, status FROM entries WHERE translation_group_id = ? AND id <> ? AND kind = ?`, p.TranslationGroupID, p.ID, p.Kind)
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +417,30 @@ func formDraft(r *http.Request, p Post) Draft {
 			d.Tags = append(d.Tags, t)
 		}
 	}
+	switch p.Kind {
+	case Garden:
+		d.Maturity = r.FormValue("maturity")
+	case Runbook:
+		d.Platform, d.Risk = r.FormValue("platform"), r.FormValue("risk")
+		d.Prerequisites = strings.ReplaceAll(r.FormValue("prerequisites"), "\r\n", "\n")
+		d.VerifiedOn = nil
+		if s := strings.TrimSpace(r.FormValue("verified_on")); s != "" {
+			v := int64(-1)
+			if t, err := time.Parse("2006-01-02", s); err == nil {
+				v = t.Unix()
+			}
+			d.VerifiedOn = &v
+		}
+	}
 	return d
+}
+
+// day writes unix seconds for a date field.
+func day(v *int64) string {
+	if v == nil || *v <= 0 {
+		return ""
+	}
+	return time.Unix(*v, 0).UTC().Format("2006-01-02")
 }
 
 // save writes the form as a revision: autosaves coalesce, a manual save
@@ -584,7 +627,7 @@ func (h *Admin) translate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad language", http.StatusBadRequest)
 		return
 	}
-	res, err := h.db.Query(r.Context(), `SELECT id FROM entries WHERE translation_group_id = ? AND lang = ? AND kind = 'post'`, p.TranslationGroupID, to)
+	res, err := h.db.Query(r.Context(), `SELECT id FROM entries WHERE translation_group_id = ? AND lang = ? AND kind = ?`, p.TranslationGroupID, to, p.Kind)
 	if err != nil {
 		h.fail(w, err)
 		return
@@ -601,8 +644,9 @@ func (h *Admin) translate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	n, err := h.repo.Create(r.Context(), Draft{
-		Post: Post{Entry: content.Entry{Slug: p.Slug, Lang: to, TranslationGroupID: p.TranslationGroupID, Title: p.Title,
-			Summary: p.Summary, SeriesID: p.SeriesID, SeriesOrder: p.SeriesOrder, Tone: p.Tone}},
+		Post: Post{Entry: content.Entry{Kind: p.Kind, Slug: p.Slug, Lang: to, TranslationGroupID: p.TranslationGroupID, Title: p.Title,
+			Summary: p.Summary, SeriesID: p.SeriesID, SeriesOrder: p.SeriesOrder, Tone: p.Tone},
+			Maturity: p.Maturity, Platform: p.Platform, Prerequisites: p.Prerequisites, VerifiedOn: p.VerifiedOn, Risk: p.Risk},
 		Markdown: md, Tags: tags,
 	})
 	if err != nil {
@@ -643,7 +687,7 @@ func (h *Admin) delete(w http.ResponseWriter, r *http.Request) {
 	}
 	var stmts []store.Stmt
 	if p.Status == content.Published {
-		from := "/" + p.Lang + "/posts/" + p.Slug
+		from := p.Path()
 		code := http.StatusMovedPermanently
 		if to == "" || to == from {
 			code, to = http.StatusGone, ""
@@ -652,7 +696,7 @@ func (h *Admin) delete(w http.ResponseWriter, r *http.Request) {
 ON CONFLICT (from_path) DO UPDATE SET to_path = excluded.to_path, code = excluded.code`,
 			Args: []any{from, to, code, content.Clock().Unix()}})
 	}
-	stmts = append(stmts, store.Stmt{SQL: `DELETE FROM entries WHERE id = ? AND kind = 'post'`, Args: []any{p.ID}})
+	stmts = append(stmts, store.Stmt{SQL: `DELETE FROM entries WHERE id = ? AND kind IN ` + longForm, Args: []any{p.ID}})
 	if _, err := h.db.Batch(r.Context(), stmts...); err != nil {
 		h.fail(w, err)
 		return
@@ -719,7 +763,8 @@ func title(lang string, p Post) string {
 // errorList turns validation errors into catalog messages, field by field.
 func errorList(lang string, v content.ValidationError) []string {
 	var out []string
-	for _, f := range []string{"title", "slug", "lang", "summary", "body", "published_at", "series", "cover", "canonical_url"} {
+	for _, f := range []string{"title", "slug", "lang", "summary", "body", "published_at", "series", "cover", "canonical_url",
+		"maturity", "platform", "prerequisites", "verified_on", "risk"} {
 		msg, ok := v[f]
 		if !ok {
 			continue

@@ -265,3 +265,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - The aside: "open deck ↗" solid rose, "download .html" and "watch recording · N min" outlined, then "related" with section glyphs (¶ posts, {} snippets, ◆ projects, ↗ elsewhere) in `--link`.
 - Home gets the presentations tile ("N talks") and About the talks card ("N talks at M events") once one is published. The palette filters presentations with `t:`.
 - `/admin/presentations` (derive): the entry editor with type, event, city, date, language spoken, cover, recording, outline and related rows, and a Deck panel under the form with the upload, the current version and the bridge script to paste into a deck.
+
+## 30. Implementation notes (Phase 5.5a)
+- Garden (derive, green): the posts list layout with a stage chip row (`?stage=`, filtered in place by `filter.js`) and post cards with a stage badge (seedling `--warning`, budding `--info`, evergreen `--success`) and "tended DATE". The article is the post template with the stage badge and the tended date in the meta line.
+- Runbooks (derive, navy): a dense list of cards with a 3px navy rule, title, summary and platform, risk badge (low `--success`, medium `--warning`, high `--accent-2`) and "verified DATE". The article is the post template with a facts strip (platform, risk, verified) and the prerequisites as a list on the navy tint above the steps.
+- Both join the more menu (garden, runbooks) and the admin sidebar under posts; the post editor shows the kind chip on, and the kind's fields in the side panel (maturity; platform, risk, last verified, prerequisites).

@@ -40,6 +40,21 @@ func date(sec *int64) string {
 	return time.Unix(*sec, 0).UTC().Format("2006-01-02")
 }
 
+// articleTone is a long-form entry's tone: its own, else the section's
+// (garden green, runbooks navy, posts cyan).
+func articleTone(p post.Post) string {
+	if p.Tone != nil {
+		return *p.Tone
+	}
+	switch p.Kind {
+	case post.Garden:
+		return "green"
+	case post.Runbook:
+		return "navy"
+	}
+	return "cyan"
+}
+
 func tone(e content.Entry) string {
 	if e.Tone != nil {
 		return *e.Tone
@@ -227,16 +242,18 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 }
 
 // sections maps entry kinds to their public URL segment.
-var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "presentation": "presentations"}
+var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "presentation": "presentations",
+	"garden": "garden", "runbook": "runbooks"}
 
 // glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
 var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆", "homelab": "⌁",
-	"presentation": "▶"}
+	"presentation": "▶", "garden": "✿", "runbook": "$"}
 
 // --- Post -------------------------------------------------------------------
 
 type postPage struct {
 	page
+	Section      string // posts, garden or runbooks: the crumb and series links
 	ArticleLang  string
 	Post         post.Post
 	Body         template.HTML
@@ -264,15 +281,23 @@ type translationLink struct {
 // "not translated yet" banner (design/Post.dc.html), canonical to the
 // original and noindex.
 func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
+	h.article(w, r, lang, post.Kind)
+}
+
+// article serves a long-form entry of kind (post, garden page, runbook) at
+// /{lang}/{section}/{slug}: one template, with the garden's maturity or the
+// runbook's platform, risk and prerequisites in the header.
+func (h *Handlers) article(w http.ResponseWriter, r *http.Request, lang, kind string) {
+	seg := post.Section(kind)
 	slug := r.PathValue("slug")
 	if !content.ValidSlug(slug) {
 		h.notFound(w, r)
 		return
 	}
-	p, err := h.posts.GetPublished(r.Context(), lang, slug)
+	p, err := h.posts.GetPublishedKind(r.Context(), kind, lang, slug)
 	untranslated := false
 	if errors.Is(err, content.ErrNotFound) {
-		p, err = h.untranslated(r, lang, slug)
+		p, err = h.untranslated(r, kind, lang, slug)
 		untranslated = err == nil
 	}
 	if err != nil {
@@ -289,7 +314,7 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 		for _, t := range trs {
 			if t.Lang == lang {
 				w.Header().Set("Cache-Control", "no-store")
-				http.Redirect(w, r, "/"+lang+"/posts/"+t.Slug, http.StatusMovedPermanently)
+				http.Redirect(w, r, "/"+lang+"/"+seg+"/"+t.Slug, http.StatusMovedPermanently)
 				return
 			}
 		}
@@ -317,18 +342,19 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 
 	// Where each language lives: the post itself, its translations, or the
 	// fallback page that shows the banner.
-	where := map[string]string{p.Lang: "/" + p.Lang + "/posts/" + p.Slug}
+	where := map[string]string{p.Lang: "/" + p.Lang + "/" + seg + "/" + p.Slug}
 	for _, t := range trs {
-		where[t.Lang] = "/" + t.Lang + "/posts/" + t.Slug
+		where[t.Lang] = "/" + t.Lang + "/" + seg + "/" + t.Slug
 	}
 	switchTo := func(l string) string {
 		if u, ok := where[l]; ok {
 			return u
 		}
-		return "/" + l + "/posts/" + p.Slug
+		return "/" + l + "/" + seg + "/" + p.Slug
 	}
 	pg := postPage{
-		page:         h.newPage(lang, "posts", p.Title+" · halid.org", "", switchTo),
+		page:         h.newPage(lang, seg, p.Title+" · halid.org", "", switchTo),
+		Section:      seg,
 		ArticleLang:  p.Lang,
 		Post:         p,
 		Body:         template.HTML(rev.BodyHTML), // renderer output, stored on the revision (ADR-002)
@@ -336,7 +362,7 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 		Series:       series,
 		Untranslated: untranslated,
 		OtherURL:     where[p.Lang],
-		Tone:         tone(p.Entry),
+		Tone:         articleTone(p),
 	}
 	for _, b := range bls {
 		if seg, ok := sections[b.Kind]; ok {
@@ -347,9 +373,13 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 	pg.Head.Description = p.Summary
 	pg.Head.OGType = "article"
 	if p.PublishedAt != nil {
-		// The original's card, also on the untranslated fallback page.
-		card := og.Post(p.Lang, p.Title, *p.PublishedAt, p.ReadingMinutes)
-		pg.Head.Image = h.origin + og.URL(og.EntryKey(p.Lang, "posts", p.Slug), card)
+		// The original's card, also on the untranslated fallback page; it
+		// matches the one the entry.changed job renders.
+		card := og.Entry(p.Kind, p.Lang, p.Title, p.Summary, p.Slug, *p.PublishedAt)
+		if p.Kind == post.Kind {
+			card = og.Post(p.Lang, p.Title, *p.PublishedAt, p.ReadingMinutes)
+		}
+		pg.Head.Image = h.origin + og.URL(og.EntryKey(p.Lang, seg, p.Slug), card)
 	}
 	pg.Head.Canonical = h.origin + where[p.Lang]
 	pg.Head.Alternates = nil
@@ -371,13 +401,14 @@ func (h *Handlers) post(w http.ResponseWriter, r *http.Request, lang string) {
 	h.render(w, r, "post", pg)
 }
 
-// untranslated finds the post with this slug in another language.
-func (h *Handlers) untranslated(r *http.Request, lang, slug string) (post.Post, error) {
+// untranslated finds the long-form entry of kind with this slug in another
+// language.
+func (h *Handlers) untranslated(r *http.Request, kind, lang, slug string) (post.Post, error) {
 	for _, l := range i18n.Supported {
 		if l == lang {
 			continue
 		}
-		if p, err := h.posts.GetPublished(r.Context(), l, slug); err == nil {
+		if p, err := h.posts.GetPublishedKind(r.Context(), kind, l, slug); err == nil {
 			return p, nil
 		} else if !errors.Is(err, content.ErrNotFound) {
 			return post.Post{}, err

@@ -66,7 +66,7 @@ FROM revisions WHERE entry_id = ? ORDER BY id DESC LIMIT 200`, p.ID)
 		h.fail(w, err)
 		return
 	}
-	pg := revisionsPage{Shell: h.ui.Shell(r, i18n.T(lang, "admin.rev.title")+" · "+title(lang, p), "posts"), Post: p}
+	pg := revisionsPage{Shell: h.ui.Shell(r, i18n.T(lang, "admin.rev.title")+" · "+title(lang, p), nav(p.Kind)), Post: p}
 	if len(revs) == 0 {
 		h.ui.Render(w, http.StatusOK, h.revs, pg)
 		return

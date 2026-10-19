@@ -1,7 +1,7 @@
 {{define "title"}}{{if .Post.Title}}{{.Post.Title}}{{else}}{{.Post.Slug}}{{end}} · {{tr .Lang "admin.editor.label"}}{{end}}
 {{define "content"}}<div class="ed">
 <header class="ed-top">
-<a class="ed-back mono" href="/admin/posts">← {{tr .Lang "admin.nav.posts"}}</a>
+<a class="ed-back mono" href="/admin/posts?kind={{.Post.Kind}}">← {{tr .Lang (print "admin.nav." .Section)}}</a>
 <span class="ed-title" id="ed-title">{{if .Post.Title}}{{.Post.Title}}{{else}}{{tr .Lang "admin.untitled"}}{{end}}</span>
 <span class="ed-status s-{{.Status}}">{{tr .Lang (print "admin.status." .Status)}}</span>
 {{template "save-state" .}}
@@ -34,7 +34,7 @@
 <div id="ed-errors" class="ed-errors"{{if not .Errors}} hidden{{end}}>{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}</div>
 <div class="ed-sec">
 <span class="ed-label">{{tr .Lang "admin.editor.kind"}}</span>
-<div class="ed-kinds"><span class="on">post</span><span aria-disabled="true">note</span><span aria-disabled="true">snippet</span></div>
+<div class="ed-kinds">{{range .Kinds}}<span{{if eq . $.Post.Kind}} class="on"{{else}} aria-disabled="true"{{end}}>{{.}}</span>{{end}}</div>
 <label class="ed-label" for="ed-slug">{{tr .Lang "admin.editor.slug"}}</label>
 <input id="ed-slug" name="slug" value="{{.Post.Slug}}" spellcheck="false" pattern="[a-z0-9\-]{1,80}" required>
 <label class="ed-label" for="ed-series">{{tr .Lang "admin.editor.series"}}</label>
@@ -43,6 +43,24 @@
 <input name="series_order" value="{{with .Post.SeriesOrder}}{{.}}{{end}}" inputmode="numeric" size="2" aria-label="{{tr .Lang "admin.editor.series_order"}}" placeholder="#">
 </div>
 </div>
+{{- if eq .Post.Kind "garden"}}
+<div class="ed-sec">
+<label class="ed-label" for="ed-maturity">{{tr .Lang "admin.editor.maturity"}}</label>
+<select id="ed-maturity" name="maturity">{{range .Maturities}}<option value="{{.}}"{{if eq . $.Post.Maturity}} selected{{end}}>{{tr $.Lang (print "garden.maturity." .)}}</option>{{end}}</select>
+<span class="ed-small">{{tr .Lang "admin.editor.tended_hint"}}{{with .Post.LastTendedAt}} · {{date .}}{{end}}</span>
+</div>
+{{- else if eq .Post.Kind "runbook"}}
+<div class="ed-sec">
+<label class="ed-label" for="ed-platform">{{tr .Lang "admin.editor.platform"}}</label>
+<input id="ed-platform" name="platform" value="{{.Post.Platform}}" placeholder="Proxmox VE 8" maxlength="80">
+<label class="ed-label" for="ed-risk">{{tr .Lang "admin.editor.risk"}}</label>
+<select id="ed-risk" name="risk">{{range .Risks}}<option value="{{.}}"{{if eq . $.Post.Risk}} selected{{end}}>{{tr $.Lang (print "runbook.risk." .)}}</option>{{end}}</select>
+<label class="ed-label" for="ed-verified">{{tr .Lang "admin.editor.verified_on"}}</label>
+<input id="ed-verified" type="date" name="verified_on" value="{{.Verified}}">
+<label class="ed-label" for="ed-prereq">{{tr .Lang "admin.editor.prerequisites"}}</label>
+<textarea id="ed-prereq" name="prerequisites" rows="4" placeholder="{{tr .Lang "admin.editor.prereq_hint"}}">{{.Post.Prerequisites}}</textarea>
+</div>
+{{- end}}
 <div class="ed-sec">
 <label class="ed-label" for="ed-tags">{{tr .Lang "admin.editor.tags"}}</label>
 <div class="ed-chips" id="ed-chips" hidden></div>
@@ -83,7 +101,7 @@
 {{- end}}
 {{- if eq .Status "published"}}
 <label class="ed-label" for="ed-redirect">{{tr .Lang "admin.delete.redirect_to"}}</label>
-<input id="ed-redirect" name="redirect_to" form="ed-delete" placeholder="/{{.Post.Lang}}/posts/…" spellcheck="false">
+<input id="ed-redirect" name="redirect_to" form="ed-delete" placeholder="/{{.Post.Lang}}/{{.Section}}/…" spellcheck="false">
 {{- end}}
 <div class="ed-confirm-row">
 <button type="submit" class="ed-btn danger" form="ed-delete"{{if .Backlinks}} data-needs-confirm{{end}}>{{tr .Lang "admin.delete.confirm"}}</button>

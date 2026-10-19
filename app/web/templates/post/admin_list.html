@@ -1,20 +1,21 @@
 {{define "main"}}
 <div class="adm-head">
 <h1>{{.Title}}</h1>
-<a class="adm-btn solid" href="/admin/posts/new">{{tr .Lang "admin.posts.new"}}</a>
+<a class="adm-btn solid" href="/admin/posts/new?kind={{.Filter.Kind}}">{{tr .Lang (print "admin.new." .Filter.Kind)}}</a>
 </div>
 {{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
 {{with .Error}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
 <form class="adm-filters" method="get" action="/admin/posts" role="search">
+<input type="hidden" name="kind" value="{{.Filter.Kind}}">
 <label>{{tr .Lang "admin.posts.col_status"}}<select name="status"><option value="">{{tr .Lang "admin.filter.all"}}</option>{{range .Statuses}}<option value="{{.}}"{{if eq . $.Filter.Status}} selected{{end}}>{{tr $.Lang (print "admin.status." .)}}</option>{{end}}</select></label>
 <label>{{tr .Lang "admin.posts.col_lang"}}<select name="lang"><option value="">{{tr .Lang "admin.filter.all"}}</option>{{range $l := langs}}<option value="{{$l}}"{{if eq $l $.Filter.Lang}} selected{{end}}>{{$l}}</option>{{end}}</select></label>
 <label>{{tr .Lang "admin.editor.tags"}}<select name="tag"><option value="">{{tr .Lang "admin.filter.all"}}</option>{{range .Tags}}<option value="{{.}}"{{if eq . $.Filter.Tag}} selected{{end}}>#{{.}}</option>{{end}}</select></label>
 <button type="submit" class="adm-btn">{{tr .Lang "admin.filter.apply"}}</button>
-{{if or .Filter.Status .Filter.Lang .Filter.Tag}}<a class="adm-clear" href="/admin/posts">{{tr .Lang "admin.filter.clear"}}</a>{{end}}
+{{if or .Filter.Status .Filter.Lang .Filter.Tag}}<a class="adm-clear" href="/admin/posts?kind={{.Filter.Kind}}">{{tr .Lang "admin.filter.clear"}}</a>{{end}}
 </form>
 <section class="adm-panel">
 <form id="bulk" method="post" action="/admin/posts/bulk" class="adm-bulk">
-<input type="hidden" name="back" value="?status={{.Filter.Status}}&lang={{.Filter.Lang}}&tag={{.Filter.Tag}}">
+<input type="hidden" name="back" value="?kind={{.Filter.Kind}}&status={{.Filter.Status}}&lang={{.Filter.Lang}}&tag={{.Filter.Tag}}">
 <span class="mono muted">{{tr .Lang "admin.bulk.selected"}}</span>
 <select name="action" aria-label="{{tr .Lang "admin.bulk.action"}}"><option value="publish">{{tr .Lang "admin.bulk.publish"}}</option><option value="archive">{{tr .Lang "admin.bulk.archive"}}</option></select>
 <button type="submit" class="adm-btn">{{tr .Lang "admin.bulk.apply"}}</button>

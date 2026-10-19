@@ -32,6 +32,8 @@ const SECTIONS: Record<string, string> = {
 	project: "projects",
 	homelab: "projects",
 	presentation: "presentations",
+	garden: "garden",
+	runbook: "runbooks",
 };
 
 /** search.Fold: ı, İ and I become i, everything else lowercases. */

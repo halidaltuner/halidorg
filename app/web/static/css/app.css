@@ -61,6 +61,8 @@ a.wordmark:hover { text-shadow: -2.5px 0 var(--ab-rose-hover), 2.5px 0 var(--ab-
 [data-s="links"] { --rule: var(--kind-link); }
 [data-s="favs"] { --rule: var(--kind-fav); }
 [data-s="certificates"] { --rule: var(--kind-certificate); }
+[data-s="garden"] { --rule: var(--kind-garden); }
+[data-s="runbooks"] { --rule: var(--kind-runbook); }
 .nav > a,
 .nav-more > summary {
   font-size: var(--fs-14);
@@ -1966,4 +1968,32 @@ html.ph-locked { overflow: hidden; }
   .prd-bar { gap: var(--sp-8); padding: var(--sp-8) 10px; }
   .prd-progress { display: none; }
   .prd-count { flex: 1; }
+}
+
+/* Garden and runbooks (Phase 5.5, derive: the posts list and article in
+   green and navy). */
+.list-page[class*="tone-"] .list-head .eyebrow { color: var(--t-ink); }
+.list-sub { margin: 0; font-size: var(--fs-18); line-height: 1.7; max-width: 60ch; color: var(--text-muted); }
+.badge.mat-seedling { color: var(--warning); }
+.badge.mat-budding { color: var(--info); }
+.badge.mat-evergreen { color: var(--success); }
+.badge.risk-low { color: var(--success); }
+.badge.risk-med { color: var(--warning); }
+.badge.risk-high { color: var(--accent-2); }
+.rb-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-8); }
+.rb-list a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px var(--sp-16); padding: var(--sp-16) var(--sp-20); background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--t-ink); border-radius: var(--radius-2); text-decoration: none; color: var(--text); }
+.rb-list a:hover { box-shadow: var(--shadow-card-hover); }
+.rb-title { font-size: var(--fs-18); font-weight: 600; }
+.rb-sum { grid-column: 1; font-size: var(--fs-14); color: var(--text-muted); }
+.rb-meta { grid-column: 2; grid-row: 1 / span 2; align-self: center; display: flex; gap: var(--sp-12); align-items: center; font-size: var(--fs-12); color: var(--text-muted); flex-wrap: wrap; justify-content: flex-end; }
+.rb-facts { display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-24); margin: var(--sp-16) 0 var(--sp-24); padding: var(--sp-12) var(--sp-16); border: 1px solid var(--border); border-radius: var(--radius-2); background: var(--surface); font-size: var(--fs-13); }
+.rb-facts div { display: flex; gap: var(--sp-8); align-items: center; }
+.rb-facts dt { color: var(--text-muted); }
+.rb-facts dd { margin: 0; }
+.rb-prereq { margin: 0 0 var(--sp-32); padding: var(--sp-16) var(--sp-20); border-radius: var(--radius-2); background: var(--tone-navy-tint); }
+.rb-prereq h2 { margin: 0 0 var(--sp-8); font-size: var(--fs-13); font-weight: 500; color: var(--tone-navy-ink); }
+.rb-prereq ul { margin: 0; padding-left: 1.2em; font-size: var(--fs-16); line-height: 1.7; }
+@media (max-width: 760px) {
+  .rb-list a { grid-template-columns: minmax(0, 1fr); }
+  .rb-meta { grid-column: 1; grid-row: auto; justify-content: flex-start; }
 }

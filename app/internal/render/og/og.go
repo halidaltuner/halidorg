@@ -63,6 +63,8 @@ var (
 		"fav":          rose,
 		"project":      rgb(0x4A, 0xDE, 0x80),
 		"presentation": rose,
+		"garden":       rgb(0x4A, 0xDE, 0x80),
+		"runbook":      rgb(0xA5, 0xB4, 0xFC),
 		"build log":    rgb(0x4A, 0xDE, 0x80), // a project's log: the project dot
 	}
 )

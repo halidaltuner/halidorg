@@ -82,6 +82,8 @@ var sections = []struct {
 	{"dashboard", "/admin", "", false, true},
 	{"content", "", "", false, true},
 	{"posts", "/admin/posts", "post", true, true},
+	{"garden", "/admin/posts?kind=garden", "garden", true, true},
+	{"runbooks", "/admin/posts?kind=runbook", "runbook", true, true},
 	{"notes", "/admin/notes", "note", true, true},
 	{"snippets", "/admin/snippets", "snippet", true, true},
 	{"links", "/admin/links", "link", true, true},
