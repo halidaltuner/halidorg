@@ -244,11 +244,11 @@ func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string
 
 // sections maps entry kinds to their public URL segment.
 var sections = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects",
-	"presentation": "presentations", "garden": "garden", "runbook": "runbooks", "term": "glossary"}
+	"presentation": "presentations", "garden": "garden", "runbook": "runbooks", "term": "glossary", "radar_item": "radar"}
 
 // glyphs are the kind marks used in the stream and backlinks (design/Post.dc.html).
 var glyphs = map[string]string{"post": "¶", "note": "~", "snippet": "{}", "link": "↗", "fav": "*", "project": "◆", "homelab": "⌁",
-	"presentation": "▶", "garden": "✿", "runbook": "$", "term": "§", "book": "❒"}
+	"presentation": "▶", "garden": "✿", "runbook": "$", "term": "§", "book": "❒", "radar_item": "◎", "radar": "◎"}
 
 // --- Post -------------------------------------------------------------------
 

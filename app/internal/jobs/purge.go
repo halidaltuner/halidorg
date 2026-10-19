@@ -145,6 +145,7 @@ var kindPath = map[string]string{
 	"garden":       "garden",
 	"runbook":      "runbooks",
 	"term":         "glossary",
+	"radar_item":   "radar",
 }
 
 // listPath is the URL segment of each kind's list page and per-kind feeds.
@@ -161,6 +162,7 @@ var listPath = map[string]string{
 	"runbook":      "runbooks",
 	"term":         "glossary",
 	"book":         "reading",
+	"radar_item":   "radar",
 }
 
 // ListSegment is the URL segment of a kind's list page, or "".

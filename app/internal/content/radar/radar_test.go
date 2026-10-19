@@ -3,6 +3,7 @@ package radar
 import (
 	"context"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -209,5 +210,76 @@ func TestNextLabel(t *testing.T) {
 		if got := nextLabel(now, eds); got != c.want {
 			t.Errorf("after %q: %s, want %s", c.latest, got, c.want)
 		}
+	}
+}
+
+// TestLayout: every blip lands inside its quadrant and ring, none overlap,
+// and a blip keeps its spot when others join.
+func TestLayout(t *testing.T) {
+	for run := 0; run < 10; run++ {
+		layoutOnce(t)
+		if t.Failed() {
+			return
+		}
+	}
+}
+
+func layoutOnce(t *testing.T) {
+	var bs []Blip
+	n := 0
+	for qi, q := range Quadrants {
+		for ri, r := range Rings {
+			// The inner rings hold fewer: adopt has room for three a quadrant.
+			count := 3 + ri + qi%2
+			if ri == 0 {
+				count = 3
+			}
+			for k := 0; k < count; k++ {
+				n++
+				bs = append(bs, Blip{Group: content.NewID(), Quadrant: q, Ring: r})
+			}
+		}
+	}
+	pts := Layout(bs)
+	if len(pts) != n {
+		t.Fatalf("%d points for %d blips", len(pts), n)
+	}
+	for i, b := range bs {
+		p := pts[b.Group]
+		dx, dy := p.X-Center, p.Y-Center
+		rad := math.Hypot(dx, dy)
+		ri := RingIndex(b.Ring)
+		if rad < RingRadii[ri] || rad > RingRadii[ri+1] {
+			t.Errorf("%s/%s at radius %.1f", b.Quadrant, b.Ring, rad)
+		}
+		// languages top right, techniques top left, tools bottom left, platforms bottom right
+		right, top := dx > 0, dy < 0
+		want := map[string][2]bool{"languages": {true, true}, "techniques": {false, true}, "tools": {false, false}, "platforms": {true, false}}[b.Quadrant]
+		if right != want[0] || top != want[1] {
+			t.Errorf("%s blip at (%.0f, %.0f)", b.Quadrant, p.X, p.Y)
+		}
+		for _, o := range bs[i+1:] {
+			if q := pts[o.Group]; math.Hypot(p.X-q.X, p.Y-q.Y) < 16 {
+				t.Errorf("overlap at (%.0f, %.0f)", p.X, p.Y)
+			}
+		}
+	}
+	// Same input, same picture.
+	again := Layout(bs)
+	for g, p := range pts {
+		if again[g] != p {
+			t.Fatal("layout is not deterministic")
+		}
+	}
+	more := append(append([]Blip{}, bs...), Blip{Group: content.NewID(), Quadrant: "tools", Ring: "hold"})
+	moved := 0
+	for g, p := range Layout(more) {
+		if old, ok := pts[g]; ok && old != p {
+			moved++
+		}
+	}
+	// Only blips it displaces (and theirs) step aside; most stay put.
+	if moved > len(bs)/5 {
+		t.Errorf("one new blip moved %d of %d others", moved, len(bs))
 	}
 }

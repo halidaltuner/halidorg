@@ -13,8 +13,8 @@ func same(string) string { return "/x" }
 func TestNavShowsOnlyEnabledSections(t *testing.T) {
 	c := NewChrome("en", "posts", false, same)
 	// Phase 4: projects and homelab join posts; Phase 5: presentations,
-	// photos, now, about.
-	if len(c.Nav) != 7 || c.Nav[3].Href != "/en/presentations" || c.Nav[4].Href != "/en/photos" || c.Nav[5].Href != "/en/now" || c.Nav[6].Href != "/en/about" || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts" ||
+	// photos, now, about; Phase 6: the radar.
+	if len(c.Nav) != 8 || c.Nav[3].Href != "/en/presentations" || c.Nav[4].Href != "/en/photos" || c.Nav[5].Href != "/en/radar" || c.Nav[6].Href != "/en/now" || c.Nav[7].Href != "/en/about" || c.Nav[0].Slug != "posts" || !c.Nav[0].Active || c.Nav[0].Href != "/en/posts" ||
 		c.Nav[1].Slug != "projects" || c.Nav[1].Active || c.Nav[2].Href != "/en/homelab" {
 		t.Fatalf("nav %+v", c.Nav)
 	}
@@ -81,8 +81,8 @@ func TestHeader(t *testing.T) {
 			t.Errorf("missing %s in\n%s", want, out)
 		}
 	}
-	if !strings.Contains(out, `<details class="nav-more">`) || strings.Contains(out, `href="/en/radar"`) {
-		t.Error("more menu must list only the sections that exist")
+	if !strings.Contains(out, `<details class="nav-more">`) || !strings.Contains(out, `href="/en/radar"`) {
+		t.Error("the header lists the radar and the more menu")
 	}
 	empty := NewChrome("en", "posts", false, same)
 	empty.More = nil

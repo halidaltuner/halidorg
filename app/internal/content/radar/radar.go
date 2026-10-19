@@ -428,10 +428,11 @@ func blipOf(i Item) Blip {
 
 // History is an item's rows across editions, newest first.
 type History struct {
-	Label string `json:"label"`
-	Ring  string `json:"ring"`
-	Note  string `json:"-"`
-	Prev  string `json:"-"` // the ring in the edition before, "" when not on it
+	Label    string `json:"label"`
+	Ring     string `json:"ring"`
+	Quadrant string `json:"quadrant"`
+	Note     string `json:"-"`
+	Prev     string `json:"-"` // the ring in the edition before, "" when not on it
 	// Off is set on an edition the item is not on, after one it was on.
 	Off    bool   `json:"-"`
 	NoteTR string `json:"note_tr"`
@@ -445,7 +446,7 @@ func (r *Repo) HistoryOf(ctx context.Context, group, lang string) ([]History, er
 	if err != nil {
 		return nil, err
 	}
-	res, err := r.db.Query(ctx, `SELECT e.label, h.ring, h.note_tr, h.note_en FROM radar_history h
+	res, err := r.db.Query(ctx, `SELECT e.label, h.ring, h.quadrant, h.note_tr, h.note_en FROM radar_history h
 JOIN radar_editions e ON e.id = h.edition_id WHERE h.group_id = ?`, group)
 	if err != nil {
 		return nil, err
@@ -561,4 +562,21 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`, Args: []any{it.Group, out.Edition.ID, it.Sl
 		return Frozen{}, err
 	}
 	return out, nil
+}
+
+// GetPublished loads an item's published entry by language and slug.
+func (r *Repo) GetPublished(ctx context.Context, lang, slug string) (content.Entry, error) {
+	res, err := r.db.Query(ctx, `SELECT `+content.EntryColumns+` FROM entries e
+WHERE e.kind = ? AND e.lang = ? AND e.slug = ? AND e.status = 'published' AND e.visibility <> 'private' LIMIT 1`, Kind, lang, slug)
+	if err != nil {
+		return content.Entry{}, err
+	}
+	rows, err := store.Scan[content.Entry](res)
+	if err != nil {
+		return content.Entry{}, err
+	}
+	if len(rows) == 0 {
+		return content.Entry{}, content.NotFound(Kind, lang+"/"+slug)
+	}
+	return rows[0], nil
 }

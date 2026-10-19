@@ -77,7 +77,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 // under. Posts use the language feeds (/{lang}/feed.xml).
 var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs", "project": "projects",
 	"certificate": "certificates", "photo": "photos", "presentation": "presentations",
-	"garden": "garden", "runbook": "runbooks", "term": "glossary", "book": "reading"}
+	"garden": "garden", "runbook": "runbooks", "term": "glossary", "book": "reading", "radar_item": "radar"}
 
 // item is one feed entry, whatever its kind.
 type item struct {
@@ -509,7 +509,7 @@ func (h *Handlers) sitemapRows(ctx context.Context) ([]smRow, error) {
 	// A build log lives under its project: its "slug" here is the path
 	// below /{lang}/projects/ (project/log/slug).
 	res, err := h.db.Query(ctx, `SELECT kind, lang, slug, translation_group_id, updated_at FROM entries
-WHERE kind IN ('post', 'note', 'snippet', 'project', 'presentation', 'garden', 'runbook', 'term', 'page') AND status = 'published' AND visibility = 'public'
+WHERE kind IN ('post', 'note', 'snippet', 'project', 'presentation', 'garden', 'runbook', 'term', 'radar_item', 'page') AND status = 'published' AND visibility = 'public'
 UNION ALL
 SELECT 'project', e.lang, pe.slug || '/log/' || e.slug, e.translation_group_id, e.updated_at
 FROM entries e JOIN buildlogs b ON b.entry_id = e.id JOIN entries pe ON pe.id = b.project_entry_id
@@ -579,7 +579,7 @@ JOIN gh_repos g ON g.full_name = a.repo WHERE g.gone = 0 ORDER BY 1 LIMIT 1000`)
 
 // itemSegments are the kinds with a page per entry and their URL segment.
 var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects",
-	"presentation": "presentations", "garden": "garden", "runbook": "runbooks", "term": "glossary"}
+	"presentation": "presentations", "garden": "garden", "runbook": "runbooks", "term": "glossary", "radar_item": "radar"}
 
 func itemPath(r smRow) string {
 	if r.Kind == "page" { // About and Now sit at the language root
@@ -597,7 +597,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos", "/presentations", "/garden", "/runbooks", "/series", "/glossary", "/reading"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos", "/presentations", "/garden", "/runbooks", "/series", "/glossary", "/reading", "/radar"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})
@@ -637,8 +637,31 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	for _, m := range months {
 		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + m.Lang + "/stream/" + m.Slug})
 	}
+	// Radar editions other than the latest (which is /radar), in both languages.
+	res, err := h.db.Query(r.Context(), `SELECT label FROM radar_editions ORDER BY label DESC LIMIT 100`)
+	var labels []struct {
+		Label string `json:"label"`
+	}
+	if err == nil {
+		labels, err = store.Scan[struct {
+			Label string `json:"label"`
+		}](res)
+	}
+	if err != nil {
+		slog.Error("sitemap", "err", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+	for i, x := range labels {
+		if i == 0 {
+			continue
+		}
+		for _, l := range i18n.Supported {
+			set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + l + "/radar/" + x.Label})
+		}
+	}
 	// Series pages: a series has one in each language it has a published part in.
-	res, err := h.db.Query(r.Context(), `SELECT DISTINCT e.lang, s.slug FROM series s JOIN entries e ON e.series_id = s.id
+	res, err = h.db.Query(r.Context(), `SELECT DISTINCT e.lang, s.slug FROM series s JOIN entries e ON e.series_id = s.id
 WHERE s.status <> 'archived' AND e.status = 'published' AND e.visibility = 'public' ORDER BY s.slug, e.lang`)
 	type seriesRow struct {
 		Lang string `json:"lang"`

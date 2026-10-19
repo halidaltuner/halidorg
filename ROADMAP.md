@@ -80,7 +80,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 
 ## Phase 6: Tech Radar (M)
 - [x] `radar_item`, history, editions (6.1: frozen editions only; the admin edits a working copy)
-- [ ] Radar **(designed)**: SVG, quadrants, rings, new/moved blips, list sync, edition switcher, keyboard
+- [x] Radar **(designed)**: SVG, quadrants, rings, new/moved blips, list sync, edition switcher, keyboard (6.2; editions at `/{lang}/radar/{YYYY-MM}`, items at `/{lang}/radar/{slug}`)
 - [x] Admin radar editor **(derive)**, edition snapshot (6.1)
 
 ## Phase 7: Discovery and polish (M)

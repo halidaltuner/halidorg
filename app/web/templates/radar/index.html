@@ -1,0 +1,65 @@
+{{define "content"}}<main class="rdr-page">
+<div class="rdr-head">
+<div class="rdr-intro">
+<h1>{{tr .Lang "radar.title"}}</h1>
+<p>{{tr .Lang "radar.intro"}}</p>
+</div>
+{{- if gt (len .Editions) 1}}
+<nav class="rdr-eds mono" aria-label="{{tr .Lang "radar.editions"}}">{{range .Editions}}<a href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}>{{.Label}}</a>{{end}}</nav>
+{{- else}}{{with .Edition}}<span class="rdr-eds mono"><span aria-current="page">{{.}}</span></span>{{end}}{{end}}
+</div>
+{{- if .Blips}}
+<div class="rdr-legend mono" aria-hidden="true">
+<span><span class="rdr-lg-dot"></span>{{tr .Lang "radar.legend.same"}}</span>
+<span><span class="rdr-lg-tri"></span>{{tr .Lang "radar.legend.new"}}</span>
+<span><span class="rdr-lg-arrow">→</span>{{tr .Lang "radar.legend.moved"}}</span>
+</div>
+<div class="rdr-grid">
+<div class="rdr-chart">
+<svg viewBox="0 0 500 500" role="img" aria-labelledby="rdr-svg-t" class="rdr-svg" data-radar>
+<title id="rdr-svg-t">{{printf (tr .Lang "radar.svg_label") .Edition (len .Blips)}}</title>
+<circle cx="250" cy="250" r="240" class="rdr-c r-hold"/>
+<circle cx="250" cy="250" r="180" class="rdr-c r-assess"/>
+<circle cx="250" cy="250" r="120" class="rdr-c r-trial"/>
+<circle cx="250" cy="250" r="60" class="rdr-c r-adopt"/>
+<line x1="250" y1="6" x2="250" y2="494" class="rdr-axis"/>
+<line x1="6" y1="250" x2="494" y2="250" class="rdr-axis"/>
+{{- range .RingNames}}
+<text x="{{.X}}" y="246" class="rdr-rl r-{{.Key}}">{{.Name}}</text>
+{{- end}}
+<text x="490" y="18" text-anchor="end" class="rdr-ql">{{index .Quadrants "languages"}}</text>
+<text x="10" y="18" class="rdr-ql">{{index .Quadrants "techniques"}}</text>
+<text x="10" y="490" class="rdr-ql">{{index .Quadrants "tools"}}</text>
+<text x="490" y="490" text-anchor="end" class="rdr-ql">{{index .Quadrants "platforms"}}</text>
+{{- range .Blips}}
+<g class="rdr-blip r-{{.Ring}}" transform="translate({{.X}} {{.Y}})" data-n="{{.N}}" data-href="{{.Href}}">
+{{- if .Moved}}<line x1="{{.TrailX}}" y1="{{.TrailY}}" x2="0" y2="0" class="rdr-trail"/>{{end}}
+{{- if .New}}<polygon points="0,-11 10,7 -10,7" class="rdr-mark"/>{{else}}<circle r="8" class="rdr-mark"/>{{end}}
+<text y="{{if .New}}5{{else}}3{{end}}" text-anchor="middle">{{.N}}</text>
+</g>
+{{- end}}
+</svg>
+</div>
+<div class="rdr-list" data-radar-list>
+{{- range .Rings}}{{if .Items}}
+<section class="rdr-ring r-{{.Key}}" aria-labelledby="ring-{{.Key}}">
+<h2 class="mono" id="ring-{{.Key}}">{{.Name}}</h2>
+<ol>
+{{- range .Items}}
+<li><a class="rdr-row" href="{{.Href}}" data-n="{{.N}}"><span class="rdr-n mono">{{.N}}</span><span class="rdr-text"><span class="rdr-name">{{.Name}}</span>{{with .Note}}<span class="rdr-note">{{.}}</span>{{end}}</span><span class="rdr-tag mono">{{.Tag}}</span></a></li>
+{{- end}}
+</ol>
+</section>
+{{- end}}{{end}}
+{{- with .Dropped}}
+<section class="rdr-ring rdr-gone" aria-labelledby="ring-gone">
+<h2 class="mono" id="ring-gone">{{tr $.Lang "radar.dropped"}}</h2>
+<p>{{range $i, $n := .}}{{if $i}}, {{end}}{{$n}}{{end}}</p>
+</section>
+{{- end}}
+</div>
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "radar.empty"}}</p>
+{{- end}}
+</main>{{end}}

@@ -33,7 +33,7 @@ type section struct {
 var (
 	nav = []section{
 		{"posts", true}, {"projects", true}, {"homelab", true}, {"presentations", true},
-		{"photos", true}, {"radar", false}, {"now", true}, {"about", true},
+		{"photos", true}, {"radar", true}, {"now", true}, {"about", true},
 	}
 	more = []section{
 		{"notes", true}, {"snippets", true}, {"links", true}, {"favs", true}, {"certificates", true},

@@ -109,6 +109,8 @@ func New(db store.DB) (*Handlers, error) {
 		"runbooks":      "templates/runbook/index.html",
 		"presentation":  "templates/presentation/show.html",
 		"photos":        "templates/photo/index.html",
+		"radar":         "templates/radar/index.html",
+		"radar-item":    "templates/radar/item.html",
 	} {
 		t, err := ui.Parse(name, "templates/partials/base.html", "templates/post/card.html", "templates/note/card.html", file)
 		if err != nil {
@@ -170,6 +172,8 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/runbooks", func(w http.ResponseWriter, r *http.Request) { h.runbooks(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/runbooks/{slug}", func(w http.ResponseWriter, r *http.Request) { h.article(w, r, lang, post.Runbook) })
 		mux.HandleFunc("GET /"+lang+"/presentations/{slug}", func(w http.ResponseWriter, r *http.Request) { h.presentation(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/radar", func(w http.ResponseWriter, r *http.Request) { h.radarIndex(w, r, lang, "") })
+		mux.HandleFunc("GET /"+lang+"/radar/{slug}", func(w http.ResponseWriter, r *http.Request) { h.radarIndex(w, r, lang, r.PathValue("slug")) })
 		mux.HandleFunc("GET /"+lang+"/certificates", func(w http.ResponseWriter, r *http.Request) { h.certificates(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/about", func(w http.ResponseWriter, r *http.Request) { h.about(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/now", func(w http.ResponseWriter, r *http.Request) { h.now(w, r, lang) })

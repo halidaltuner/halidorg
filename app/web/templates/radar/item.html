@@ -1,0 +1,25 @@
+{{define "content"}}<main class="list-page rdr-item tone-indigo">
+<article{{if .Untranslated}} lang="{{.ArticleLang}}"{{end}}>
+{{- if .Untranslated}}
+<div class="banner-untranslated" lang="{{.Lang}}">{{tr .Lang "radar.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
+{{- end}}
+<header class="list-head">
+<a class="mono back" href="/{{.Lang}}/radar">← {{tr .Lang "radar.title"}}</a>
+{{- with .Quadrant}}<span class="eyebrow mono">◎ // {{.}}</span>{{end}}
+<h1>{{.Name}}</h1>
+<p class="rdr-now mono">{{if .Ring}}<span class="rdr-chip r-{{.Ring}}">{{.RingName}}</span> {{printf (tr .Lang "radar.in_edition") .Latest}}{{else}}{{tr .Lang "radar.not_current"}}{{end}}</p>
+{{- with .Note}}<p class="rdr-lead">{{.}}</p>{{end}}
+</header>
+{{- with .History}}
+<section class="rdr-hist" aria-labelledby="rdr-hist-h">
+<h2 class="mono" id="rdr-hist-h">{{tr $.Lang "radar.history"}}</h2>
+<ol>
+{{- range .}}
+<li{{if .Off}} class="is-off"{{end}}><a class="mono" href="{{.Href}}">{{.Label}}</a>{{if .Ring}}<span class="rdr-chip r-{{.Ring}}">{{.RingName}}</span>{{end}}{{with .Tag}}<span class="rdr-tag mono">{{.}}</span>{{end}}{{with .Note}}<p>{{.}}</p>{{end}}</li>
+{{- end}}
+</ol>
+</section>
+{{- end}}
+{{template "connections" dict "c" .Conn "lang" .Lang}}
+</article>
+</main>{{end}}
