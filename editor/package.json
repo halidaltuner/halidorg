@@ -2,9 +2,10 @@
   "name": "halidorg-editor",
   "private": true,
   "type": "module",
-  "description": "Builds the vendored JS: the admin's CodeMirror 6 bundle and htmx (app/web/static/vendor), and Mermaid's ESM build (app/web/static/mermaid). Outputs are committed.",
+  "description": "Builds the vendored JS: the admin's Tiptap block editor, CodeMirror 6 (Markdown view) and htmx (app/web/static/vendor), and Mermaid's ESM build (app/web/static/mermaid). Outputs are committed. `npm test` checks the Markdown roundtrip.",
   "scripts": {
-    "build": "sh ../scripts/build-editor.sh"
+    "build": "sh ../scripts/build-editor.sh",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@codemirror/commands": "6.11.1",
@@ -13,8 +14,21 @@
     "@codemirror/state": "6.7.6",
     "@codemirror/view": "6.43.14",
     "@lezer/highlight": "1.2.5",
+    "@tiptap/core": "3.32.0",
+    "@tiptap/extension-bubble-menu": "3.32.0",
+    "@tiptap/extension-code-block": "3.32.0",
+    "@tiptap/extension-drag-handle": "3.32.0",
+    "@tiptap/extension-image": "3.32.0",
+    "@tiptap/extension-table": "3.32.0",
+    "@tiptap/extensions": "3.32.0",
+    "@tiptap/markdown": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
+    "@tiptap/suggestion": "3.32.0",
     "esbuild": "0.28.2",
+    "happy-dom": "20.0.0",
     "htmx.org": "2.0.11",
-    "mermaid": "11.17.2"
+    "mermaid": "11.17.2",
+    "vitest": "3.2.4"
   }
 }

@@ -22,13 +22,15 @@
  hx-post="/admin/posts/{{.Post.ID}}" hx-trigger="input delay:800ms" hx-vals='{"origin":"autosave"}' hx-target="#save-state" hx-swap="outerHTML" hx-sync="this:queue last">
 <input type="hidden" name="lang" id="ed-lang" value="{{.Post.Lang}}">
 <div class="ed-md">
-<div class="ed-bar mono"><span>{{tr .Lang "admin.editor.markdown"}} · {{.Post.Lang}}</span><span><span id="ed-words">{{.Words}}</span> {{tr .Lang "admin.editor.words"}}</span></div>
+<div class="ed-bar mono"><span class="ed-bar-l"><span>{{tr .Lang "admin.editor.markdown"}} · {{.Post.Lang}}</span><button type="button" class="ed-mode" data-mode hidden aria-pressed="false" data-visual="{{tr .Lang "admin.rich.mode_visual"}}" data-markdown="{{tr .Lang "admin.rich.mode_markdown"}}">{{tr .Lang "admin.rich.mode_markdown"}}</button></span><span><span id="ed-words">{{.Words}}</span> {{tr .Lang "admin.editor.words"}}</span></div>
 <input class="ed-title-in" name="title" value="{{.Post.Title}}" placeholder="{{tr .Lang "admin.editor.title"}}" aria-label="{{tr .Lang "admin.editor.title"}}" autocomplete="off">
+<p class="ed-note" id="ed-rich-note" role="status" hidden></p>
+<div class="ed-rich" id="ed-rich" hidden data-labels="{{richLabels .Lang}}" data-mermaid-src="{{asset "/static/mermaid/mermaid.esm.min.mjs"}}" lang="{{.Post.Lang}}"></div>
 <div class="ed-src"><textarea id="md" name="markdown" spellcheck="false" aria-label="{{tr .Lang "admin.editor.markdown"}}" placeholder="{{tr .Lang "admin.editor.md_placeholder"}}">{{.Markdown}}</textarea></div>
 </div>
 <div class="ed-preview">
 <div class="ed-bar-plain mono">{{tr .Lang "admin.editor.preview"}}</div>
-<div class="prose ed-prose" id="preview" lang="{{.Post.Lang}}" hx-post="/admin/preview" hx-trigger="input from:#md delay:300ms, input from:.ed-title-in delay:300ms" hx-include="#md, #ed-lang, .ed-title-in" hx-target="this" hx-swap="innerHTML" hx-sync="this:replace">{{if .Post.Title}}<h1 class="ed-prev-title">{{.Post.Title}}</h1>{{end}}{{.Preview}}</div>
+<div class="prose ed-prose" id="preview" lang="{{.Post.Lang}}" hx-post="/admin/preview" hx-trigger="input[!document.querySelector('.ed-cols.is-rich')] from:#md delay:300ms, input[!document.querySelector('.ed-cols.is-rich')] from:.ed-title-in delay:300ms" hx-include="#md, #ed-lang, .ed-title-in" hx-target="this" hx-swap="innerHTML" hx-sync="this:replace">{{if .Post.Title}}<h1 class="ed-prev-title">{{.Post.Title}}</h1>{{end}}{{.Preview}}</div>
 </div>
 <aside class="ed-side">
 <div id="ed-errors" class="ed-errors"{{if not .Errors}} hidden{{end}}>{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}</div>

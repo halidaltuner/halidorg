@@ -40,6 +40,22 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
+  editor:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: editor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: editor/package-lock.json
+      - run: npm ci
+      # Markdown round trips through the block editor's schema.
+      - run: npm test
+
   image:
     runs-on: ubuntu-latest
     steps:

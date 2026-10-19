@@ -304,3 +304,9 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 ## 37. Implementation notes (Phase 7.2, Mermaid)
 - A diagram renders in a figure like the code blocks: surface background, 1px border, 8px radius, 16px padding, centered, scrolling sideways when wider than the column. Mermaid's base theme takes Plex Sans at 14px and the tokens: nodes in the cyan tint with cyan ink borders, secondary in indigo, notes in amber, lines in `--text-muted`.
 - Without JS, and when a diagram does not parse, the source stays in its block (a rose border marks a failed one). Details and the server-side options: docs/mermaid.md.
+
+## 38. Implementation notes (Phase 7.6a, block editor)
+- The post, garden and runbook editor opens in a visual view (Tiptap): the text column at the reading size (`--fs-18`) with the settings column on the right; the live preview hides, since the view is the preview. A mono button in the editor bar switches to the Markdown view (CodeMirror, with the preview) and back; the choice is kept per browser.
+- "/" opens the command menu: a popover list (surface, 1px border, popover shadow) of mono glyph tiles and labels, ↑ ↓ and Enter to pick. Selected text gets a dark formatting bar (bold, italic, strike, code, link). A ⋮⋮ handle in `--text-muted` appears beside the hovered block and drags it.
+- Callouts show their kind as a small mono label above the body, with a 3px left rule in the callout tone (info, success, warning, rose); footnote references are small mono labels on the cyan tint and their notes sit at the end in muted text behind a dotted rule; code blocks have a mono field above them for the fence info (`go file=main.go`, `terminal`, `mermaid`) and dark blocks use the `--dk-*` tokens; a mermaid block previews its diagram under the source.
+- A document the view cannot write back unchanged (raw HTML, say) opens in the Markdown view with a note above the editor.
