@@ -296,3 +296,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - List rows are links to the item pages (the prototype's rows are buttons). Without JS every note shows; with `radar.js` the active row (hover or focus) shows its note and its blip darkens and grows, hovering a blip lights its row, ↑ and ↓ move between rows. Tags read "new", "↑ from hold", "↓ from adopt". Items that left show under "left in this edition".
 - Item page (derive, indigo): back link, quadrant eyebrow, the name, its ring now as a chip, the note as a lead with a 3px rule, then its ring per edition with the move tag and the note where it changed, then the connections block.
 - The stream shows one row per edition with the radar glyph ◎ (indigo), "3 new · 2 moved" as its meta.
+
+## 36. Implementation notes (Phase 7.1, search page)
+- `/{lang}/search` (derive: stream rows): eyebrow "> // search", a 48px heading, a mono input with a dark submit button, the prefix list as the subline, then results as stream rows (kind glyph tile, title, kind label and the language when it is not the page's). Photos use ◐ (violet), certificates ✓ (cyan).
+- The header search button is a link to this page; with JS it opens the palette, and Enter in the palette with nothing selected goes here with the query.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { entryHref, fold, parse, search, type SearchEnv, serveSearch } from "../src/search";
+import { entryHref, fold, parse, score, search, type SearchEnv, serveSearch } from "../src/search";
 
 describe("parse", () => {
 	// Same cases as app/internal/search TestParse: the index is folded by Go.
@@ -14,6 +14,10 @@ describe("parse", () => {
 		["n: loop", `"loop"*`, "note"],
 		["l: grug", `"grug"*`, "link"],
 		["f: kleppmann", `"kleppmann"*`, "fav"],
+		["gl: ulid", `"ulid"*`, "term"],
+		["rd: zig", `"zig"*`, "radar_item"],
+		["ph: bosphorus", `"bosphorus"*`, "photo"],
+		["c: aws", `"aws"*`, "certificate"],
 		["x: foo", `"x" "foo"*`, ""],
 		[`ISTANBUL "OR" NEAR(a b)`, `"istanbul" "or" "near" "a" "b"*`, ""],
 		["p:", "", "post"],
@@ -102,6 +106,40 @@ describe("search", () => {
 		expect(await search(penv, "h: ra", "en")).toEqual([{ href: "/en/projects/rack", title: "rack", kind: "homelab", lang: "en" }]);
 		expect(plog[0]!.sql).toContain("kind IN ('project', 'homelab')");
 		expect(await search(penv, "pr: ra", "en")).toEqual([{ href: "/en/projects/site", title: "halid.org", kind: "project", lang: "en" }]);
+	});
+
+	it("ranks the page language first, then bm25 with a recency boost", async () => {
+		const now = Math.floor(Date.now() / 1000);
+		const renv: SearchEnv = {
+			SEARCH: d1(
+				() => [
+					{ entry_id: "old", kind: "post", lang: "en", rank: -10 },
+					{ entry_id: "new", kind: "post", lang: "en", rank: -8 },
+					{ entry_id: "ph", kind: "photo", lang: "tr", rank: -3 },
+					{ entry_id: "ph", kind: "photo", lang: "en", rank: -9 },
+					{ entry_id: "ce", kind: "certificate", lang: "en", rank: -1 },
+				],
+				[],
+			),
+			DB: d1((sql) => {
+				if (sql.includes("FROM photos")) return [{ id: "ph", title: "Bosphorus at dusk", at: now - 400 * 86400 }];
+				if (sql.includes("FROM certificates")) return [{ id: "ce", name: "AWS Solutions Architect", issued_at: now }];
+				return [
+					{ id: "old", kind: "post", lang: "en", slug: "old", title: "Old", summary: "", url: null, published_at: now - 5 * 365 * 86400 },
+					{ id: "new", kind: "post", lang: "en", slug: "new", title: "New", summary: "", url: null, published_at: now - 86400 },
+				];
+			}, []),
+		};
+		// new: 8 × ~1.5 = 12 beats old: 10 × ~1.0; the photo ranks by its en
+		// row (9 × ~1.17), the fresh certificate is a weak match (1 × 1.5).
+		expect((await search(renv, "x", "en")).map((r) => r.href)).toEqual(["/en/posts/new", "/en/photos#p-ph", "/en/posts/old", "/en/certificates#c-ce"]);
+	});
+
+	it("boosts recent rows by up to half", () => {
+		const now = 1_800_000_000;
+		expect(score(-10, now, now)).toBe(15);
+		expect(score(-10, null, now)).toBe(10);
+		expect(score(-10, now - 365 * 86400, now)).toBeCloseTo(10 * (1 + 0.5 / Math.E));
 	});
 
 	it("answers JSON, privately, and only on /x/search", async () => {

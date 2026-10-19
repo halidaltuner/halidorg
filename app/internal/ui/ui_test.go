@@ -74,7 +74,7 @@ func TestHeader(t *testing.T) {
 		`class="wordmark" href="/en/"`,
 		`<a href="/en/posts" data-s="posts" aria-current="page">posts</a>`,
 		`<details class="nav-sheet">`,
-		`data-palette hidden`,
+		`<a href="/en/search" class="search-btn" data-palette`,
 		`class="lang-switch"`,
 	} {
 		if !strings.Contains(out, want) {

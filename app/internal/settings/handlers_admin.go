@@ -40,6 +40,18 @@ func (h *Admin) Register(mux *http.ServeMux) {
 	mux.Handle("GET /admin/settings", h.auth.RequireSession(http.HandlerFunc(h.show)))
 	mux.Handle("POST /admin/settings/homelab", admin.Guard(h.auth.RequireSession(http.HandlerFunc(h.saveHomelab))))
 	mux.Handle("POST /admin/settings/photos", admin.Guard(h.auth.RequireSession(http.HandlerFunc(h.savePhotos))))
+	mux.Handle("POST /admin/settings/search", admin.Guard(h.auth.RequireSession(http.HandlerFunc(h.rebuildSearch))))
+}
+
+// rebuildSearch recreates the search index from the main database in the
+// background (jobs.TypeSearchRebuild): the first job empties it, so search
+// finds less until the last page is indexed, a minute or so.
+func (h *Admin) rebuildSearch(w http.ResponseWriter, r *http.Request) {
+	if err := jobs.EnqueueSearchRebuild(r.Context(), h.jobs); err != nil {
+		h.fail(w, err)
+		return
+	}
+	http.Redirect(w, r, "/admin/settings?saved=search", http.StatusSeeOther)
 }
 
 type page struct {
@@ -61,7 +73,11 @@ func (h *Admin) show(w http.ResponseWriter, r *http.Request) {
 		h.fail(w, err)
 		return
 	}
-	if r.URL.Query().Get("saved") != "" {
+	switch r.URL.Query().Get("saved") {
+	case "":
+	case "search":
+		p.Notice = i18n.T(lang, "settings.search_started")
+	default:
 		p.Notice = i18n.T(lang, "settings.saved")
 	}
 	h.ui.Render(w, http.StatusOK, h.page, p)

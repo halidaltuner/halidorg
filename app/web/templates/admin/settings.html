@@ -19,4 +19,11 @@
 <button type="submit" class="adm-btn solid">{{tr .Lang "admin.tax.save"}}</button>
 </form>
 </section>
+<section class="adm-panel adm-narrow">
+<h2>{{tr .Lang "settings.search"}}</h2>
+<form class="adm-form" method="post" action="/admin/settings/search">
+<p class="ent-hint">{{tr .Lang "settings.search_hint"}}</p>
+<button type="submit" class="adm-btn">{{tr .Lang "settings.search_rebuild"}}</button>
+</form>
+</section>
 {{end}}

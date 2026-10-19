@@ -296,6 +296,9 @@ func (h *Admin) refresh(r *http.Request) {
 	if err := jobs.EnqueuePages(r.Context(), h.jobs, Paths()...); err != nil {
 		slog.Error("enqueue pages.changed", "err", err) // the dashboard lists failed jobs
 	}
+	if err := jobs.EnqueueSearchGallery(r.Context(), h.jobs); err != nil {
+		slog.Error("enqueue search.gallery", "err", err)
+	}
 }
 
 func (h *Admin) fail(w http.ResponseWriter, err error) {

@@ -44,11 +44,11 @@ func TestCertificatesPage(t *testing.T) {
 		`<h1>Badges and certifications.</h1>`,
 		`<div><dd class="tone-green">2</dd><dt class="mono">active</dt></div><div><dd class="tone-cyan">2</dd><dt class="mono">issuers</dt></div><div><dd>3</dd><dt class="mono">total</dt></div>`,
 		`<a class="chip tone-cyan" href="/en/certificates?issuer=cncf" data-filter-key="cncf">CNCF</a>`,
-		`<article class="ce-card tone-cyan" data-filter-value="cncf">`,
+		`class="ce-card tone-cyan" data-filter-value="cncf">`,
 		`<span class="ce-issuer mono">CNCF</span>`, `<h2>CKA</h2>`, `<div class="ce-skills"><span class="mono">kubernetes</span><span class="mono">ops</span></div>`,
 		`<span>2026-03</span><span class="ce-st st-active">active</span><a href="https://www.credly.com/badges/cka" rel="noopener">verify ↗</a>`,
 		`<span class="ce-st st-renew_soon">renew soon</span>`,
-		`<article class="ce-card tone-amber is-expired" data-filter-value="aws">`, `<span class="ce-st st-expired">expired</span>`,
+		`class="ce-card tone-amber is-expired" data-filter-value="aws">`, `<span class="ce-st st-expired">expired</span>`,
 		`href="/en/certificates/feed.xml"`, `<link rel="canonical" href="https://halid.org/en/certificates">`,
 	)
 	if strings.Contains(body, "Hidden draft") {

@@ -18,7 +18,7 @@
 {{- end}}
 <div class="ce-grid">
 {{- range .Cards}}
-<article class="ce-card tone-{{.Tone}}{{if eq .StatusKey "expired"}} is-expired{{end}}" data-filter-value="{{.IssuerKey}}">
+<article id="c-{{.ID}}" class="ce-card tone-{{.Tone}}{{if eq .StatusKey "expired"}} is-expired{{end}}" data-filter-value="{{.IssuerKey}}">
 <div class="ce-hex">{{with .Badge}}<img src="{{.URL}}" alt="{{.Alt}}" loading="lazy">{{else}}<span class="mono" aria-hidden="true">✓</span>{{end}}</div>
 <span class="ce-issuer mono">{{.Issuer}}</span>
 <h2>{{.Name}}</h2>

@@ -36,6 +36,7 @@ type EntryJobs struct {
 	warm   *Warmer
 	origin string   // PUBLIC_ORIGIN: absolute links on it count as internal
 	icons  Favicons // nil: links keep the initial instead of a favicon
+	jobs   *Jobs    // set by Register: the search rebuild enqueues its next page
 }
 
 // NewEntryJobs wires the handler; register it with jobs.Handle. blob is
@@ -47,8 +48,11 @@ func NewEntryJobs(db, searchDB store.DB, blob store.Blob, warm *Warmer) *EntryJo
 
 // Register adds the entry handlers to j.
 func (e *EntryJobs) Register(j *Jobs) {
+	e.jobs = j
 	j.Handle(TypeEntryChanged, e.changed)
 	j.Handle(TypePagesChanged, e.pages)
+	j.Handle(TypeSearchRebuild, e.rebuild)
+	j.Handle(TypeSearchGallery, e.galleryJob)
 }
 
 // Enqueue is what write paths call after their batch commits.

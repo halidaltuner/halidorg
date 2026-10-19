@@ -37,7 +37,7 @@ Every content item with its own page has one row here. Type-specific fields live
 - `syndications(entry_id, network, url, posted_at)` POSSE
 - `job_runs(id, type, payload, status: queued|running|done|failed|dead, attempt, max_attempts, error, created_at, started_at, finished_at)` (migrations/0003_jobs.sql)
 - `admin_sessions(id, email, created_at, expires_at, last_reauth_at, ip, ua)` see ADR-005. Exception to ULID ids: `id` is the hex HMAC-SHA256 of the cookie token, never the token itself
-- `search_fts` FTS5 virtual table, in the separate `halidorg-search-{env}` database, not the main one (ADR-010)
+- `search_fts` FTS5 virtual table, in the separate `halidorg-search-{env}` database, not the main one (ADR-010): every entry with its status (private ones left out), plus photos and certificates (kinds `photo`, `certificate`, one row per language). Palette prefixes: `p` posts, `n` notes, `s` snippets, `l` links, `f` favs, `pr` projects, `h` homelab, `t` talks, `g` garden, `rb` runbooks, `gl` glossary, `b` books, `rd` radar, `ph` photos, `c` certificates.
 
 ## 2. Per-kind schemas
 

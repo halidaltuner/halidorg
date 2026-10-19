@@ -42,6 +42,10 @@ func TestParse(t *testing.T) {
 		{`ISTANBUL "OR" NEAR(a b)`, `"istanbul" "or" "near" "a" "b"*`, ""},
 		{"p:", "", "post"},
 		{"Işık*", `"işik"*`, ""},
+		{"gl: ulid", `"ulid"*`, "term"},
+		{"rd: zig", `"zig"*`, "radar_item"},
+		{"ph: boğaz", `"boğaz"*`, "photo"},
+		{"c: aws", `"aws"*`, "certificate"},
 	}
 	for _, c := range cases {
 		q := Parse(c.in)
@@ -145,5 +149,23 @@ func TestSearchAgainstFTS5(t *testing.T) {
 	}
 	if got := ids(search(t, db, "isik", Filter{})); len(got) != 0 {
 		t.Errorf("after delete: got %v", got)
+	}
+}
+
+func TestScore(t *testing.T) {
+	now := int64(1_800_000_000)
+	if got := Score(-10, now, now); got != 15 {
+		t.Errorf("today: %v", got)
+	}
+	if got := Score(-10, 0, now); got != 10 {
+		t.Errorf("undated: %v", got)
+	}
+	year := Score(-10, now-365*86400, now)
+	if year < 11.8 || year > 11.9 {
+		t.Errorf("a year old: %v", year)
+	}
+	// A fresher, slightly weaker match outranks an old stronger one.
+	if Score(-8, now-86400, now) <= Score(-10, now-5*365*86400, now) {
+		t.Error("recency does not lift")
 	}
 }
