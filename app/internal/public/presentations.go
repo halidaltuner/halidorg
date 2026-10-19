@@ -61,6 +61,9 @@ func (h *Handlers) presentations(w http.ResponseWriter, r *http.Request, lang st
 			Date: presentation.Day(x.HeldOn), City: x.City, Type: x.Type, Tone: presTone(x), Slides: x.SlideCount}
 		if x.CoverMediaID != nil {
 			if im, ok := imgs[*x.CoverMediaID]; ok {
+				if im.Alt == "" {
+					im.Alt = x.Title
+				}
 				c.Cover = &im
 			}
 		}
@@ -177,6 +180,9 @@ func (h *Handlers) presentation(w http.ResponseWriter, r *http.Request, lang str
 			return
 		}
 		if im, ok := imgs[*p.CoverMediaID]; ok {
+			if im.Alt == "" {
+				im.Alt = p.Title
+			}
 			v.Cover = &im
 		}
 	}
