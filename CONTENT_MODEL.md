@@ -97,10 +97,10 @@ migrations/0014_presentations.sql, `internal/content/presentation`.
 - Writes queue `entry.changed`; a presentation purges its page, the list and feeds, home and About (the talks card).
 
 ### book
-`books(entry_id, author, isbn, cover_media_id, status: want|reading|done|dropped, progress_pct, started_at, finished_at, rating)`
+`books(entry_id, author, isbn, status: want|reading|done|dropped, progress_pct, started_at, finished_at, rating)` (migrations/0017_terms_books.sql). The cover is the entry's `cover_media_id` (any media image), the title the book's title, the summary a short take shown on the list, the body optional notes. A finished book is at 100%. Books have no page of their own: `/{lang}/reading` lists them by status (reading by progress, then want, done, dropped), each at `#{slug}`; the feeds link there. Now shows the books being read from this list; the books typed in the Now form are the fallback when none is, and archived Now versions keep theirs. A book change re-renders the list, its feeds and `/{lang}/now`.
 
 ### term (glossary)
-`terms(entry_id, term, aliases_json, short_def)`
+`terms(entry_id, term, aliases_json, short_def)` (0017). The entry title is the term (`term` keeps a copy for sorting), `short_def` (at most 300 characters) is the index line and the page lead and the meta description when the summary is empty, the body explains it. `/{lang}/glossary` lists the terms A to Z under their letters (Turkish dotted İ, "#" for digits and signs), `/{lang}/glossary/{slug}` is the term. Terms are not linked automatically in writing (decided 2026-10-19): link them by hand.
 
 ### radar_item
 `radar_items(entry_id, quadrant: languages|techniques|tools|platforms, ring: adopt|trial|assess|hold)`
@@ -182,8 +182,8 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | deck | `https://decks.halid.org/{entry_id}/` (isolated origin; `decks-staging.halid.org` on staging) |
 | photos | `/{lang}/photos?album={slug}` |
 | certificates | `/{lang}/certificates?issuer=aws`, `/{lang}/certificates/feed.xml` |
-| book | `/{lang}/reading` |
-| term | `/{lang}/glossary/{slug}` |
+| book | `/{lang}/reading` (each book at `#{slug}`) |
+| term | `/{lang}/glossary`, `/{lang}/glossary/{slug}` |
 | radar | `/{lang}/radar?edition=2026-10` |
 | github | `/{lang}/github` (also embedded in Projects) |
 | stream | `/{lang}/stream?kind=note`, `/{lang}/stream/{YYYY-MM}` (month archive) |

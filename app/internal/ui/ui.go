@@ -37,7 +37,7 @@ var (
 	}
 	more = []section{
 		{"notes", true}, {"snippets", true}, {"links", true}, {"favs", true}, {"certificates", true},
-		{"garden", true}, {"runbooks", true},
+		{"garden", true}, {"runbooks", true}, {"glossary", true}, {"reading", true},
 	}
 )
 

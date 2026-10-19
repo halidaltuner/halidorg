@@ -274,3 +274,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 ## 31. Implementation notes (Phase 5.5b)
 - Series (derive, the posts list in cyan): the index has cards with a 3px cyan top rule, the part count, an ongoing (`--success`) or complete (`--info`) status, title and description; the posts list header links "series →". A series page lists its parts in order: the number in cyan mono, the kind glyph and title, the description and the date. The post crumb links the series name to its page.
 - `/admin/series` (derive): the list with slug, part count and status, and a form per series (title and description per language, slug, status, order) with its parts linked to their editors.
+
+## 32. Implementation notes (Phase 5.5c)
+- Glossary (derive, indigo): a letter bar of mono chips, then the terms under each letter heading, the term in bold with its other names in mono, the short definition below. A term page has the short definition as a lead with a 3px indigo rule, then the explanation.
+- Reading list (derive, amber): groups for reading, want to read, read and dropped, each a grid of cards with a 2:3 cover (the amber cover pattern without an image), title, author, the short take, stars or dates, and for books being read an amber progress bar with the percentage.
+- Both join the more menu and the admin sidebar (glossary, reading list) and use the shared entry editor.

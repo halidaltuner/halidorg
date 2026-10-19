@@ -34,6 +34,7 @@ const SECTIONS: Record<string, string> = {
 	presentation: "presentations",
 	garden: "garden",
 	runbook: "runbooks",
+	term: "glossary",
 };
 
 /** search.Fold: ı, İ and I become i, everything else lowercases. */
@@ -102,6 +103,7 @@ export function entryHref(e: Pick<Entry, "kind" | "lang" | "slug" | "url">): str
 	if (seg) return `/${e.lang}/${seg}/${e.slug}`;
 	if (e.kind === "link") return e.url ?? "";
 	if (e.kind === "fav") return `/${e.lang}/favs#${e.slug}`;
+	if (e.kind === "book") return `/${e.lang}/reading#${e.slug}`;
 	if (e.kind === "page") return `/${e.lang}/${e.slug}`; // About, Now
 	return "";
 }

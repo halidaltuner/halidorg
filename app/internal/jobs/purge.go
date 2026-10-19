@@ -123,6 +123,7 @@ var kindPath = map[string]string{
 	"presentation": "presentations",
 	"garden":       "garden",
 	"runbook":      "runbooks",
+	"term":         "glossary",
 }
 
 // listPath is the URL segment of each kind's list page and per-kind feeds.
@@ -137,6 +138,8 @@ var listPath = map[string]string{
 	"presentation": "presentations",
 	"garden":       "garden",
 	"runbook":      "runbooks",
+	"term":         "glossary",
+	"book":         "reading",
 }
 
 // ListSegment is the URL segment of a kind's list page, or "".
@@ -264,6 +267,9 @@ func Paths(c Change) []string {
 			add("/sitemap.xml")
 			if r.Kind == "project" && r.Homelab {
 				add(l + "/homelab")
+			}
+			if r.Kind == "book" {
+				add(l + "/now") // Now shows the books being read
 			}
 			if r.Kind == "project" || r.Kind == "presentation" {
 				add(l + "/about") // its cards count projects, builds and decks

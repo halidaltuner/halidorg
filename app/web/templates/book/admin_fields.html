@@ -1,0 +1,18 @@
+{{define "entry-fields"}}{{$o := .Options}}
+<label>{{tr .Lang "kind.book.author"}}<input name="author" value="{{.Item.Author}}" maxlength="120"></label>
+<fieldset class="ent-langs ent-types"><legend>{{tr .Lang "kind.book.status"}}</legend>
+{{- range $o.States}}<label class="check"><input type="radio" name="book_status" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
+</fieldset>
+<div class="ent-two">
+<label>{{tr .Lang "kind.book.progress"}}<input name="progress_pct" value="{{.Item.Progress}}" class="mono" inputmode="numeric" maxlength="4"></label>
+<label>ISBN<input name="isbn" value="{{.Item.ISBN}}" class="mono" maxlength="20" autocapitalize="off"></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "kind.book.started"}}<input type="date" name="started" value="{{$o.Started}}"></label>
+<label>{{tr .Lang "kind.book.finished"}}<input type="date" name="finished" value="{{$o.Finished}}"></label>
+</div>
+<fieldset class="ent-langs"><legend>{{tr .Lang "kind.fav.rating"}}</legend>
+{{- range $o.Ratings}}<label class="check"><input type="radio" name="rating" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
+</fieldset>
+<label>{{tr .Lang "kind.book.cover"}}<select name="cover">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+{{end}}

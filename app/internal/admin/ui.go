@@ -92,6 +92,8 @@ var sections = []struct {
 	{"presentations", "/admin/presentations", "presentation", true, true},
 	{"pages", "/admin/pages", "page", true, true},
 	{"series", "/admin/series", "", true, true},
+	{"glossary", "/admin/glossary", "term", true, true},
+	{"reading", "/admin/reading", "book", true, true},
 	{"certificates", "/admin/certificates", "", true, true},
 	{"photos", "/admin/photos", "", true, true},
 	{"categories", "/admin/categories", "", false, true},
