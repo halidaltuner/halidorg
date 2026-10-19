@@ -42,7 +42,13 @@ async function kvHit(path) {
 	// A STALE page re-renders in the background (waitUntil): give it a
 	// moment before asking again.
 	if (first.res.headers.get("x-cache") === "STALE") await new Promise((r) => setTimeout(r, 4000));
-	const second = await get(path);
+	let second = await get(path);
+	// A key written just now (first visit) can take a few seconds to be
+	// readable at the edge: one more try before calling it a miss.
+	if (first.res.headers.get("x-cache") === "MISS" && second.res.headers.get("x-cache") === "MISS") {
+		await new Promise((r) => setTimeout(r, 10000));
+		second = await get(path);
+	}
 	const a = first.res.headers.get("x-cache"), b = second.res.headers.get("x-cache");
 	let why = "";
 	if (b === "STALE") {
