@@ -1,0 +1,651 @@
+{
+  "origin": "https://staging.halid.org",
+  "at": "2026-10-19T07:37:27.224Z",
+  "results": [
+    {
+      "name": "Access: service token reaches the app",
+      "ok": true,
+      "detail": "status 200"
+    },
+    {
+      "name": "KV: /en/ second request is a HIT",
+      "ok": true,
+      "detail": "200 HIT → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/ has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /tr/ second request is a HIT",
+      "ok": true,
+      "detail": "200 HIT → 200 HIT"
+    },
+    {
+      "name": "Fresh: /tr/ has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/posts second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/posts has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Posts: the list has published posts",
+      "ok": true,
+      "detail": "test, sample-short-note, sample-long-read, sample-renderer-tour"
+    },
+    {
+      "name": "KV: /en/posts/test second request is a HIT",
+      "ok": false,
+      "detail": "200 STALE → 200 STALE · origin 200 build f69792dc5329c373396aebfbc39dbc9010e0a1cd cc public, max-age=0, must-revalidate ct text/html; charset=utf-8"
+    },
+    {
+      "name": "Fresh: /en/posts/test has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: c843e2e"
+    },
+    {
+      "name": "Post: og:image meta present",
+      "ok": true,
+      "detail": "https://staging.halid.org/og/en/posts/test.png?v=3e9d48e4d7e7"
+    },
+    {
+      "name": "OG: card served from R2 by the Worker",
+      "ok": true,
+      "detail": "200 image/png public, max-age=31536000, immutable"
+    },
+    {
+      "name": "Post: canonical and hreflang",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Fallback: /tr/posts/{en-slug} is the banner page or a 301 to the translation",
+      "ok": true,
+      "detail": "status 200"
+    },
+    {
+      "name": "Search: \"test\" finds /en/posts/test",
+      "ok": true,
+      "detail": "0 rows"
+    },
+    {
+      "name": "/en/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "application/rss+xml; charset=utf-8"
+    },
+    {
+      "name": "/en/feed.json 200 application/feed+json",
+      "ok": true,
+      "detail": "application/feed+json; charset=utf-8"
+    },
+    {
+      "name": "/sitemap.xml 200 application/xml",
+      "ok": true,
+      "detail": "application/xml; charset=utf-8"
+    },
+    {
+      "name": "/robots.txt 200 text/plain",
+      "ok": true,
+      "detail": "text/plain; charset=utf-8"
+    },
+    {
+      "name": "robots.txt disallows everything on staging",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "404: styled page, not cached",
+      "ok": true,
+      "detail": "404 BYPASS"
+    },
+    {
+      "name": "Admin: needs a session (redirects to login)",
+      "ok": true,
+      "detail": "303 /admin/login"
+    },
+    {
+      "name": "KV: /en/projects second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/projects has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/homelab second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/homelab has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/stream second request is a HIT",
+      "ok": true,
+      "detail": "200 HIT → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/stream has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/github second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/github has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Projects: the list has software projects",
+      "ok": true,
+      "detail": "sample-project-site"
+    },
+    {
+      "name": "Homelab: the page lists builds",
+      "ok": true,
+      "detail": "sample-project-rack"
+    },
+    {
+      "name": "KV: /en/projects/sample-project-site second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/projects/sample-project-site has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Project (software): its OG card is served",
+      "ok": true,
+      "detail": "/og/en/projects/sample-project-site.png 200"
+    },
+    {
+      "name": "KV: /en/projects/sample-project-rack second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/projects/sample-project-rack has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Project (homelab): its OG card is served",
+      "ok": true,
+      "detail": "/og/en/projects/sample-project-rack.png 200"
+    },
+    {
+      "name": "KV: /en/projects/sample-project-rack/log/sample-log-brackets second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/projects/sample-project-rack/log/sample-log-brackets has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Build log: page under its project with a back link",
+      "ok": true,
+      "detail": "/en/projects/sample-project-rack/log/sample-log-brackets"
+    },
+    {
+      "name": "/en/projects/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/projects",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/homelab",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/stream",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/github",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists a project page",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "GitHub: /en/github shows synced data",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "GitHub: the projects page has the GitHub section",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "GitHub: the activity list has rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Stream: project or homelab rows",
+      "ok": true,
+      "detail": "27 rows"
+    },
+    {
+      "name": "Home: stream links to /en/stream",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Stream: ?kind=homelab shows only homelab rows",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Palette: \"pr: sample\" finds project rows only",
+      "ok": true,
+      "detail": "project /en/projects/sample-project-site"
+    },
+    {
+      "name": "Palette: \"h: sample\" finds homelab rows only",
+      "ok": true,
+      "detail": "homelab /en/projects/sample-project-rack"
+    },
+    {
+      "name": "Admin: /admin/github needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "KV: /en/about second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/about has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "/en/about: has content",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/now second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/now has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "/en/now: has content",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/now/archive second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/now/archive has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "/en/now/archive: has content",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/certificates second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/certificates has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "/en/certificates: has content",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/photos second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/photos has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "/en/photos: has content",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/presentations second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/presentations has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "/en/presentations: has content",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /tr/about second request is a HIT",
+      "ok": false,
+      "detail": "404 BYPASS → 404 BYPASS"
+    },
+    {
+      "name": "KV: /en/presentations/dpdk second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/presentations/dpdk has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Deck: iframe on the decks origin, not the main one",
+      "ok": true,
+      "detail": "https://decks-staging.halid.org"
+    },
+    {
+      "name": "Deck: served without Access, framed only by the site",
+      "ok": true,
+      "detail": "200 frame-ancestors 'self' https://staging.halid.org"
+    },
+    {
+      "name": "Deck: not served from the main origin",
+      "ok": true,
+      "detail": "404"
+    },
+    {
+      "name": "About: certificates card links /en/certificates",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/garden second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/garden has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/runbooks second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/runbooks has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/series second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/series has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/glossary second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/glossary has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "KV: /en/reading second request is a HIT",
+      "ok": true,
+      "detail": "200 STALE → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/reading has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Post: backlinks block (and related, when tags are shared)",
+      "ok": true,
+      "detail": "no tag-mates"
+    },
+    {
+      "name": "/en/presentations/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "/en/photos/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "/en/certificates/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "/en/glossary/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "/en/reading/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "Sitemap lists /en/about",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/now",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/certificates",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/photos",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/presentations",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/garden",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/glossary",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Sitemap lists /en/reading",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Photos: media served by the Worker",
+      "ok": true,
+      "detail": "/media/01M58HK1SESZ0VB78KP1B97B9K/screenshot-2026-10-19-at-01-07-24.png 200 image/png"
+    },
+    {
+      "name": "Admin: /admin/presentations needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "Admin: /admin/photos needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "Admin: /admin/certificates needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "Admin: /admin/series needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "Admin: /admin/pages needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "KV: /en/radar second request is a HIT",
+      "ok": true,
+      "detail": "200 HIT → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/radar has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Radar: at least two editions in the switcher",
+      "ok": false,
+      "detail": ""
+    },
+    {
+      "name": "Radar: SVG with a text alternative and numbered blips",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Radar: list rows link item pages",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Radar: new or moved marks against the edition before",
+      "ok": false,
+      "detail": "0 new, 0 moved"
+    },
+    {
+      "name": "Radar: blip positions stable across renders",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "KV: /en/radar/go second request is a HIT",
+      "ok": true,
+      "detail": "200 HIT → 200 HIT"
+    },
+    {
+      "name": "Fresh: /en/radar/go has the current templates (palette.js)",
+      "ok": true,
+      "detail": "deploy in footer: f69792d"
+    },
+    {
+      "name": "Radar item: history across editions",
+      "ok": true,
+      "detail": "/en/radar/go"
+    },
+    {
+      "name": "Stream: a row per radar edition",
+      "ok": false,
+      "detail": "1 rows"
+    },
+    {
+      "name": "/en/radar/feed.xml 200 application/rss+xml",
+      "ok": true,
+      "detail": "200"
+    },
+    {
+      "name": "Sitemap lists /en/radar",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Header links the radar",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Admin: /admin/radar needs a session",
+      "ok": true,
+      "detail": "303"
+    },
+    {
+      "name": "Palette: ⌘K opens and lists results",
+      "ok": true,
+      "detail": "2 rows"
+    },
+    {
+      "name": "JS errors at 1280px",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "JS errors at 390px",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}
