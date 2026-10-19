@@ -78,6 +78,8 @@ type entryRow struct {
 	Published  *int64  `json:"published_at"`
 	Minutes    *int    `json:"reading_minutes"`
 	Version    *string `json:"version_day"`
+	Series     *string `json:"series"`
+	Parts      *string `json:"series_parts"`
 }
 
 // load returns the entry with the body search should see: the published
@@ -100,6 +102,11 @@ func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
   (SELECT pe.slug FROM buildlogs b JOIN entries pe ON pe.id = b.project_entry_id WHERE b.entry_id = e.id) AS parent,
   (SELECT group_concat(le.slug, ' ') FROM buildlogs b JOIN entries le ON le.id = b.entry_id WHERE b.project_entry_id = e.id) AS logs,
   (SELECT reading_minutes FROM posts WHERE entry_id = e.id) AS reading_minutes,
+  -- its series and the other published parts in its language: their pages
+  -- show the series nav with this entry's title
+  (SELECT s.slug FROM series s WHERE s.id = e.series_id) AS series,
+  (SELECT group_concat(pe.kind || ':' || pe.slug, ' ') FROM entries pe WHERE pe.series_id = e.series_id AND pe.id <> e.id
+     AND pe.lang = e.lang AND pe.status = 'published' AND pe.visibility = 'public') AS series_parts,
   (SELECT strftime('%Y-%m-%d', max(published_at), 'unixepoch') FROM page_versions WHERE entry_id = e.id) AS version_day,
   -- a link's category and its parent: both awesome pages list it
   (SELECT c.slug || coalesce(' ' || p.slug, '') FROM links l JOIN categories c ON c.id = l.category_id
@@ -143,6 +150,12 @@ func (r *entryRow) ref() Ref {
 	}
 	if r.Logs != nil {
 		ref.Logs = strings.Fields(*r.Logs)
+	}
+	if r.Series != nil {
+		ref.Series = *r.Series
+		if r.Parts != nil {
+			ref.Parts = strings.Fields(*r.Parts)
+		}
 	}
 	if r.Kind == "snippet" && r.DataJSON != nil {
 		for _, f := range snippetFiles(*r.DataJSON) {

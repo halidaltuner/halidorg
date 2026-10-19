@@ -62,6 +62,9 @@ func TestRoutes(t *testing.T) {
 		"/en/runbooks/missing":                          http.StatusNotFound,
 		"/tr/runbooks/feed.xml":                         http.StatusOK,
 		"/admin/posts?kind=runbook":                     http.StatusSeeOther,
+		"/en/series":                                    http.StatusOK,
+		"/en/series/missing":                            http.StatusNotFound,
+		"/admin/series":                                 http.StatusSeeOther,
 	}
 	for path, want := range cases {
 		rec := httptest.NewRecorder()

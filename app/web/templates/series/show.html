@@ -1,0 +1,13 @@
+{{define "content"}}<main class="list-page sr-page">
+<header class="list-head">
+<a class="mono back" href="/{{.Lang}}/series">← {{tr .Lang "series.title"}}</a>
+<h1>{{.Title}}</h1>
+{{- with .Summary}}<p class="list-sub">{{.}}</p>{{end}}
+<span class="sr-top mono"><span>{{printf (tr .Lang "series.parts_n") (len .Parts)}}</span><span class="sr-st st-{{.StatusKey}}">{{.Status}}</span></span>
+</header>
+<ol class="sr-parts">
+{{- range .Parts}}
+<li><a href="{{.Href}}"><span class="sr-n mono">{{printf "%02d" .N}}</span><span class="sr-body"><span class="sr-title"><span aria-hidden="true">{{.Glyph}}</span> {{.Title}}</span>{{with .Summary}}<span class="sr-sum">{{.}}</span>{{end}}</span><time class="mono">{{.Date}}</time></a></li>
+{{- end}}
+</ol>
+</main>{{end}}

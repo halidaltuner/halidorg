@@ -1,0 +1,17 @@
+{{define "main"}}
+<div class="adm-head">
+<h1>{{.Title}}</h1>
+<a class="adm-btn solid ent-head-new" href="/admin/series/new">{{tr .Lang "admin.series.new"}}</a>
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+<p class="ent-hint">{{tr .Lang "admin.series.hint"}}</p>
+<section class="adm-panel">
+<ul class="ent-list">
+{{- range .Rows}}
+<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono"><span>{{.Slug}}</span><span>{{printf (tr $.Lang "admin.series.parts_n") .Parts}}</span><span class="adm-st s-{{.StatusKey}}">{{.Status}}</span></span></a></li>
+{{- else}}
+<li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>
+{{- end}}
+</ul>
+</section>
+{{end}}
