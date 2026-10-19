@@ -2,6 +2,7 @@ package public
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 	"sort"
@@ -9,14 +10,16 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"halid.org/engine/internal/content/radar"
 	"halid.org/engine/internal/i18n"
 	"halid.org/engine/internal/store"
 )
 
 // streamKinds are the kinds in the stream, in chip order
 // (design/Home.dc.html). Homelab is a project type, not an entry kind;
-// GitHub releases and new repos show as project rows.
-var streamKinds = []string{"post", "note", "snippet", "link", "fav", "project", "homelab"}
+// GitHub releases and new repos show as project rows; a frozen radar
+// edition is one radar row.
+var streamKinds = []string{"post", "note", "snippet", "link", "fav", "project", "homelab", "radar"}
 
 // streamSize is how many rows the home stream and each /stream page show.
 const streamSize = 30
@@ -38,6 +41,10 @@ type streamRow struct {
 	Body        *string `json:"body_md"`
 	Status      *string `json:"project_status"`
 	Parent      *string `json:"parent"`
+	// A radar edition row: what it brought in and moved, and the latest
+	// label (that edition lives at /radar).
+	RadarNew, RadarMoved int    `json:"-"`
+	RadarLatest          string `json:"-"`
 }
 
 // streamSpan bounds stream rows by publish time: From inclusive, To
@@ -96,8 +103,16 @@ ORDER BY published_at DESC, id DESC LIMIT ?`, append(args, limit)...)
 	if err != nil {
 		return nil, err
 	}
+	if kind == "" || kind == "radar" {
+		eds, err := radarStreamRows(ctx, db, span)
+		if err != nil {
+			return nil, err
+		}
+		rows = append(rows, eds...)
+	}
 	if kind != "" && kind != "project" {
-		return rows, nil
+		sortStream(rows)
+		return rows[:min(limit, len(rows))], nil
 	}
 	// GitHub activity opens the linked project's page when there is one.
 	res, err = db.Query(ctx, `SELECT * FROM (
@@ -119,11 +134,48 @@ ORDER BY published_at DESC, id DESC LIMIT ?`, append(ghArgs, limit)...)
 		gh[i].Lang = lang
 	}
 	rows = append(rows, gh...)
+	sortStream(rows)
+	return rows[:min(limit, len(rows))], nil
+}
+
+func sortStream(rows []streamRow) {
 	sort.SliceStable(rows, func(i, j int) bool {
 		a, b := at(rows[i]), at(rows[j])
 		return a > b || (a == b && rows[i].ID > rows[j].ID)
 	})
-	return rows[:min(limit, len(rows))], nil
+}
+
+// radarStreamRows are the radar editions frozen within span, each with how
+// many items it brought in and moved.
+func radarStreamRows(ctx context.Context, db store.DB, span streamSpan) ([]streamRow, error) {
+	repo := radar.NewRepo(db)
+	eds, err := repo.Editions(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []streamRow
+	for _, e := range eds {
+		if span.From != 0 && e.PublishedAt < span.From || span.To != 0 && e.PublishedAt >= span.To {
+			continue
+		}
+		v, err := repo.Edition(ctx, e.Label)
+		if err != nil {
+			return nil, err
+		}
+		added, moved := 0, 0
+		for _, b := range v.Blips {
+			if b.New {
+				added++
+			}
+			if b.Moved {
+				moved++
+			}
+		}
+		at := e.PublishedAt
+		out = append(out, streamRow{ID: e.ID, Kind: "radar", Entry: "radar.edition", Slug: e.Label, PublishedAt: &at,
+			RadarNew: added, RadarMoved: moved, RadarLatest: eds[0].Label})
+	}
+	return out, nil
 }
 
 func at(r streamRow) int64 {
@@ -193,6 +245,10 @@ func (r streamRow) item(lang string) streamItem {
 			it.Href = "/" + r.Lang + "/projects/" + *r.Parent + "/log/" + r.Slug
 		}
 		it.Meta = i18n.T(lang, "stream.buildlog")
+	case "radar.edition":
+		it.Title = fmt.Sprintf(i18n.T(lang, "stream.radar_title"), r.Slug)
+		it.Href = radarHref(lang, r.Slug, r.RadarLatest)
+		it.Meta = fmt.Sprintf(i18n.T(lang, "stream.radar_meta"), r.RadarNew, r.RadarMoved)
 	case "github.release", "github.repo":
 		if r.URL != nil {
 			it.Href = *r.URL

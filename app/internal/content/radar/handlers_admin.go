@@ -413,7 +413,33 @@ func (h *Admin) doFreeze(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.enqueue(ctx, prev)
+	h.enqueuePages(ctx, f.Edition)
 	http.Redirect(w, r, "/admin/radar?notice=frozen", http.StatusSeeOther)
+}
+
+// enqueuePages re-renders what a new edition changes beyond its items: every
+// edition page (their switcher, and the latest moves to /radar) and the
+// stream, which gets a row for it.
+func (h *Admin) enqueuePages(ctx context.Context, e Edition) {
+	eds, err := h.repo.Editions(ctx)
+	if err != nil {
+		slog.Error("radar editions", "err", err)
+	}
+	var paths []string
+	month := time.Unix(e.PublishedAt, 0).UTC().Format("2006-01")
+	for _, l := range i18n.Supported {
+		paths = append(paths, "/"+l+"/", "/"+l+"/stream", jobs.StreamMonth(l, month))
+		for _, x := range eds {
+			paths = append(paths, "/"+l+"/radar/"+x.Label)
+		}
+	}
+	for len(paths) > 0 {
+		n := min(len(paths), 50)
+		if err := jobs.EnqueuePages(ctx, h.jobs, paths[:n]...); err != nil {
+			slog.Error("enqueue pages.changed", "err", err) // the dashboard lists failed jobs
+		}
+		paths = paths[n:]
+	}
 }
 
 func (h *Admin) fail(w http.ResponseWriter, err error) {

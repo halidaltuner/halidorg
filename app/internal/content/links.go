@@ -19,7 +19,7 @@ type Link struct {
 var (
 	anchorRE  = regexp.MustCompile(`(?is)<a\s[^>]*href="([^"]+)"[^>]*>(.*?)</a>`)
 	tagRE     = regexp.MustCompile(`<[^>]+>`)
-	sitePathR = regexp.MustCompile(`^/(tr|en)/(posts|notes|snippets|projects|presentations|garden|runbooks|glossary)/([a-z0-9-]{1,80})/?(?:[?#].*)?$`)
+	sitePathR = regexp.MustCompile(`^/(tr|en)/(posts|notes|snippets|projects|presentations|garden|runbooks|glossary|radar)/([a-z0-9-]{1,80})/?(?:[?#].*)?$`)
 )
 
 // ExtractLinks returns the internal entry links in body, once per target, in
@@ -53,7 +53,7 @@ func ExtractLinks(body, origin string) []Link {
 
 // sectionKind maps a URL section to entries.kind.
 var sectionKind = map[string]string{"posts": "post", "notes": "note", "snippets": "snippet", "projects": "project",
-	"presentations": "presentation", "garden": "garden", "runbooks": "runbook", "glossary": "term"}
+	"presentations": "presentation", "garden": "garden", "runbooks": "runbook", "glossary": "term", "radar": "radar_item"}
 
 // PageKinds are the kinds with a page of their own, in SQL: the ones that
 // show backlinks and related entries, and can be related.

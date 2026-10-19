@@ -19,7 +19,7 @@ import (
 func TestPaths(t *testing.T) {
 	now := &Ref{Kind: "post", Lang: "en", Slug: "htmx", Tags: []string{"go", "htmx"}, Listed: true}
 	prev := &Ref{Kind: "post", Lang: "en", Slug: "htmx-old", Tags: []string{"go", "admin", "Bad Tag"}}
-	got := Paths(Change{Now: now, Prev: prev, Siblings: []Ref{{Kind: "post", Lang: "tr", Slug: "htmx-tr"}, {Kind: "radar_item", Lang: "en", Slug: "x"}}})
+	got := Paths(Change{Now: now, Prev: prev, Siblings: []Ref{{Kind: "post", Lang: "tr", Slug: "htmx-tr"}, {Kind: "uses", Lang: "en", Slug: "x"}}})
 	want := []string{
 		"/en/", "/en/atom.xml", "/en/feed.json", "/en/feed.xml", "/en/posts", "/en/posts/htmx", "/en/posts/htmx-old",
 		"/en/stream", "/en/tags/admin", "/en/tags/admin/feed.xml", "/en/tags/go", "/en/tags/go/feed.xml",
@@ -109,9 +109,16 @@ func TestPaths(t *testing.T) {
 	if contains(bk, "/tr/reading/ddia") {
 		t.Errorf("book with a page of its own: %v", bk)
 	}
-	// Kinds without pages yet contribute nothing.
-	if got := Paths(Change{Now: &Ref{Kind: "radar_item", Lang: "en", Slug: "x"}}); len(got) != 0 {
-		t.Errorf("radar paths = %v", got)
+	// Kinds without pages contribute nothing.
+	if got := Paths(Change{Now: &Ref{Kind: "uses", Lang: "en", Slug: "x"}}); len(got) != 0 {
+		t.Errorf("unknown kind paths = %v", got)
+	}
+	// A radar item: its page and the radar with its feeds.
+	rd := Paths(Change{Now: &Ref{Kind: "radar_item", Lang: "en", Slug: "zig", Listed: true}})
+	for _, want := range []string{"/en/radar/zig", "/en/radar", "/en/radar/feed.xml", "/sitemap.xml"} {
+		if !contains(rd, want) {
+			t.Errorf("radar paths %v: no %s", rd, want)
+		}
 	}
 }
 

@@ -6,10 +6,10 @@
 {{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
 {{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
 <p class="ent-hint">{{tr .Lang "admin.radar.hint"}}</p>
-<p class="rd-state mono">{{with .Latest}}{{printf (tr $.Lang "admin.radar.latest") .Label}}{{else}}{{tr .Lang "admin.radar.none"}}{{end}}
+<p class="rdr-state mono">{{with .Latest}}{{printf (tr $.Lang "admin.radar.latest") .Label}}{{else}}{{tr .Lang "admin.radar.none"}}{{end}}
 {{- if .HasChange}} · <a href="/admin/radar/freeze">{{printf (tr .Lang "admin.radar.pending") .Pending.New .Pending.Moved .Pending.Dropped}}</a>{{else}} · {{tr .Lang "admin.radar.clean"}}{{end}}</p>
-<section class="adm-panel rd-panel">
-<table class="adm-table tx-table rd-table">
+<section class="adm-panel rdr-panel">
+<table class="adm-table tx-table rdr-table">
 <thead><tr><th>{{tr .Lang "admin.radar.name"}}</th><th>{{tr .Lang "admin.radar.quadrant"}}</th><th>{{tr .Lang "admin.radar.ring"}}</th><th>{{tr .Lang "admin.radar.note_tr"}}</th><th>{{tr .Lang "admin.radar.note_en"}}</th><th>{{tr .Lang "admin.radar.off"}}</th><th></th></tr></thead>
 <tbody>
 {{- range .Rows}}
@@ -41,20 +41,20 @@
 {{- end}}
 {{end}}
 
-{{define "radar-row"}}{{$f := print "f-" .Item.Group}}<tr id="r-{{.Item.Group}}"{{if .Item.Off}} class="rd-off"{{end}}>
+{{define "radar-row"}}{{$f := print "f-" .Item.Group}}<tr id="r-{{.Item.Group}}"{{if .Item.Off}} class="rdr-off"{{end}}>
 <td><input form="{{$f}}" name="name" value="{{.Item.Name}}" maxlength="60" required aria-label="{{tr .Lang "admin.radar.name"}}">
-<span class="rd-slug mono">{{if .Published}}<a href="/{{.Lang}}/radar/{{.Item.Slug}}">{{.Item.Slug}}</a>{{else}}{{.Item.Slug}}{{end}}</span></td>
+<span class="rdr-slug mono">{{if .Published}}<a href="/{{.Lang}}/radar/{{.Item.Slug}}">{{.Item.Slug}}</a>{{else}}{{.Item.Slug}}{{end}}</span></td>
 <td><select form="{{$f}}" name="quadrant" aria-label="{{tr .Lang "admin.radar.quadrant"}}">{{range .Quadrants}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></td>
-<td><select form="{{$f}}" name="ring" class="rd-ring" aria-label="{{tr .Lang "admin.radar.ring"}}">{{range .Rings}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></td>
+<td><select form="{{$f}}" name="ring" class="rdr-ring" aria-label="{{tr .Lang "admin.radar.ring"}}">{{range .Rings}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></td>
 <td><input form="{{$f}}" name="note_tr" value="{{.Item.NoteTR}}" lang="tr" maxlength="160" aria-label="{{tr .Lang "admin.radar.note_tr"}}"></td>
 <td><input form="{{$f}}" name="note_en" value="{{.Item.NoteEN}}" lang="en" maxlength="160" aria-label="{{tr .Lang "admin.radar.note_en"}}"></td>
 <td class="cb"><input form="{{$f}}" type="checkbox" name="off" value="1"{{if .Item.Off}} checked{{end}} aria-label="{{tr .Lang "admin.radar.off"}}"></td>
-<td class="rd-act">
+<td class="rdr-act">
 <form id="{{$f}}" method="post" action="/admin/radar/{{.Item.Group}}" hx-post="/admin/radar/{{.Item.Group}}" hx-target="#r-{{.Item.Group}}" hx-swap="outerHTML">
 <button type="submit" class="adm-btn">{{tr .Lang "admin.tax.save"}}</button>
 {{- if .Saved}} <span class="adm-st s-published" role="status">{{tr .Lang "entry.saved"}}</span>{{end}}
 </form>
-<details class="rd-del"><summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>
+<details class="rdr-del"><summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>
 <form method="post" action="/admin/radar/{{.Item.Group}}/delete"><p>{{tr .Lang "admin.radar.delete_sure"}}</p><button type="submit" class="adm-btn danger">{{tr .Lang "admin.delete.confirm"}}</button></form>
 </details>
 {{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}

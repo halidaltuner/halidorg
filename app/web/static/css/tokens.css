@@ -178,6 +178,13 @@
   --kind-book: #B45309;
   --kind-certificate: #0E7490;
   --kind-page: #0E1525;
+  --kind-radar_item: #4F46E5;
+
+  /* Radar rings, center out (design/Radar.dc.html): ink and band tint. */
+  --ring-adopt: #15803D;  --ring-adopt-tint: #F0F8F2;
+  --ring-trial: #B45309;  --ring-trial-tint: #FEF8EE;
+  --ring-assess: #4F46E5; --ring-assess-tint: #F4F4FD;
+  --ring-hold: #E11D48;   --ring-hold-tint: #FFF5F7;
 
   /* Type scale */
   --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; --fs-14: 14px; --fs-15: 15px;

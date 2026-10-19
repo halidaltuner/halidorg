@@ -76,7 +76,7 @@ func TestRadarAdmin(t *testing.T) {
 
 	// Freezing shows the diff and needs a valid label.
 	body = do("GET", "/admin/radar/freeze", nil, false).Body.String()
-	must(body, "First edition", `<span class="rd-name">Go</span>`, `name="label" value="20`)
+	must(body, "First edition", `<span class="rdr-name">Go</span>`, `name="label" value="20`)
 	if rec := do("POST", "/admin/radar/freeze", url.Values{"label": {"2026-13"}}, false); rec.Code != http.StatusUnprocessableEntity ||
 		!strings.Contains(rec.Body.String(), "The label must be YYYY-MM") {
 		t.Errorf("bad label: %d", rec.Code)
@@ -85,8 +85,8 @@ func TestRadarAdmin(t *testing.T) {
 	if rec := do("POST", "/admin/radar/freeze", url.Values{"label": {"2026-04"}}, false); rec.Code != http.StatusSeeOther {
 		t.Fatalf("freeze %d %s", rec.Code, rec.Body.String())
 	}
-	if n := len(s.Queue.(*storetest.Queue).Sent) - sent; n != 4 {
-		t.Errorf("freeze enqueued %d jobs, want 4 (two items, two languages)", n)
+	if n := len(s.Queue.(*storetest.Queue).Sent) - sent; n != 5 {
+		t.Errorf("freeze enqueued %d jobs, want 5 (two items in two languages, the pages)", n)
 	}
 	body = do("GET", "/admin/radar?notice=frozen", nil, false).Body.String()
 	must(body, "Edition frozen and published.", "latest edition: 2026-04", "no changes since the latest edition", `<a href="/en/radar/zig">zig</a>`,
@@ -102,7 +102,7 @@ func TestRadarAdmin(t *testing.T) {
 		t.Errorf("htmx error row: %s", rec.Body.String())
 	}
 	body = do("GET", "/admin/radar/freeze", nil, false).Body.String()
-	must(body, "Since 2026-04", `<li class="rd-moved"><span class="rd-mark mono">moved</span><span class="rd-name">Zig</span><span class="rd-move mono">languages · hold → assess</span></li>`,
+	must(body, "Since 2026-04", `<li class="rdr-moved"><span class="rdr-mark mono">moved</span><span class="rdr-name">Zig</span><span class="rdr-move mono">languages · hold → assess</span></li>`,
 		"unchanged: 1")
 	// Nothing public moved yet: the entry still has the frozen note.
 	ids, _ := repo.EntryIDs(ctx, zig.Group)
