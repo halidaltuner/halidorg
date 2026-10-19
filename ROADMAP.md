@@ -72,10 +72,10 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 ## Phase 5: Presentations, photos, certificates, personal pages (L)
 - [x] Presentations **(designed)** and Presentation Detail **(designed)**: deck upload to R2, `decks.halid.org` origin, sandboxed iframe, slide controls, outline jump via `postMessage` (ADR-007) (staging: `decks-staging.halid.org`; prod's custom domain joins at the Phase 3 cutover)
 - [x] Photos **(designed)**: albums, dense grid with spans, lightbox with EXIF, 500px embed in lightbox only, CSP (ADR-009) (local image and a "view on 500px" link instead of an embed, decided 2026-10-18)
-- [ ] Certificates **(designed)**: issuers, hexagon badges, derived status (active / renew soon / expired)
-- [ ] About **(designed)**: hero, portrait, skills, experience timeline, link cards
-- [ ] Now **(designed)**: building, reading, learning, not doing; `/now/archive` **(derive)** (no weather, decided 2026-10-18)
-- [ ] Admin forms for presentations, photos, certificates, now and about `data_json` **(derive)**
+- [x] Certificates **(designed)**: issuers, hexagon badges, derived status (active / renew soon / expired)
+- [x] About **(designed)**: hero, portrait, skills, experience timeline, link cards
+- [x] Now **(designed)**: building, reading, learning, not doing; `/now/archive` **(derive)** (no weather, decided 2026-10-18)
+- [x] Admin forms for presentations, photos, certificates, now and about `data_json` **(derive)**
 - [x] `garden`, `runbook`, `series`, `term`, `book` reading list **(derive)**, backlinks + related block (garden and runbook in 5.5a, in the post editor; series in 5.5b; glossary and reading list in 5.5c; backlinks for every kind and the related block, from shared tags, in 5.5d)
 
 ## Phase 6: Tech Radar (M)

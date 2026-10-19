@@ -1,5 +1,6 @@
 // Exit checks against staging: Phase 1 (prompts/phase-1.md, "Phase 1 exit
-// check") and Phase 4 (projects, homelab, GitHub, stream). Read-only: it
+// check"), Phase 4 (projects, homelab, GitHub, stream) and Phase 5 (about,
+// now, certificates, photos, presentations, the derived sections). Read-only: it
 // never signs in to the admin and never writes.
 // Run by .github/workflows/staging-check.yml with the Access service token.
 //
@@ -41,7 +42,13 @@ async function kvHit(path) {
 	// A STALE page re-renders in the background (waitUntil): give it a
 	// moment before asking again.
 	if (first.res.headers.get("x-cache") === "STALE") await new Promise((r) => setTimeout(r, 4000));
-	const second = await get(path);
+	let second = await get(path);
+	// A key written just now (first visit) can take a few seconds to be
+	// readable at the edge: one more try before calling it a miss.
+	if (first.res.headers.get("x-cache") === "MISS" && second.res.headers.get("x-cache") === "MISS") {
+		await new Promise((r) => setTimeout(r, 10000));
+		second = await get(path);
+	}
 	const a = first.res.headers.get("x-cache"), b = second.res.headers.get("x-cache");
 	let why = "";
 	if (b === "STALE") {
@@ -165,11 +172,74 @@ for (const [prefix, ps, want] of [["pr", pslugs[0], "project"], ["h", hslugs[0],
 const ga = await get("/admin/github");
 check("Admin: /admin/github needs a session", ga.res.status === 303, `${ga.res.status}`);
 
-// 6. Screenshots for the visual comparison with design/*.dc.html.
+// 6. Phase 5: personal pages, certificates, photos, presentations, the
+// derived sections. Designed screens need content; derived ones are
+// checked when something is published.
+const shots5 = [];
+for (const [name, path, marker] of [["about", "/en/about", 'class="ab-'], ["now", "/en/now", 'class="nw-page'], ["now-archive", "/en/now/archive", "<main"],
+	["certificates", "/en/certificates", 'class="ce-card'], ["photos", "/en/photos", 'class="ph-grid'], ["presentations", "/en/presentations", 'class="pr-card']]) {
+	const pg = await kvHit(path);
+	check(`${path}: has content`, pg.res.status === 200 && pg.body.includes(marker), pg.res.status === 200 ? "" : `status ${pg.res.status}`);
+	shots5.push([name, path]);
+}
+await kvHit("/tr/about");
+const pres = await get("/en/presentations");
+const prSlug = pres.body.match(/class="pr-card" href="\/en\/presentations\/([a-z0-9-]+)"/)?.[1];
+let deckURL = "";
+if (prSlug) {
+	const d = await kvHit(`/en/presentations/${prSlug}`);
+	shots5.push(["presentation", `/en/presentations/${prSlug}`]);
+	deckURL = d.body.match(/<iframe src="([^"]+)"/)?.[1]?.replace(/&amp;/g, "&") ?? "";
+	if (deckURL) {
+		const u = new URL(deckURL);
+		check("Deck: iframe on the decks origin, not the main one", u.origin !== new URL(origin).origin && /sandbox="allow-scripts/.test(d.body), u.origin);
+		// The decks host stays outside Access (a third-party cookie would not reach the iframe).
+		const dr = await fetch(deckURL, { redirect: "manual" });
+		const csp = dr.headers.get("content-security-policy") || "";
+		check("Deck: served without Access, framed only by the site", dr.status === 200 && /frame-ancestors/.test(csp), `${dr.status} ${csp}`);
+		const main = await get(u.pathname);
+		check("Deck: not served from the main origin", main.res.status === 404, `${main.res.status}`);
+	} else check("Deck: a presentation with an uploaded deck", false, `${prSlug} has no deck`);
+}
+const ab = await get("/en/about");
+check("About: certificates card links /en/certificates", ab.body.includes('href="/en/certificates"'));
+for (const [path, kind] of [["/en/garden", "garden"], ["/en/runbooks", "runbooks"], ["/en/series", "series"], ["/en/glossary", "glossary"], ["/en/reading", "reading"]]) {
+	const pg = await kvHit(path);
+	shots5.push([kind, path]);
+	const m = pg.body.match(new RegExp(`href="(/en/${kind}/[a-z0-9-]+)"`));
+	if (!m) {
+		console.log(`info  ${path}: nothing published yet`);
+		continue;
+	}
+	const d = await kvHit(m[1]);
+	shots5.push([`${kind}-item`, m[1]]);
+	if (kind !== "series") check(`${m[1]}: connections block or none to show`, d.res.status === 200, /id="(backlinks|related)"/.test(d.body) ? "has connections" : "");
+}
+if (slug) {
+	const p = await get(`/en/posts/${slug}`);
+	check("Post: backlinks block (and related, when tags are shared)", /id="backlinks"/.test(p.body), /id="related"/.test(p.body) ? "related shown" : "no tag-mates");
+}
+for (const path of ["/en/presentations/feed.xml", "/en/photos/feed.xml", "/en/certificates/feed.xml", "/en/glossary/feed.xml", "/en/reading/feed.xml"]) {
+	const r = await get(path);
+	check(`${path} 200 application/rss+xml`, r.res.status === 200 && (r.res.headers.get("content-type") || "").startsWith("application/rss+xml"), `${r.res.status}`);
+}
+for (const path of ["/en/about", "/en/now", "/en/certificates", "/en/photos", "/en/presentations", "/en/garden", "/en/glossary", "/en/reading"]) check(`Sitemap lists ${path}`, sm.body.includes(`${path}</loc>`));
+const ph = await get("/en/photos");
+const img = ph.body.match(/<img src="(\/media\/[^"]+)"/)?.[1];
+if (img) {
+	const r = await get(img);
+	check("Photos: media served by the Worker", r.res.status === 200 && /^image\//.test(r.res.headers.get("content-type") || ""), `${img} ${r.res.status} ${r.res.headers.get("content-type")}`);
+}
+for (const a of ["/admin/presentations", "/admin/photos", "/admin/certificates", "/admin/series", "/admin/pages"]) {
+	const r = await get(a);
+	check(`Admin: ${a} needs a session`, r.res.status === 303, `${r.res.status}`);
+}
+
+// 7. Screenshots for the visual comparison with design/*.dc.html.
 const browser = await chromium.launch();
 const shots = [["home", "/en/"], ["styleguide", "/_styleguide"], ["posts", "/en/posts"]];
 if (slug) shots.push(["post", `/en/posts/${slug}`], ["post-tr-fallback", `/tr/posts/${slug}`]);
-shots.push(["not-found", "/en/nope"], ["admin-login", "/admin/login"], ...shots4);
+shots.push(["not-found", "/en/nope"], ["admin-login", "/admin/login"], ...shots4, ...shots5);
 for (const [w, h] of [[1280, 900], [390, 844]]) {
 	const ctx = await browser.newContext({ viewport: { width: w, height: h }, extraHTTPHeaders: access, locale: "en-US" });
 	const page = await ctx.newPage();
