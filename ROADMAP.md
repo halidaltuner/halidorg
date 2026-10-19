@@ -85,7 +85,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 
 ## Phase 7: Discovery and polish (M)
 - [x] Full-site search behind the palette (FTS5 or Pagefind), no-JS search results page **(derive)** (7.1: FTS5, photos and certificates indexed, recency boost, rebuild job, `/{lang}/search`)
-- [ ] Mermaid: lazy client render first, server SVG later
+- [x] Mermaid: lazy client render first, server SVG later (7.2: vendored Mermaid 11.17.2, loaded only near a diagram; server SVG options in docs/mermaid.md)
 - [ ] Bilingual polish: paired URLs, untranslated fallbacks everywhere
 - [ ] SVG wordmark, favicon and monogram (design needed)
 - [ ] Performance budget: LCP < 1.2s, JS < 30KB on content pages

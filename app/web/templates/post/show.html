@@ -42,4 +42,7 @@
 </nav>{{end}}{{end}}
 {{template "connections" dict "c" .Conn "lang" .Lang}}
 </article>
+{{- if .Post.Mermaid}}
+<script src="{{asset "/static/js/mermaid.js"}}" data-mermaid="{{asset "/static/mermaid/mermaid.esm.min.mjs"}}" defer></script>
+{{- end}}
 </div>{{end}}

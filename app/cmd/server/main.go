@@ -226,6 +226,9 @@ func staticHandler() http.Handler {
 			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		case r.URL.Query().Has("v"):
 			w.Header().Set("Cache-Control", "public, max-age=60")
+		case r.PathValue("dir") == "mermaid" && r.PathValue("file") != "mermaid.esm.min.mjs":
+			// Mermaid's chunks carry a content hash in their names.
+			w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 		default:
 			w.Header().Set("Cache-Control", "public, max-age=3600")
 		}

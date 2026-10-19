@@ -2,7 +2,7 @@
   "name": "halidorg-editor",
   "private": true,
   "type": "module",
-  "description": "Builds the admin's vendored JS: CodeMirror 6 bundle and htmx. Outputs are committed under app/web/static/vendor.",
+  "description": "Builds the vendored JS: the admin's CodeMirror 6 bundle and htmx (app/web/static/vendor), and Mermaid's ESM build (app/web/static/mermaid). Outputs are committed.",
   "scripts": {
     "build": "sh ../scripts/build-editor.sh"
   },
@@ -14,6 +14,7 @@
     "@codemirror/view": "6.43.14",
     "@lezer/highlight": "1.2.5",
     "esbuild": "0.28.2",
-    "htmx.org": "2.0.11"
+    "htmx.org": "2.0.11",
+    "mermaid": "11.17.2"
   }
 }

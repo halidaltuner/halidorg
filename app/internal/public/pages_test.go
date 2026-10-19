@@ -179,3 +179,26 @@ func TestErrorsAndRedirects(t *testing.T) {
 		t.Errorf("404 headers: %d %q", rec.Code, rec.Header().Get("Cache-Control"))
 	}
 }
+
+// TestMermaidIsland: a post with a diagram keeps its source in the page (the
+// no-JS fallback) and loads the island with the vendored build's URL; a
+// post without one loads neither.
+func TestMermaidIsland(t *testing.T) {
+	mux, db := newSite(t)
+	seed(t, db)
+	r := post.NewRepo(db)
+	p, err := r.Create(context.Background(), post.Draft{Post: post.Post{Entry: content.Entry{Slug: "flow", Lang: "en", Title: "Flow"}},
+		Markdown: "Before.\n\n```mermaid\ngraph TD; A-->B\n```\n"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := r.Publish(context.Background(), p.ID); err != nil {
+		t.Fatal(err)
+	}
+	_, body := get(t, mux, "/en/posts/flow")
+	must(t, body, `<pre class="mermaid">graph TD; A--&gt;B`, `/static/js/mermaid.js?v=`, `data-mermaid="/static/mermaid/mermaid.esm.min.mjs?v=`)
+	_, body = get(t, mux, "/en/posts/ghost")
+	if strings.Contains(body, "mermaid") {
+		t.Error("a post without diagrams loads Mermaid")
+	}
+}
