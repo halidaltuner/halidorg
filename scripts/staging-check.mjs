@@ -1,6 +1,7 @@
 // Exit checks against staging: Phase 1 (prompts/phase-1.md, "Phase 1 exit
 // check"), Phase 4 (projects, homelab, GitHub, stream) and Phase 5 (about,
-// now, certificates, photos, presentations, the derived sections). Read-only: it
+// now, certificates, photos, presentations, the derived sections) and Phase 6
+// (the tech radar). Read-only: it
 // never signs in to the admin and never writes.
 // Run by .github/workflows/staging-check.yml with the Access service token.
 //
@@ -235,11 +236,47 @@ for (const a of ["/admin/presentations", "/admin/photos", "/admin/certificates",
 	check(`Admin: ${a} needs a session`, r.res.status === 303, `${r.res.status}`);
 }
 
-// 7. Screenshots for the visual comparison with design/*.dc.html.
+// 7. Phase 6: the tech radar. Needs two frozen editions on staging.
+const shots6 = [];
+const rad = await kvHit("/en/radar");
+shots6.push(["radar", "/en/radar"]);
+const eds = [...rad.body.matchAll(/<a href="(\/en\/radar(?:\/\d{4}-\d{2})?)"[^>]*>(\d{4}-\d{2})<\/a>/g)].map((m) => ({ href: m[1], label: m[2] }));
+check("Radar: at least two editions in the switcher", eds.length >= 2, eds.map((e) => e.label).join(", "));
+check("Radar: SVG with a text alternative and numbered blips", /<svg viewBox="0 0 500 500" role="img"/.test(rad.body) && /<title id="rdr-svg-t">/.test(rad.body) && /class="rdr-blip /.test(rad.body));
+check("Radar: list rows link item pages", /<a class="rdr-row" href="\/en\/radar\/[a-z0-9-]+" data-n="1">/.test(rad.body));
+check("Radar: new or moved marks against the edition before", /<polygon points="0,-11 10,7 -10,7"/.test(rad.body) || /class="rdr-trail"/.test(rad.body),
+	`${(rad.body.match(/<polygon/g) || []).length} new, ${(rad.body.match(/rdr-trail/g) || []).length} moved`);
+// Blip positions are part of the page: the origin renders them the same way twice.
+const o1 = await get("/en/radar?_origin=1"), o2 = await get("/en/radar?_origin=2");
+const blipsOf = (b) => [...b.matchAll(/<g class="rdr-blip[^"]*" transform="translate\(([^)]+)\)" data-n="(\d+)"/g)].map((m) => m[2] + "@" + m[1]).join(" ");
+check("Radar: blip positions stable across renders", blipsOf(o1.body) !== "" && blipsOf(o1.body) === blipsOf(o2.body) && blipsOf(o1.body) === blipsOf(rad.body));
+const older = eds.find((e) => e.href !== "/en/radar");
+if (older) {
+	const od = await kvHit(older.href);
+	shots6.push(["radar-old", older.href]);
+	check(`Radar: ${older.href} is its own page`, new RegExp(`rel="canonical" href="[^"]*/en/radar/${older.label}"`).test(od.body) &&
+		od.body.includes(`href="${older.href}" aria-current="page"`), older.label);
+}
+const item = rad.body.match(/<a class="rdr-row" href="(\/en\/radar\/[a-z0-9-]+)"/)?.[1];
+if (item) {
+	const it = await kvHit(item);
+	shots6.push(["radar-item", item]);
+	check("Radar item: history across editions", /<section class="rdr-hist"/.test(it.body), item);
+}
+const rst = await get("/en/stream?kind=radar");
+check("Stream: a row per radar edition", (rst.body.match(/glyph k-radar/g) || []).length >= 2, `${(rst.body.match(/glyph k-radar/g) || []).length} rows`);
+const rf = await get("/en/radar/feed.xml");
+check("/en/radar/feed.xml 200 application/rss+xml", rf.res.status === 200 && (rf.res.headers.get("content-type") || "").startsWith("application/rss+xml"), `${rf.res.status}`);
+check("Sitemap lists /en/radar", sm.body.includes("/en/radar</loc>"));
+check("Header links the radar", home.body.includes('href="/en/radar"'));
+const ra = await get("/admin/radar");
+check("Admin: /admin/radar needs a session", ra.res.status === 303, `${ra.res.status}`);
+
+// 8. Screenshots for the visual comparison with design/*.dc.html.
 const browser = await chromium.launch();
 const shots = [["home", "/en/"], ["styleguide", "/_styleguide"], ["posts", "/en/posts"]];
 if (slug) shots.push(["post", `/en/posts/${slug}`], ["post-tr-fallback", `/tr/posts/${slug}`]);
-shots.push(["not-found", "/en/nope"], ["admin-login", "/admin/login"], ...shots4, ...shots5);
+shots.push(["not-found", "/en/nope"], ["admin-login", "/admin/login"], ...shots4, ...shots5, ...shots6);
 for (const [w, h] of [[1280, 900], [390, 844]]) {
 	const ctx = await browser.newContext({ viewport: { width: w, height: h }, extraHTTPHeaders: access, locale: "en-US" });
 	const page = await ctx.newPage();
