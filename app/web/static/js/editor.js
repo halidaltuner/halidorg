@@ -1,15 +1,19 @@
-// Editor island (design/Admin Editor.dc.html, DESIGN.md §7). The page is a
-// plain form that works without JS; this adds CodeMirror, tag chips, the
-// counters, ⌘S / ⌘⇧P and the typed-slug delete check. Autosave, save and
-// preview are htmx attributes in the template.
+// Editor island (design/Admin Editor.dc.html, DESIGN.md §7, §38). The page
+// is a plain form that works without JS; this adds the block editor (Tiptap)
+// with a Markdown view (CodeMirror), tag chips, the counters, ⌘S / ⌘⇧P and
+// the typed-slug delete check. Autosave, save and preview are htmx
+// attributes in the template.
 import { mount } from "/static/vendor/cm.js";
+import { mountRich } from "/static/vendor/tt.js";
 
 const form = document.getElementById("editor");
 const md = document.getElementById("md");
 let dirty = false;
 
 if (form && md) {
-	mount(md);
+	const rich = document.getElementById("ed-rich");
+	if (rich) modes(form, md, rich);
+	else mount(md);
 	form.addEventListener("input", () => { dirty = true; });
 	// A finished save (autosave or manual) clears the unsaved flag.
 	document.body.addEventListener("htmx:afterRequest", (e) => {
@@ -101,4 +105,51 @@ function tags(field, chips) {
 	field.after(add);
 	chips.hidden = false;
 	draw();
+}
+
+// modes switches between the block editor and the Markdown source. The
+// textarea holds the Markdown in both; the choice is remembered per browser.
+// A text the block editor would rewrite stays in Markdown, with a note.
+function modes(form, md, rich) {
+	const btn = form.querySelector("[data-mode]");
+	const note = document.getElementById("ed-rich-note");
+	const src = md.parentElement;
+	const labels = JSON.parse(rich.dataset.labels || "{}");
+	const r = mountRich(md, rich, labels);
+	let cm = null;
+	const say = (msg) => {
+		note.textContent = msg || "";
+		note.hidden = !msg;
+	};
+	const show = (visual) => {
+		form.classList.toggle("is-rich", visual);
+		rich.hidden = !visual;
+		src.hidden = visual;
+		btn.setAttribute("aria-pressed", String(!visual));
+		btn.textContent = visual ? btn.dataset.markdown : btn.dataset.visual;
+		try { localStorage.setItem("ed-mode", visual ? "visual" : "markdown"); } catch {}
+	};
+	const toMarkdown = () => {
+		if (!cm) cm = mount(md);
+		else cm.dispatch({ changes: { from: 0, to: cm.state.doc.length, insert: md.value } });
+		show(false);
+	};
+	const toVisual = () => {
+		if (!r.load()) {
+			say(labels.unfaithful_back);
+			return;
+		}
+		say("");
+		show(true);
+		r.editor.commands.focus("start");
+	};
+	let saved = "visual";
+	try { saved = localStorage.getItem("ed-mode") || "visual"; } catch {}
+	if (!r.faithful) {
+		say(labels.unfaithful);
+		toMarkdown();
+	} else if (saved === "markdown") toMarkdown();
+	else show(true);
+	btn.hidden = false;
+	btn.addEventListener("click", () => (form.classList.contains("is-rich") ? toMarkdown() : toVisual()));
 }

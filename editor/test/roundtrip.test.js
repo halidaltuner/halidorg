@@ -1,0 +1,40 @@
+// @vitest-environment happy-dom
+import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import { Editor } from "@tiptap/core";
+import { norm, schema } from "../src/tiptap/extensions.js";
+
+const roundtrip = (md) => {
+	const ed = new Editor({ extensions: schema(), content: md, contentType: "markdown" });
+	const out = ed.getMarkdown();
+	ed.destroy();
+	return out;
+};
+
+describe("markdown roundtrip", () => {
+	for (const file of ["../../app/internal/render/testdata/post.md", "../../app/internal/styleguide/sample.md"]) {
+		it(file, () => {
+			const md = fs.readFileSync(new URL(file, import.meta.url), "utf8");
+			expect(norm(roundtrip(md))).toBe(norm(md));
+		});
+	}
+	const cases = {
+		callout: "> [!TIP]\n> Explicit saves always create a revision.",
+		"callout with label and two paragraphs": "> [!WARNING] dikkat\n> First.\n>\n> Second with **bold**.",
+		"plain quote": "> Just a quote.",
+		footnotes: "Text with a note[^1] and another[^long-one].\n\n[^1]: The note.\n\n[^long-one]: A second note with `code`.",
+		"code fence info": "```go file=main.go\nfunc main() {}\n```",
+		"tabs and terminal": "```html file=a.html tabs\n<p>a</p>\n```\n\n```terminal cwd=~/x\n$ ls\n```",
+		mermaid: "```mermaid\nflowchart LR\n  A --> B\n```",
+		headings: "## Two\n\n### Three\n\nText.",
+		lists: "- one\n- two\n  - nested\n\n1. first\n2. second",
+		inline: "Some **bold**, *italic*, `code`, ~~gone~~ and a [link](https://example.com).",
+		image: "![A cat on a mat](/media/abc/cat.jpg)",
+		table: "| a | b |\n| --- | --- |\n| 1 | 2 |",
+		rule: "Above.\n\n---\n\nBelow.",
+		turkish: "Işık, ğüşöç ve İstanbul.",
+	};
+	for (const [name, md] of Object.entries(cases)) {
+		it(name, () => expect(norm(roundtrip(md))).toBe(norm(md)));
+	}
+});

@@ -3,6 +3,7 @@
 package ui
 
 import (
+	"encoding/json"
 	"errors"
 	"html/template"
 	"net/http"
@@ -171,10 +172,11 @@ func Env() string {
 func Funcs() template.FuncMap {
 	return template.FuncMap{
 		"tr": i18n.T, "dict": dict, "date": Date, "minutes": Minutes, "asset": web.Asset,
-		"langs":     func() []string { return i18n.Supported },
-		"add":       func(a, b int) int { return a + b },
-		"sub":       func(a, b int) int { return a - b },
-		"thousands": Thousands,
+		"langs":      func() []string { return i18n.Supported },
+		"add":        func(a, b int) int { return a + b },
+		"sub":        func(a, b int) int { return a - b },
+		"thousands":  Thousands,
+		"richLabels": RichLabels,
 		// deref reads an optional string field (a nullable column) in templates.
 		"deref": func(p *string) string {
 			if p == nil {
@@ -252,4 +254,24 @@ func Thousands(n int) string {
 		s = s[:i] + "," + s[i:]
 	}
 	return s
+}
+
+// richKeys are the block editor's strings (editor/src/tiptap), handed to it
+// as JSON by RichLabels so the catalog stays the one source of copy.
+var richKeys = []string{
+	"cmd_text", "cmd_h2", "cmd_h3", "cmd_bullets", "cmd_numbers", "cmd_quote", "cmd_note", "cmd_tip", "cmd_warning", "cmd_danger",
+	"cmd_code", "cmd_terminal", "cmd_mermaid", "cmd_table", "cmd_image", "cmd_divider", "cmd_footnote", "cmd_none",
+	"fmt_bold", "fmt_italic", "fmt_strike", "fmt_code", "fmt_link",
+	"prompt_image", "prompt_alt", "prompt_link", "placeholder", "placeholder_first", "drag", "code_info",
+	"mode_markdown", "mode_visual", "unfaithful", "unfaithful_back",
+}
+
+// RichLabels is the block editor's copy in lang, as JSON for a data attribute.
+func RichLabels(lang string) string {
+	m := make(map[string]string, len(richKeys))
+	for _, k := range richKeys {
+		m[k] = i18n.T(lang, "admin.rich."+k)
+	}
+	b, _ := json.Marshal(m)
+	return string(b)
 }
