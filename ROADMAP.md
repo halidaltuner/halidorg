@@ -79,9 +79,9 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [x] `garden`, `runbook`, `series`, `term`, `book` reading list **(derive)**, backlinks + related block (garden and runbook in 5.5a, in the post editor; series in 5.5b; glossary and reading list in 5.5c; backlinks for every kind and the related block, from shared tags, in 5.5d)
 
 ## Phase 6: Tech Radar (M)
-- [ ] `radar_item`, history, editions
+- [x] `radar_item`, history, editions (6.1: frozen editions only; the admin edits a working copy)
 - [ ] Radar **(designed)**: SVG, quadrants, rings, new/moved blips, list sync, edition switcher, keyboard
-- [ ] Admin radar editor **(derive)**, edition snapshot
+- [x] Admin radar editor **(derive)**, edition snapshot (6.1)
 
 ## Phase 7: Discovery and polish (M)
 - [ ] Full-site search behind the palette (FTS5 or Pagefind), no-JS search results page **(derive)**

@@ -1435,6 +1435,37 @@ html.pal-open { overflow: hidden; }
 .ent-delete summary { padding: var(--sp-12) var(--sp-16); font-size: var(--fs-12); color: var(--accent-2); cursor: pointer; }
 .ent-delete form { display: flex; align-items: center; gap: var(--sp-12); flex-wrap: wrap; padding: 0 var(--sp-16) var(--sp-16); }
 .ent-delete p { margin: 0; font-size: var(--fs-13); }
+/* Radar editor (derive: dashboard density, DESIGN.md §34). */
+.rd-state { margin: 0; font-size: var(--fs-12); color: var(--text-muted); }
+.rd-panel { overflow-x: auto; }
+.rd-table { table-layout: fixed; min-width: 960px; }
+.rd-table td { vertical-align: top; padding-left: var(--sp-8); padding-right: var(--sp-8); }
+.rd-table th { padding-left: var(--sp-8); padding-right: var(--sp-8); }
+.rd-table th:nth-child(1) { width: 17%; } .rd-table th:nth-child(2) { width: 13%; } .rd-table th:nth-child(3) { width: 11%; }
+.rd-table th:nth-child(6) { width: 40px; } .rd-table th:nth-child(7) { width: 120px; }
+.rd-table input:not([type="checkbox"]), .rd-table select { min-width: 0; }
+.rd-table input[type="checkbox"] { width: 16px; min-width: 0; height: 16px; margin: 7px 0 0; }
+.rd-same { padding: 0 var(--sp-16) var(--sp-16); }
+.rd-slug { display: block; margin-top: var(--sp-4); font-size: var(--fs-11); color: var(--text-muted); }
+.rd-slug a { color: var(--link); }
+.rd-off input:not([type="checkbox"]), .rd-off select { color: var(--text-muted); text-decoration: line-through; }
+.rd-act { white-space: nowrap; overflow: visible; }
+.rd-act form { display: flex; align-items: center; gap: var(--sp-8); }
+.rd-del summary { margin-top: var(--sp-8); font-family: var(--font-mono); font-size: var(--fs-11); color: var(--accent-2); cursor: pointer; }
+.rd-del form { flex-direction: column; align-items: flex-start; white-space: normal; max-width: 240px; margin-top: var(--sp-8); }
+.rd-del p, .rd-confirm p { margin: 0; font-size: var(--fs-13); }
+.rd-diff { list-style: none; margin: 0; padding: var(--sp-8) var(--sp-16) var(--sp-16); display: flex; flex-direction: column; gap: var(--sp-8); }
+.rd-diff li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 2px var(--sp-12); font-size: var(--fs-14); }
+.rd-diff h2 { margin: 0; }
+.rd-mark { font-size: var(--fs-11); align-self: center; }
+.rd-new .rd-mark { color: var(--success); }
+.rd-moved .rd-mark { color: var(--tone-amber-ink); }
+.rd-dropped .rd-mark { color: var(--accent-2); }
+.rd-move { grid-column: 2; font-size: var(--fs-12); color: var(--text-muted); }
+.rd-confirm { display: flex; flex-direction: column; gap: var(--sp-12); }
+.rd-confirm summary { align-self: flex-start; list-style: none; cursor: pointer; }
+.rd-confirm summary::-webkit-details-marker { display: none; }
+.rd-confirm[open] summary { display: none; }
 @media (max-width: 760px) {
   /* Phone: 16px text so iOS does not zoom, 44px targets (Quick Capture rules). */
   .ent-form input:not([type=checkbox]):not([type=radio]), .ent-form select, .ent-form textarea { font-size: 16px; min-height: 44px; box-sizing: border-box; }

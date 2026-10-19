@@ -284,3 +284,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Connections (derive, from the post's backlinks block): one partial under every detail page (post, garden page, runbook, note, snippet, project, presentation, term). Backlinks first, then "related": up to three entries in the page's language sharing the most tags, newest first among equals. Each related row has the kind glyph from the stream (same tints), the title in `--link` and the summary muted below it.
 - Posts, garden pages and runbooks always show the backlinks block with its empty message; other kinds show the block only when it has something.
 - An entry with no title and no summary (a note) goes by its kind and day: "note · 2026-10-19".
+
+## 34. Implementation notes (Phase 6.1, admin radar editor)
+- Derive, dashboard density: one table of the working copy (name with the slug under it, quadrant and ring selects, both notes, an "off" box for leaving an item out of the next edition). Each row saves on its own with htmx and comes back in place with a "saved" badge or its errors; without JS the form posts and the page reloads at the row. Delete sits in a small disclosure under save.
+- Above the table: the latest edition and what the next one changes ("next edition: 1 new, 2 moved, 0 dropped"), linking to the freeze page. Rows on the radar come first, by ring, quadrant and name; off rows are struck through.
+- Freeze page: the diff since the latest edition (new, moved with from and to ring, dropped), the count of unchanged items, the label (this month, or the month after the latest edition) and a two-step confirm. Freezing and deleting need a recent sign-in.

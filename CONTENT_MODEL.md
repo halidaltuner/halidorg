@@ -103,9 +103,10 @@ migrations/0014_presentations.sql, `internal/content/presentation`.
 `terms(entry_id, term, aliases_json, short_def)` (0017). The entry title is the term (`term` keeps a copy for sorting), `short_def` (at most 300 characters) is the index line and the page lead and the meta description when the summary is empty, the body explains it. `/{lang}/glossary` lists the terms A to Z under their letters (Turkish dotted İ, "#" for digits and signs), `/{lang}/glossary/{slug}` is the term. Terms are not linked automatically in writing (decided 2026-10-19): link them by hand.
 
 ### radar_item
-`radar_items(entry_id, quadrant: languages|techniques|tools|platforms, ring: adopt|trial|assess|hold)`
-`radar_history(radar_entry_id, edition_id, ring, changed_at, note)` drives new (triangle) and moved (dashed line)
-`radar_editions(id, label, published_at)` labels like `2026-10`
+`radar_items(group_id, slug, name, quadrant: languages|techniques|tools|platforms, ring: adopt|trial|assess|hold, note_tr, note_en, off)` (migrations/0018_radar.sql) is the working copy the admin edits, one row per item with both languages' notes. Nothing in it is public (decided 2026-10-19: frozen editions only).
+`radar_editions(id, label, published_at)`, labels `YYYY-MM` that only grow (`2026-10` after `2026-04`).
+`radar_history(group_id, edition_id, slug, name, quadrant, ring, note_tr, note_en, changed_at)` is what each edition showed: freezing copies every item not marked off into it, with its name and notes, so old editions keep their words and outlive a deleted item.
+Freezing also publishes the item's entries (kind `radar_item`, one per language in the item's translation group `group_id`, same slug): title the name, summary the note in that language, empty body. An item is new in an edition when it was not on the one before (the first edition has nothing new), moved when its ring differs from the one before. The slug comes from the name when the item is created and stays when it is renamed; a name shaped like an edition label gets an `item-` prefix, since editions live at `/{lang}/radar/{YYYY-MM}`.
 
 ### page (singletons and free pages)
 `pages(entry_id, template: about|now)` (migrations/0010_pages.sql). The slug is the template, so `UNIQUE (kind, lang, slug)` keeps one About and one Now per language. Structured sections live in `revisions.data_json` (Go struct `page.Data`, validated per template) and go live on publish like the body. `uses` and `generic` join when they get pages.
@@ -196,7 +197,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 - `published` requires `title` (except `note`) and `published_at`
 - `link.url`, `fav.url`, `credly_url`, `embed_url` must be absolute https
 - `summary` ≤ 160 chars when used as SEO description
-- `radar_item` ring change always writes `radar_history`
+- `radar_item` ring changes reach `radar_history` when an edition is frozen; the working copy is not public
 - `project_type = homelab` requires `category_id` from homelab categories
 - `presentation.deck_r2_key` must point to a single self-contained HTML file (sniffed as HTML, valid UTF-8, at most 25 MB)
 - Deleting an entry with inbound backlinks requires typed slug confirmation and creates a `redirects` row or a 410 tombstone
