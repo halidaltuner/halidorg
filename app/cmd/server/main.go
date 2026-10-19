@@ -14,6 +14,7 @@ import (
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/capture"
+	"halid.org/engine/internal/content/book"
 	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/certificate"
 	"halid.org/engine/internal/content/fav"
@@ -27,6 +28,7 @@ import (
 	"halid.org/engine/internal/content/series"
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/content/snippet"
+	"halid.org/engine/internal/content/term"
 	"halid.org/engine/internal/devseed"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/fetch"
@@ -125,6 +127,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	link.NewAdmin(stores.DB, authn, runner).Register(mux)
 	for _, editor := range []func(store.DB, *admin.UI, *auth.Auth, *jobs.Jobs) (*shortadmin.Admin, error){
 		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor, page.NewEditor,
+		term.NewEditor, book.NewEditor,
 	} {
 		e, err := editor(stores.DB, adminUI, authn, runner)
 		if err != nil {

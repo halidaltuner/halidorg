@@ -101,6 +101,9 @@ func New(db store.DB) (*Handlers, error) {
 		"presentations": "templates/presentation/index.html",
 		"garden":        "templates/garden/index.html",
 		"series-index":  "templates/series/index.html",
+		"glossary":      "templates/term/index.html",
+		"term":          "templates/term/show.html",
+		"reading":       "templates/book/index.html",
 		"series":        "templates/series/show.html",
 		"runbooks":      "templates/runbook/index.html",
 		"presentation":  "templates/presentation/show.html",
@@ -158,6 +161,9 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/presentations", func(w http.ResponseWriter, r *http.Request) { h.presentations(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/garden", func(w http.ResponseWriter, r *http.Request) { h.garden(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/series", func(w http.ResponseWriter, r *http.Request) { h.seriesIndex(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/glossary", func(w http.ResponseWriter, r *http.Request) { h.glossary(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/glossary/{slug}", func(w http.ResponseWriter, r *http.Request) { h.term(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/reading", func(w http.ResponseWriter, r *http.Request) { h.reading(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/series/{slug}", func(w http.ResponseWriter, r *http.Request) { h.seriesShow(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/garden/{slug}", func(w http.ResponseWriter, r *http.Request) { h.article(w, r, lang, post.Garden) })
 		mux.HandleFunc("GET /"+lang+"/runbooks", func(w http.ResponseWriter, r *http.Request) { h.runbooks(w, r, lang) })

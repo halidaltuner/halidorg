@@ -1,0 +1,22 @@
+{{define "content"}}<main class="list-page tone-indigo">
+<header class="list-head">
+<span class="eyebrow mono">§ // {{tr .Lang "glossary.title"}}</span>
+<h1>{{tr .Lang "glossary.h1"}}</h1>
+<p class="list-sub">{{tr .Lang "glossary.sub"}}</p>
+</header>
+{{- if .Groups}}
+<nav class="gl-letters mono" aria-label="{{tr .Lang "glossary.letters"}}">{{range .Letters}}<a href="#l-{{.}}">{{.}}</a>{{end}}</nav>
+{{- range .Groups}}
+<section class="gl-group" id="l-{{.Letter}}" aria-labelledby="h-{{.Letter}}">
+<h2 class="gl-letter mono" id="h-{{.Letter}}">{{.Letter}}</h2>
+<dl class="gl-terms">
+{{- range .Rows}}
+<div id="{{.Slug}}"><dt><a href="{{.Href}}">{{.Term}}</a>{{with .Aliases}} <span class="gl-aka mono">{{.}}</span>{{end}}</dt>{{with .Def}}<dd>{{.}}</dd>{{end}}</div>
+{{- end}}
+</dl>
+</section>
+{{- end}}
+{{- else}}
+<p class="empty">{{tr .Lang "glossary.empty"}}</p>
+{{- end}}
+</main>{{end}}

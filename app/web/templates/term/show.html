@@ -1,0 +1,14 @@
+{{define "content"}}<main class="list-page sr-page tone-indigo">
+<article class="gl-term"{{if .Untranslated}} lang="{{.ArticleLang}}"{{end}}>
+{{- if .Untranslated}}
+<div class="banner-untranslated" lang="{{.Lang}}">{{tr .Lang "glossary.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
+{{- end}}
+<header class="list-head">
+<a class="mono back" href="/{{.Lang}}/glossary#{{.Term.Slug}}">← {{tr .Lang "glossary.title"}}</a>
+<h1>{{.Term.Title}}</h1>
+{{- with .Term.Aliases}}<p class="gl-aka mono">{{tr $.Lang "glossary.aka"}} {{range $i, $a := .}}{{if $i}}, {{end}}{{$a}}{{end}}</p>{{end}}
+{{- with .Term.ShortDef}}<p class="gl-def">{{.}}</p>{{end}}
+</header>
+{{- if .Body}}<div class="prose">{{.Body}}</div>{{end}}
+</article>
+</main>{{end}}

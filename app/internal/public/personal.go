@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/book"
 	pages "halid.org/engine/internal/content/page"
 	"halid.org/engine/internal/i18n"
 )
@@ -243,7 +244,28 @@ func (h *Handlers) now(w http.ResponseWriter, r *http.Request, lang string) {
 	case n > 1:
 		p.Archive = fmt.Sprintf(i18n.T(lang, "now.earlier"), n)
 	}
-	if err := h.nowView(ctx, lang, &p, pg.Data); err != nil {
+	// The books being read come from the reading list (5.5); the ones typed
+	// in the Now form stay as the fallback, and archived versions keep theirs.
+	data := pg.Data
+	reading, err := book.NewRepo(h.db).List(ctx, lang, "reading")
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	if len(reading) > 0 {
+		data.Reading = nil
+		for _, b := range reading {
+			nb := pages.Book{Title: b.Title, Author: b.Author, Pct: b.Progress}
+			if b.CoverMediaID != nil {
+				nb.Cover = *b.CoverMediaID
+			}
+			if b.Tone != nil {
+				nb.Tone = *b.Tone
+			}
+			data.Reading = append(data.Reading, nb)
+		}
+	}
+	if err := h.nowView(ctx, lang, &p, data); err != nil {
 		h.fail(w, r, err)
 		return
 	}

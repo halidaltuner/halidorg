@@ -1,0 +1,4 @@
+{{define "entry-fields"}}
+<label>{{tr .Lang "kind.term.short_def"}}<textarea name="short_def" rows="2" maxlength="300">{{.Item.ShortDef}}</textarea></label>
+<label>{{tr .Lang "kind.term.aliases"}}<input name="aliases" value="{{.Options.Aliases}}" placeholder="{{tr .Lang "kind.term.aliases_hint"}}" autocapitalize="off"></label>
+{{end}}

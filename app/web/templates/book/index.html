@@ -1,0 +1,31 @@
+{{define "content"}}<main class="list-page tone-amber">
+<header class="list-head">
+<span class="eyebrow mono">❒ // {{tr .Lang "reading.title"}}</span>
+<h1>{{tr .Lang "reading.h1"}}</h1>
+<p class="list-sub">{{tr .Lang "reading.sub"}}</p>
+</header>
+{{- range .Groups}}
+<section class="rd-group" aria-labelledby="rd-{{.State}}">
+<h2 class="rd-head mono" id="rd-{{.State}}">{{.Label}} · {{len .Books}}</h2>
+<ul class="rd-books{{if eq .State "reading"}} is-reading{{end}}">
+{{- range .Books}}
+<li class="rd-book tone-{{.Tone}}" id="{{.Slug}}">
+<div class="rd-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt "radius" 1}}{{else}}{{template "cover" dict "tone" .Tone "radius" 1}}{{end}}</div>
+<div class="rd-body">
+<h3>{{.Title}}</h3>
+{{- with .Author}}<span class="rd-author">{{.}}</span>{{end}}
+{{- with .Take}}<p>{{.}}</p>{{end}}
+<div class="rd-meta mono">
+{{- if .Rating}}<span class="rd-stars" aria-label="{{len .Rating}}">{{range .Rating}}{{if .}}★{{else}}☆{{end}}{{end}}</span>{{end}}
+{{- with .Finished}}<span>{{.}}</span>{{else}}{{with .Started}}<span>{{tr $.Lang "reading.since"}} {{.}}</span>{{end}}{{end}}
+</div>
+{{- if and .Progress (lt .Progress 100)}}<div class="rd-progress" role="progressbar" aria-valuenow="{{.Progress}}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{.Progress}}%"></span></div><span class="rd-pct mono">{{.Progress}}%</span>{{end}}
+</div>
+</li>
+{{- end}}
+</ul>
+</section>
+{{- else}}
+<p class="empty">{{tr .Lang "reading.empty"}}</p>
+{{- end}}
+</main>{{end}}

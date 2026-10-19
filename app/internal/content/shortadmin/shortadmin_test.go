@@ -12,6 +12,7 @@ import (
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
 	"halid.org/engine/internal/content"
+	"halid.org/engine/internal/content/book"
 	"halid.org/engine/internal/content/buildlog"
 	"halid.org/engine/internal/content/fav"
 	"halid.org/engine/internal/content/link"
@@ -20,6 +21,7 @@ import (
 	"halid.org/engine/internal/content/project"
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/content/snippet"
+	"halid.org/engine/internal/content/term"
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/store/storetest"
@@ -41,6 +43,7 @@ func newSite(t *testing.T) site {
 	mux := http.NewServeMux()
 	for _, f := range []func(store.DB, *admin.UI, *auth.Auth, *jobs.Jobs) (*shortadmin.Admin, error){
 		note.NewEditor, snippet.NewEditor, link.NewEditor, fav.NewEditor, project.NewEditor, buildlog.NewEditor, page.NewEditor,
+		term.NewEditor, book.NewEditor,
 	} {
 		e, err := f(s.DB, u, a, j)
 		if err != nil {
@@ -388,5 +391,28 @@ func TestPageEditor(t *testing.T) {
 	a, err := page.NewRepo(st.s.DB).Get(ctx, aid)
 	if err != nil || len(a.Data.Skills) != 1 || len(a.Data.Skills[0].Items) != 2 || a.Data.Name != "Halid" || a.Data.Place != "" {
 		t.Fatalf("about %+v %v", a, err)
+	}
+}
+
+func TestTermAndBookEditors(t *testing.T) {
+	st := newSite(t)
+	rec := st.do(st.fresh, "POST", "/admin/glossary", url.Values{"title": {"KV"}, "lang": {"en"}, "aliases": {"key-value store, , KV"},
+		"short_def": {"Edge key-value store."}, "markdown": {"Eventually consistent."}, "action": {"save"}})
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("term %d %s", rec.Code, rec.Body.String())
+	}
+	body := st.do(st.fresh, "GET", rec.Header().Get("Location"), nil).Body.String()
+	must(t, body, `name="aliases" value="key-value store"`, `Edge key-value store.</textarea>`)
+
+	rec = st.do(st.fresh, "POST", "/admin/reading", url.Values{"title": {"DDIA"}, "lang": {"en"}, "author": {"Kleppmann"}, "book_status": {"reading"},
+		"progress_pct": {"72%"}, "started": {"2026-09-01"}, "rating": {"5"}, "action": {"save"}})
+	if rec.Code != http.StatusSeeOther {
+		t.Fatalf("book %d %s", rec.Code, rec.Body.String())
+	}
+	body = st.do(st.fresh, "GET", rec.Header().Get("Location"), nil).Body.String()
+	must(t, body, `name="progress_pct" value="72"`, `name="started" value="2026-09-01"`, `value="reading" checked`, `value="5" checked`)
+	if rec := st.do(st.fresh, "POST", "/admin/reading", url.Values{"title": {"Bad"}, "lang": {"en"}, "book_status": {"reading"}, "finished": {"soon"},
+		"action": {"save"}}); rec.Code != http.StatusUnprocessableEntity || !strings.Contains(rec.Body.String(), "finish date") {
+		t.Errorf("bad date %d", rec.Code)
 	}
 }

@@ -77,7 +77,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 // under. Posts use the language feeds (/{lang}/feed.xml).
 var kindFeeds = map[string]string{"note": "notes", "snippet": "snippets", "link": "links", "fav": "favs", "project": "projects",
 	"certificate": "certificates", "photo": "photos", "presentation": "presentations",
-	"garden": "garden", "runbook": "runbooks"}
+	"garden": "garden", "runbook": "runbooks", "term": "glossary", "book": "reading"}
 
 // item is one feed entry, whatever its kind.
 type item struct {
@@ -285,6 +285,8 @@ ORDER BY e.published_at DESC, e.id DESC LIMIT 20`, kind, logs, lang)
 			it.URL = *x.FavURL
 		case kind == "fav":
 			it.URL = h.origin + "/" + x.Lang + "/favs#" + x.Slug
+		case kind == "book":
+			it.URL = h.origin + "/" + x.Lang + "/reading#" + x.Slug
 		case x.Parent != nil:
 			it.URL = h.origin + "/" + x.Lang + "/projects/" + *x.Parent + "/log/" + x.Slug
 			if x.PTitle != nil && *x.PTitle != "" {
@@ -507,7 +509,7 @@ func (h *Handlers) sitemapRows(ctx context.Context) ([]smRow, error) {
 	// A build log lives under its project: its "slug" here is the path
 	// below /{lang}/projects/ (project/log/slug).
 	res, err := h.db.Query(ctx, `SELECT kind, lang, slug, translation_group_id, updated_at FROM entries
-WHERE kind IN ('post', 'note', 'snippet', 'project', 'presentation', 'garden', 'runbook', 'page') AND status = 'published' AND visibility = 'public'
+WHERE kind IN ('post', 'note', 'snippet', 'project', 'presentation', 'garden', 'runbook', 'term', 'page') AND status = 'published' AND visibility = 'public'
 UNION ALL
 SELECT 'project', e.lang, pe.slug || '/log/' || e.slug, e.translation_group_id, e.updated_at
 FROM entries e JOIN buildlogs b ON b.entry_id = e.id JOIN entries pe ON pe.id = b.project_entry_id
@@ -577,7 +579,7 @@ JOIN gh_repos g ON g.full_name = a.repo WHERE g.gone = 0 ORDER BY 1 LIMIT 1000`)
 
 // itemSegments are the kinds with a page per entry and their URL segment.
 var itemSegments = map[string]string{"post": "posts", "note": "notes", "snippet": "snippets", "project": "projects",
-	"presentation": "presentations", "garden": "garden", "runbook": "runbooks"}
+	"presentation": "presentations", "garden": "garden", "runbook": "runbooks", "term": "glossary"}
 
 func itemPath(r smRow) string {
 	if r.Kind == "page" { // About and Now sit at the language root
@@ -595,7 +597,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos", "/presentations", "/garden", "/runbooks", "/series"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos", "/presentations", "/garden", "/runbooks", "/series", "/glossary", "/reading"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})

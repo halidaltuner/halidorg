@@ -99,9 +99,19 @@ func TestPaths(t *testing.T) {
 			t.Errorf("series part paths %v: no %s", sp, want)
 		}
 	}
+	// A book: the reading list and its feeds, and Now (the books being read).
+	bk := Paths(Change{Now: &Ref{Kind: "book", Lang: "tr", Slug: "ddia", Listed: true}})
+	for _, want := range []string{"/tr/reading", "/tr/reading/feed.xml", "/tr/now"} {
+		if !contains(bk, want) {
+			t.Errorf("book paths %v: no %s", bk, want)
+		}
+	}
+	if contains(bk, "/tr/reading/ddia") {
+		t.Errorf("book with a page of its own: %v", bk)
+	}
 	// Kinds without pages yet contribute nothing.
-	if got := Paths(Change{Now: &Ref{Kind: "term", Lang: "en", Slug: "x"}}); len(got) != 0 {
-		t.Errorf("term paths = %v", got)
+	if got := Paths(Change{Now: &Ref{Kind: "radar_item", Lang: "en", Slug: "x"}}); len(got) != 0 {
+		t.Errorf("radar paths = %v", got)
 	}
 }
 
