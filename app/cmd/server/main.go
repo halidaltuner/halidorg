@@ -25,6 +25,7 @@ import (
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/content/presentation"
 	"halid.org/engine/internal/content/project"
+	"halid.org/engine/internal/content/radar"
 	"halid.org/engine/internal/content/series"
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/content/snippet"
@@ -181,6 +182,11 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		return nil, err
 	}
 	seriesAdmin.Register(mux)
+	radarAdmin, err := radar.NewAdmin(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	radarAdmin.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

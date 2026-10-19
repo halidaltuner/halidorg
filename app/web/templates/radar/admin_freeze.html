@@ -1,0 +1,28 @@
+{{define "main"}}
+<div class="adm-head">
+<a class="mono ent-back" href="/admin/radar">← {{tr .Lang "admin.nav.radar"}}</a>
+<h1>{{.Title}}</h1>
+</div>
+{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<section class="adm-panel adm-narrow">
+<h2>{{with .Latest}}{{printf (tr $.Lang "admin.radar.since") .Label}}{{else}}{{tr .Lang "admin.radar.first"}}{{end}}</h2>
+<ul class="rd-diff">
+{{- range .Changes}}
+<li class="rd-{{.Mark}}"><span class="rd-mark mono">{{tr $.Lang (print "admin.radar.mark." .Mark)}}</span><span class="rd-name">{{.Name}}</span><span class="rd-move mono">{{.Quadrant}} · {{with .From}}{{.}}{{end}}{{if and .From .To}} → {{end}}{{with .To}}{{.}}{{end}}</span></li>
+{{- else}}
+<li class="adm-empty">{{tr $.Lang "admin.radar.no_changes"}}</li>
+{{- end}}
+</ul>
+{{- if .Same}}<p class="ent-hint rd-same mono">{{printf (tr .Lang "admin.radar.same_n") .Same}}</p>{{end}}
+</section>
+<section class="adm-panel adm-narrow">
+<form class="adm-form" method="post" action="/admin/radar/freeze">
+<label>{{tr .Lang "admin.radar.label"}}<input name="label" value="{{.Label}}" class="mono" pattern="[0-9]{4}-[0-9]{2}" required></label>
+<p class="ent-hint">{{tr .Lang "admin.radar.freeze_note"}}</p>
+<details class="rd-confirm"><summary class="adm-btn solid">{{tr .Lang "admin.radar.freeze"}}</summary>
+<p>{{tr .Lang "admin.radar.freeze_sure"}}</p>
+<button type="submit" class="adm-btn solid">{{tr .Lang "admin.radar.freeze_go"}}</button>
+</details>
+</form>
+</section>
+{{end}}

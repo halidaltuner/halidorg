@@ -99,7 +99,7 @@ var sections = []struct {
 	{"categories", "/admin/categories", "", false, true},
 	{"tags", "/admin/tags", "", false, true},
 	{"media", "/admin/media", "", false, true},
-	{"radar", "", "", false, false},
+	{"radar", "/admin/radar", "", false, true},
 	{"github", "/admin/github", "", false, true},
 	{"jobs", "", "", false, false},
 	{"redirects", "", "", false, false},
