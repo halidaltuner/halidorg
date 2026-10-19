@@ -593,6 +593,9 @@ body.dark { background: var(--dk-bg); }
 .term-out { color: var(--dk-green); }
 
 .prose pre.mermaid { padding: var(--sp-16); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); font-family: var(--font-mono); font-size: var(--fs-14); white-space: pre-wrap; }
+.prose .mermaid-figure { margin: var(--sp-24) 0; padding: var(--sp-16); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); overflow-x: auto; text-align: center; }
+.prose .mermaid-figure svg { max-width: 100%; height: auto; }
+.prose pre.mermaid-error { border-color: var(--accent-2); }
 
 /* Chroma token classes (light also colors snippet files). Light: comments muted, keywords info, names link,
    numbers warning (Post.dc.html). Dark: tags rose, attributes indigo,

@@ -300,3 +300,7 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 ## 36. Implementation notes (Phase 7.1, search page)
 - `/{lang}/search` (derive: stream rows): eyebrow "> // search", a 48px heading, a mono input with a dark submit button, the prefix list as the subline, then results as stream rows (kind glyph tile, title, kind label and the language when it is not the page's). Photos use ◐ (violet), certificates ✓ (cyan).
 - The header search button is a link to this page; with JS it opens the palette, and Enter in the palette with nothing selected goes here with the query.
+
+## 37. Implementation notes (Phase 7.2, Mermaid)
+- A diagram renders in a figure like the code blocks: surface background, 1px border, 8px radius, 16px padding, centered, scrolling sideways when wider than the column. Mermaid's base theme takes Plex Sans at 14px and the tokens: nodes in the cyan tint with cyan ink borders, secondary in indigo, notes in amber, lines in `--text-muted`.
+- Without JS, and when a diagram does not parse, the source stays in its block (a rose border marks a failed one). Details and the server-side options: docs/mermaid.md.
