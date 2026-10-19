@@ -2,7 +2,7 @@
 <header class="list-head">
 <span class="eyebrow mono">¶ // {{if .Tag}}{{tr .Lang "list.tag"}}{{else}}{{tr .Lang "nav.posts"}}{{end}}</span>
 <h1>{{.Title}}</h1>
-{{- if .Tag}}<a class="mono back" href="/{{.Lang}}/posts">← {{tr .Lang "list.all_posts"}}</a>{{end}}
+{{- if .Tag}}<a class="mono back" href="/{{.Lang}}/posts">← {{tr .Lang "list.all_posts"}}</a>{{else}}<a class="mono back" href="/{{.Lang}}/series">{{tr .Lang "series.title"}} →</a>{{end}}
 </header>
 {{- if .Cards}}
 <div class="card-grid">{{range .Cards}}{{template "post-card" .}}{{end}}</div>

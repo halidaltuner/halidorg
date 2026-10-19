@@ -28,7 +28,7 @@ Every content item with its own page has one row here. Type-specific fields live
 - `revisions(id, entry_id, body_md, body_html, toc_json, data_json, origin: autosave|manual|publish|import, created_at, note)` consecutive `autosave` rows coalesce (update in place) until a `manual` save
 - `tags(id, slug, name_tr, name_en, tone)` + `entry_tags(entry_id, tag_id)`
 - `categories(id, kind, slug, name_tr, name_en, tone, parent_id, sort)` links, snippets, favs, homelab builds, awesome lists (migrations/0006_short_form.sql). `kind` is one of link, snippet, fav, homelab, awesome; `(kind, slug)` is unique; `tone` is one of the DESIGN.md tones. An entry's `category_id` must point at a category of its own kind (checked in Go). Categories nest one level: a parent is a top-level category of the same kind. The admin (`/admin/categories`, Phase 2.5) renames, sets tones, reorders (`sort` 10, 20, 30) and reparents; slugs never change. Tags are renamed and merged at `/admin/tags`: a merge moves every entry onto the other tag and deletes the first.
-- `series(id, slug, title_tr, title_en, summary, status)`
+- `series(id, slug, title_tr, title_en, summary, status, summary_tr, summary_en, sort)` (summary per language and sort: migrations/0016_series_summaries.sql; the old `summary` was copied into both and is unused). Edited at `/admin/series`; posts, garden pages and runbooks join one in the post editor (`series_id`, `series_order`). Status `active` or `done` shows on the site, `archived` hides the series page and leaves the editor's list. `/{lang}/series` lists the series with a published part in that language, `/{lang}/series/{slug}` its parts in order. A part's change re-renders the series pages and the other parts (their nav shows its title, `jobs.Ref.Series`/`Parts`); a series edit re-renders them too. Deleting a series takes its parts out of it.
 - `links_graph(from_entry_id, to_entry_id, context)` backlinks (migrations/0004_links_graph.sql). The entry.changed job rebuilds an entry's outgoing rows from its published HTML: links to `/{lang}/posts/{slug}` (relative or on the site origin), `context` is the link text. Unlisted and deleted entries have no outgoing rows.
 - `media(id, r2_key, mime, width, height, alt_tr, alt_en, blurhash, created_at, name, bytes)` (name and bytes: migrations/0005_media_meta.sql). Images only (PNG, JPEG, GIF, WebP; no SVG), 10 MB max, R2 key `media/{id}/{file}`, served by the Worker at `/media/...`. An image is usable (cover, Markdown) only once both `alt_tr` and `alt_en` are set; one used as a cover cannot be deleted.
 - `redirects(from_path, to_path, code)` importer + slug changes
@@ -171,6 +171,7 @@ Two queries merged in Go (`public.streamRows`), newest first: published public e
 | note | `/{lang}/notes`, `/{lang}/notes/{slug}` |
 | garden | `/{lang}/garden?stage=evergreen`, `/{lang}/garden/{slug}` |
 | runbook | `/{lang}/runbooks`, `/{lang}/runbooks/{slug}` |
+| series | `/{lang}/series`, `/{lang}/series/{slug}` |
 | snippet | `/{lang}/snippets`, `/{lang}/snippets/{slug}`, `/{lang}/snippets/{slug}/raw/{filename}` (text/plain) |
 | link | `/{lang}/links?status=unread`, `/{lang}/awesome` (index), `/{lang}/awesome/{category}` |
 | fav | `/{lang}/favs?type=tool` |

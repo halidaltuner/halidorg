@@ -91,6 +91,14 @@ func TestPaths(t *testing.T) {
 			t.Errorf("runbook paths %v: no %s", rb, want)
 		}
 	}
+	// A part of a series: the series index and page, and the other parts
+	// (their nav shows its title).
+	sp := Paths(Change{Now: &Ref{Kind: "post", Lang: "en", Slug: "two", Listed: true, Series: "kromatik", Parts: []string{"post:one", "garden:three"}}})
+	for _, want := range []string{"/en/series", "/en/series/kromatik", "/en/posts/one", "/en/garden/three"} {
+		if !contains(sp, want) {
+			t.Errorf("series part paths %v: no %s", sp, want)
+		}
+	}
 	// Kinds without pages yet contribute nothing.
 	if got := Paths(Change{Now: &Ref{Kind: "term", Lang: "en", Slug: "x"}}); len(got) != 0 {
 		t.Errorf("term paths = %v", got)

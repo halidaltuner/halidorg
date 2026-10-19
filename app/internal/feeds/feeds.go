@@ -595,7 +595,7 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	set := urlset{XHTML: "http://www.w3.org/1999/xhtml"}
 	// Home and the list pages exist in every language: alternate each other.
-	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos", "/presentations", "/garden", "/runbooks"} {
+	for _, path := range []string{"/", "/posts", "/notes", "/snippets", "/links", "/favs", "/awesome", "/projects", "/homelab", "/stream", "/github", "/certificates", "/photos", "/presentations", "/garden", "/runbooks", "/series"} {
 		var alts []smAlt
 		for _, l := range i18n.Supported {
 			alts = append(alts, smAlt{Rel: "alternate", Hreflang: l, Href: h.origin + "/" + l + path})
@@ -634,6 +634,25 @@ func (h *Handlers) sitemap(w http.ResponseWriter, r *http.Request) {
 	}
 	for _, m := range months {
 		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + m.Lang + "/stream/" + m.Slug})
+	}
+	// Series pages: a series has one in each language it has a published part in.
+	res, err := h.db.Query(r.Context(), `SELECT DISTINCT e.lang, s.slug FROM series s JOIN entries e ON e.series_id = s.id
+WHERE s.status <> 'archived' AND e.status = 'published' AND e.visibility = 'public' ORDER BY s.slug, e.lang`)
+	type seriesRow struct {
+		Lang string `json:"lang"`
+		Slug string `json:"slug"`
+	}
+	var ss []seriesRow
+	if err == nil {
+		ss, err = store.Scan[seriesRow](res)
+	}
+	for _, x := range ss {
+		set.URLs = append(set.URLs, smURL{Loc: h.origin + "/" + x.Lang + "/series/" + x.Slug})
+	}
+	if err != nil {
+		slog.Error("sitemap", "err", err)
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
 	}
 	h.writeXML(w, r, "application/xml; charset=utf-8", set)
 }

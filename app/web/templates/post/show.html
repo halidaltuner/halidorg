@@ -11,7 +11,7 @@
 <div class="banner-untranslated" lang="{{.Lang}}">{{tr .Lang "post.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
 {{- end}}
 <header class="post-head">
-<a class="post-crumb mono" href="/{{.Lang}}/{{.Section}}">← {{tr .Lang (print "nav." .Section)}}{{with .Series}} · {{tr $.Lang "post.series"}}: {{.Title}} ({{.Index}}/{{.Total}}){{end}}</a>
+<span class="post-crumb mono"><a href="/{{.Lang}}/{{.Section}}">← {{tr .Lang (print "nav." .Section)}}</a>{{with .Series}} · {{tr $.Lang "post.series"}}: <a href="/{{$.ArticleLang}}/series/{{.Slug}}">{{.Title}}</a> ({{.Index}}/{{.Total}}){{end}}</span>
 <h1>{{.Post.Title}}</h1>
 <div class="post-meta mono">
 {{- if eq .Post.Kind "garden"}}<span class="badge mat-{{.Post.Maturity}}">{{tr .Lang (print "garden.maturity." .Post.Maturity)}}</span>{{with .Post.LastTendedAt}}<span>{{tr $.Lang "garden.tended"}} {{date .}}</span>{{end}}

@@ -3,6 +3,7 @@ package jobs
 import (
 	"net/url"
 	"sort"
+	"strings"
 
 	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/i18n"
@@ -35,6 +36,19 @@ type Ref struct {
 	// Version is a page's latest published version (2006-01-02): the Now
 	// archive has a page per day.
 	Version string `json:"version,omitempty"`
+	// Series is its series' slug; Parts are the series' other published
+	// parts in its language ("kind:slug"), whose pages show its title in
+	// their series nav.
+	Series string   `json:"series,omitempty"`
+	Parts  []string `json:"parts,omitempty"`
+}
+
+// SeriesPaths are the pages a series shows on: the index and its own page.
+func SeriesPaths(lang, slug string) []string {
+	if !i18n.IsSupported(lang) || !content.ValidSlug(slug) {
+		return nil
+	}
+	return []string{"/" + lang + "/series", "/" + lang + "/series/" + slug}
 }
 
 // StreamMonth is the /stream archive page of a month, or "".
@@ -194,6 +208,16 @@ func Paths(c Change) []string {
 		}
 		for _, f := range r.Files {
 			add(RawPath(*r, f))
+		}
+		if r.Series != "" {
+			for _, p := range SeriesPaths(r.Lang, r.Series) {
+				add(p)
+			}
+			for _, part := range r.Parts {
+				if kind, slug, ok := strings.Cut(part, ":"); ok {
+					add(ItemPath(Ref{Kind: kind, Lang: r.Lang, Slug: slug}))
+				}
+			}
 		}
 		if r.Kind == "page" && i18n.IsSupported(r.Lang) {
 			// Now's archive (the list, the day of each version), About's

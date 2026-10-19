@@ -24,6 +24,7 @@ import (
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/content/presentation"
 	"halid.org/engine/internal/content/project"
+	"halid.org/engine/internal/content/series"
 	"halid.org/engine/internal/content/shortadmin"
 	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/devseed"
@@ -172,6 +173,11 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	}
 	presAdmin.Register(mux)
 	presentation.NewDecks(stores.DB, stores.Blob, authn, runner).Register(mux)
+	seriesAdmin, err := series.NewAdmin(stores.DB, adminUI, authn, runner)
+	if err != nil {
+		return nil, err
+	}
+	seriesAdmin.Register(mux)
 	mediaAdmin, err := media.New(mediaRepo, adminUI, authn)
 	if err != nil {
 		return nil, err

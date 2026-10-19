@@ -108,7 +108,7 @@ func TestPostPage(t *testing.T) {
 		`<article class="post" lang="en">`,
 		`<a class="toc-l2" href="#why-not-an-spa">Why not an SPA</a>`,
 		`<aside class="sn" id="sn-1">`,
-		`series: building kromatik (2/2)`,
+		`series: <a href="/en/series/kromatik">building kromatik</a> (2/2)`,
 		`<a href="/en/posts/ghost"><span class="mono">← 1/2</span>`,
 		`tr: not yet`,
 		`<meta property="og:type" content="article">`,

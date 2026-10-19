@@ -1,0 +1,21 @@
+{{define "content"}}<main class="list-page">
+<header class="list-head">
+<span class="eyebrow mono">¶ // {{tr .Lang "series.title"}}</span>
+<h1>{{tr .Lang "series.h1"}}</h1>
+<p class="list-sub">{{tr .Lang "series.sub"}}</p>
+<a class="mono back" href="/{{.Lang}}/posts">← {{tr .Lang "list.all_posts"}}</a>
+</header>
+{{- if .Cards}}
+<div class="sr-grid">
+{{- range .Cards}}
+<a class="sr-card" href="{{.Href}}">
+<span class="sr-top mono"><span>{{.Count}}</span><span class="sr-st st-{{.StatusKey}}">{{.Status}}</span></span>
+<h2>{{.Title}}</h2>
+{{- with .Summary}}<p>{{.}}</p>{{end}}
+</a>
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "series.empty"}}</p>
+{{- end}}
+</main>{{end}}

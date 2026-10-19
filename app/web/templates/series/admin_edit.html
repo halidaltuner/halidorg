@@ -1,0 +1,47 @@
+{{define "main"}}
+<div class="adm-head">
+<a class="mono ent-back" href="/admin/series">← {{tr .Lang "admin.nav.series"}}</a>
+<h1>{{.Title}}</h1>
+{{- if and (not .New) (ne .Series.Status "archived")}}<a class="mono ent-view" href="/{{.Lang}}/series/{{.Series.Slug}}">{{tr .Lang "entry.view"}}</a>{{end}}
+</div>
+{{with .Notice}}<p class="adm-flash mono" role="status">{{.}}</p>{{end}}
+<section class="adm-panel ent-panel">
+<form class="adm-form ent-form" method="post" action="/admin/series{{with .Series.ID}}/{{.}}{{end}}">
+{{- range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}
+<div class="ent-two">
+<label>{{tr .Lang "admin.photo.title_tr"}}<input name="title_tr" value="{{.Series.TitleTR}}" lang="tr" maxlength="120"></label>
+<label>{{tr .Lang "admin.photo.title_en"}}<input name="title_en" value="{{.Series.TitleEN}}" lang="en" maxlength="120"></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "admin.photo.desc_tr"}}<textarea name="summary_tr" rows="3" lang="tr" maxlength="300">{{.Series.SummaryTR}}</textarea></label>
+<label>{{tr .Lang "admin.photo.desc_en"}}<textarea name="summary_en" rows="3" lang="en" maxlength="300">{{.Series.SummaryEN}}</textarea></label>
+</div>
+<div class="ent-two">
+<label>{{tr .Lang "admin.editor.slug"}}<input name="slug" value="{{.Series.Slug}}" class="mono" autocapitalize="off" spellcheck="false"{{if .New}} placeholder="{{tr .Lang "entry.slug_auto"}}"{{end}}></label>
+<label>{{tr .Lang "admin.series.status"}}<select name="status">{{range .Statuses}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+</div>
+<label>{{tr .Lang "kind.snippet.file_order"}}<input name="sort" value="{{.Sort}}" class="mono" inputmode="numeric"></label>
+<div class="ent-actions"><button type="submit" class="adm-btn solid">{{tr .Lang "admin.tax.save"}}</button></div>
+</form>
+</section>
+{{- if not .New}}
+<section class="adm-panel ent-panel pr-deck">
+<h2>{{tr .Lang "admin.series.parts"}} <span class="n">{{len .Parts}}</span></h2>
+<p class="ent-hint pr-deck-in">{{tr .Lang "admin.series.parts_hint"}}</p>
+<ul class="ent-list">
+{{- range .Parts}}
+<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono">{{with .Order}}<span>{{.}}</span>{{end}}<span>{{.Kind}}</span><span>{{.Lang}}</span><span class="adm-st s-{{.StatusKey}}">{{.Status}}</span></span></a></li>
+{{- else}}
+<li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>
+{{- end}}
+</ul>
+</section>
+<details class="adm-panel ent-delete">
+<summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>
+<form method="post" action="/admin/series/{{.Series.ID}}/delete">
+<p>{{tr .Lang "admin.series.delete_sure"}}</p>
+<button type="submit" class="adm-btn danger">{{tr .Lang "admin.delete.confirm"}}</button>
+</form>
+</details>
+{{- end}}
+{{end}}
