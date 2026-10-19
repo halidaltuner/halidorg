@@ -24,6 +24,7 @@
 {{- with $p.Gallery}}
 <div class="pd-gallery n{{len .}}">{{range .}}<figure>{{template "cover" dict "tone" $p.Tone "image" .URL "alt" .Alt}}</figure>{{end}}</div>
 {{- end}}
+{{template "connections" dict "c" .Conn "lang" .Lang}}
 </article>
 <aside class="pd-aside">
 {{- with $p.List}}

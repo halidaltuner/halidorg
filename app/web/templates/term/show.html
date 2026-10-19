@@ -10,5 +10,6 @@
 {{- with .Term.ShortDef}}<p class="gl-def">{{.}}</p>{{end}}
 </header>
 {{- if .Body}}<div class="prose">{{.Body}}</div>{{end}}
+{{template "connections" dict "c" .Conn "lang" .Lang}}
 </article>
 </main>{{end}}

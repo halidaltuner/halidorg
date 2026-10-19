@@ -79,6 +79,10 @@ func (h *Handlers) itemPage(w http.ResponseWriter, r *http.Request, lang, seg, a
 		}
 	}
 	p.Head.Noindex = untranslated
+	if p.Conn, err = h.connections(r.Context(), lang, e, false); err != nil {
+		h.fail(w, r, err)
+		return page{}, "", false
+	}
 	if e.PublishedAt != nil {
 		card := og.Entry(e.Kind, e.Lang, e.Title, e.Summary, e.Slug, *e.PublishedAt)
 		p.Head.Image = h.origin + og.URL(og.EntryKey(e.Lang, seg, e.Slug), card)

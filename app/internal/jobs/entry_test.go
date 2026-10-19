@@ -214,6 +214,54 @@ func TestBacklinks(t *testing.T) {
 	}
 }
 
+// TestRelatedRerender: publishing a tagged entry re-renders the pages of
+// listed entries in its language sharing a tag, whose related block shows it.
+func TestRelatedRerender(t *testing.T) {
+	s, j, q := setup(t)
+	ctx := context.Background()
+	kv := s.KV.(*storetest.KV)
+	posts := post.NewRepo(s.DB)
+	mux := http.NewServeMux()
+	for _, l := range []string{"en", "tr"} {
+		mux.HandleFunc("GET /"+l+"/posts/{slug}", func(w http.ResponseWriter, _ *http.Request) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Cache-Control", "public, max-age=0")
+			_, _ = w.Write([]byte("<p>page</p>"))
+		})
+	}
+	jobs.NewEntryJobs(s.DB, s.Search, s.Blob, jobs.NewWarmer(mux, s.KV)).Register(j)
+	publish := func(slug, lang string, tags ...string) {
+		p, err := posts.Create(ctx, post.Draft{Post: post.Post{Entry: content.Entry{Slug: slug, Lang: lang, Title: slug}}, Markdown: "Body.", Tags: tags})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if _, err := posts.Publish(ctx, p.ID); err != nil {
+			t.Fatal(err)
+		}
+		if err := jobs.Enqueue(ctx, j, p.ID, nil); err != nil {
+			t.Fatal(err)
+		}
+		if code := deliver(j, q.Sent[len(q.Sent)-1], "1", true); code != 200 {
+			t.Fatalf("job %d", code)
+		}
+	}
+	publish("mate", "en", "go")
+	publish("other", "en", "rust")
+	publish("tr-mate", "tr", "go")
+	for _, k := range []string{"page:en:/en/posts/mate", "page:en:/en/posts/other", "page:tr:/tr/posts/tr-mate"} {
+		delete(kv.Vals, k)
+	}
+	publish("new", "en", "go", "htmx")
+	if _, ok := kv.Vals["page:en:/en/posts/mate"]; !ok {
+		t.Error("tag-mate not re-rendered")
+	}
+	for _, k := range []string{"page:en:/en/posts/other", "page:tr:/tr/posts/tr-mate"} {
+		if _, ok := kv.Vals[k]; ok {
+			t.Errorf("%s re-rendered: no shared tag in its language", k)
+		}
+	}
+}
+
 // TestShortFormKinds: publishing a note, a snippet and a link renders a card
 // for kinds with pages and indexes their kind fields (code, domain).
 func TestShortFormKinds(t *testing.T) {

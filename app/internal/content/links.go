@@ -19,7 +19,7 @@ type Link struct {
 var (
 	anchorRE  = regexp.MustCompile(`(?is)<a\s[^>]*href="([^"]+)"[^>]*>(.*?)</a>`)
 	tagRE     = regexp.MustCompile(`<[^>]+>`)
-	sitePathR = regexp.MustCompile(`^/(tr|en)/(posts)/([a-z0-9-]{1,80})/?(?:[?#].*)?$`)
+	sitePathR = regexp.MustCompile(`^/(tr|en)/(posts|notes|snippets|projects|presentations|garden|runbooks|glossary)/([a-z0-9-]{1,80})/?(?:[?#].*)?$`)
 )
 
 // ExtractLinks returns the internal entry links in body, once per target, in
@@ -52,7 +52,40 @@ func ExtractLinks(body, origin string) []Link {
 }
 
 // sectionKind maps a URL section to entries.kind.
-var sectionKind = map[string]string{"posts": "post"}
+var sectionKind = map[string]string{"posts": "post", "notes": "note", "snippets": "snippet", "projects": "project",
+	"presentations": "presentation", "garden": "garden", "runbooks": "runbook", "glossary": "term"}
+
+// PageKinds are the kinds with a page of their own, in SQL: the ones that
+// show backlinks and related entries, and can be related.
+const PageKinds = `('post', 'note', 'snippet', 'project', 'presentation', 'garden', 'runbook', 'term')`
+
+// RelatedEntry is a published entry sharing tags with another.
+type RelatedEntry struct {
+	ID      string `json:"id"`
+	Kind    string `json:"kind"`
+	Lang    string `json:"lang"`
+	Slug    string `json:"slug"`
+	Title   string `json:"title"`
+	Summary string `json:"summary"`
+	Shared  int    `json:"shared"`
+	// PublishedAt names an entry with no title and no summary (a note).
+	PublishedAt *int64 `json:"published_at"`
+}
+
+// Related lists up to n published public entries in lang sharing the most
+// tags with entryID, newest first among equals. Title falls back to the
+// summary (notes have none).
+func Related(ctx context.Context, db store.DB, entryID, lang string, n int) ([]RelatedEntry, error) {
+	res, err := db.Query(ctx, `SELECT e.id, e.kind, e.lang, e.slug, CASE WHEN e.title = '' THEN e.summary ELSE e.title END AS title, e.summary, e.published_at, count(*) AS shared
+FROM entry_tags mine JOIN entry_tags other ON other.tag_id = mine.tag_id AND other.entry_id <> mine.entry_id
+JOIN entries e ON e.id = other.entry_id
+WHERE mine.entry_id = ? AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public' AND e.kind IN `+PageKinds+`
+GROUP BY e.id ORDER BY shared DESC, e.published_at DESC, e.id LIMIT ?`, entryID, lang, n)
+	if err != nil {
+		return nil, err
+	}
+	return store.Scan[RelatedEntry](res)
+}
 
 // SetLinksStmts replaces the outgoing links of entryID. Targets are looked
 // up by kind, language and slug; links to entries that do not exist are
@@ -101,12 +134,14 @@ type Backlink struct {
 	Title   string `json:"title"`
 	Context string `json:"context"`
 	Status  string `json:"status"`
+	// PublishedAt names an entry with no title and no summary (a note).
+	PublishedAt *int64 `json:"published_at"`
 }
 
 // Backlinks lists the entries linking to entryID. publicOnly keeps published
 // public ones, for public pages; admin counts every source.
 func Backlinks(ctx context.Context, db store.DB, entryID string, publicOnly bool) ([]Backlink, error) {
-	q := `SELECT e.id, e.kind, e.lang, e.slug, e.title, l.context, e.status
+	q := `SELECT e.id, e.kind, e.lang, e.slug, CASE WHEN e.title = '' THEN e.summary ELSE e.title END AS title, l.context, e.status, e.published_at
 FROM links_graph l JOIN entries e ON e.id = l.from_entry_id
 WHERE l.to_entry_id = ?`
 	if publicOnly {
