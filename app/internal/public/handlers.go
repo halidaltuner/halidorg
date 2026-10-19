@@ -99,6 +99,8 @@ func New(db store.DB) (*Handlers, error) {
 		"now-archive":   "templates/page/now_archive.html",
 		"certificates":  "templates/certificate/index.html",
 		"presentations": "templates/presentation/index.html",
+		"garden":        "templates/garden/index.html",
+		"runbooks":      "templates/runbook/index.html",
 		"presentation":  "templates/presentation/show.html",
 		"photos":        "templates/photo/index.html",
 	} {
@@ -152,6 +154,10 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 		mux.HandleFunc("GET /"+lang+"/github", func(w http.ResponseWriter, r *http.Request) { h.github(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/photos", func(w http.ResponseWriter, r *http.Request) { h.photos(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/presentations", func(w http.ResponseWriter, r *http.Request) { h.presentations(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/garden", func(w http.ResponseWriter, r *http.Request) { h.garden(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/garden/{slug}", func(w http.ResponseWriter, r *http.Request) { h.article(w, r, lang, post.Garden) })
+		mux.HandleFunc("GET /"+lang+"/runbooks", func(w http.ResponseWriter, r *http.Request) { h.runbooks(w, r, lang) })
+		mux.HandleFunc("GET /"+lang+"/runbooks/{slug}", func(w http.ResponseWriter, r *http.Request) { h.article(w, r, lang, post.Runbook) })
 		mux.HandleFunc("GET /"+lang+"/presentations/{slug}", func(w http.ResponseWriter, r *http.Request) { h.presentation(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/certificates", func(w http.ResponseWriter, r *http.Request) { h.certificates(w, r, lang) })
 		mux.HandleFunc("GET /"+lang+"/about", func(w http.ResponseWriter, r *http.Request) { h.about(w, r, lang) })

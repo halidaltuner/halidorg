@@ -11,20 +11,34 @@
 <div class="banner-untranslated" lang="{{.Lang}}">{{tr .Lang "post.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
 {{- end}}
 <header class="post-head">
-<a class="post-crumb mono" href="/{{.Lang}}/posts">← {{tr .Lang "nav.posts"}}{{with .Series}} · {{tr $.Lang "post.series"}}: {{.Title}} ({{.Index}}/{{.Total}}){{end}}</a>
+<a class="post-crumb mono" href="/{{.Lang}}/{{.Section}}">← {{tr .Lang (print "nav." .Section)}}{{with .Series}} · {{tr $.Lang "post.series"}}: {{.Title}} ({{.Index}}/{{.Total}}){{end}}</a>
 <h1>{{.Post.Title}}</h1>
 <div class="post-meta mono">
-{{- with .Post.PublishedAt}}<time>{{date .}}</time>{{end}}
+{{- if eq .Post.Kind "garden"}}<span class="badge mat-{{.Post.Maturity}}">{{tr .Lang (print "garden.maturity." .Post.Maturity)}}</span>{{with .Post.LastTendedAt}}<span>{{tr $.Lang "garden.tended"}} {{date .}}</span>{{end}}
+{{- else}}{{with .Post.PublishedAt}}<time>{{date .}}</time>{{end}}{{end}}
 <span>{{minutes $.Lang .Post.ReadingMinutes}}</span>
 {{- if .Tags}}<span>{{range .Tags}}<a href="{{.Href}}">#{{.Name}}</a> {{end}}</span>{{end}}
 {{- range .Translations}}<span lang="{{.Lang}}">{{if .Missing}}{{.Lang}}: {{tr $.Lang "post.not_yet"}}{{else}}<a href="{{.Href}}" hreflang="{{.Lang}}">{{.Lang}} ↗</a>{{end}}</span>{{end}}
 </div>
 </header>
+{{- if eq .Post.Kind "runbook"}}
+<dl class="rb-facts mono">
+{{- with .Post.Platform}}<div><dt>{{tr $.Lang "runbook.platform"}}</dt><dd>{{.}}</dd></div>{{end}}
+<div><dt>{{tr .Lang "runbook.risk"}}</dt><dd><span class="badge risk-{{.Post.Risk}}">{{tr .Lang (print "runbook.risk." .Post.Risk)}}</span></dd></div>
+{{- with .Post.VerifiedOn}}<div><dt>{{tr $.Lang "runbook.verified"}}</dt><dd><time>{{date .}}</time></dd></div>{{end}}
+</dl>
+{{- with .Post.Prereqs}}
+<aside class="rb-prereq" aria-labelledby="rb-prereq-h">
+<h2 id="rb-prereq-h" class="mono">{{tr $.Lang "runbook.prerequisites"}}</h2>
+<ul>{{range .}}<li>{{.}}</li>{{end}}</ul>
+</aside>
+{{- end}}
+{{- end}}
 <div class="prose">{{.Body}}</div>
 {{- with .Series}}{{if or .Prev .Next}}
 <nav class="series-nav" aria-label="{{tr $.Lang "post.series"}}">
-{{- with .Prev}}<a href="/{{.Lang}}/posts/{{.Slug}}"><span class="mono">← {{sub $.Series.Index 1}}/{{$.Series.Total}}</span><span>{{.Title}}</span></a>{{else}}<span></span>{{end}}
-{{- with .Next}}<a class="next" href="/{{.Lang}}/posts/{{.Slug}}"><span class="mono">{{add $.Series.Index 1}}/{{$.Series.Total}} →</span><span>{{.Title}}</span></a>{{end}}
+{{- with .Prev}}<a href="{{.Path}}"><span class="mono">← {{sub $.Series.Index 1}}/{{$.Series.Total}}</span><span>{{.Title}}</span></a>{{else}}<span></span>{{end}}
+{{- with .Next}}<a class="next" href="{{.Path}}"><span class="mono">{{add $.Series.Index 1}}/{{$.Series.Total}} →</span><span>{{.Title}}</span></a>{{end}}
 </nav>{{end}}{{end}}
 <section class="backlinks" id="backlinks">
 <h3 class="mono">{{tr .Lang "post.backlinks"}} · {{len .Backlinks}}</h3>

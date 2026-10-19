@@ -1,0 +1,27 @@
+{{define "content"}}<main class="list-page tone-green" data-filter="stage"{{with .Maturity}} data-filtered="{{.}}"{{end}}>
+<header class="list-head">
+<span class="eyebrow mono">✿ // {{tr .Lang "nav.garden"}}</span>
+<h1>{{tr .Lang "garden.title"}}</h1>
+<p class="list-sub">{{tr .Lang "garden.sub"}}</p>
+</header>
+{{- if .Cards}}
+{{- if gt (len .Chips) 2}}
+<nav class="chips" aria-label="{{tr .Lang "garden.stages"}}">{{range .Chips}}<a class="chip tone-green" href="{{.Href}}" data-filter-key="{{.Key}}"{{if .Current}} aria-current="true"{{end}}>{{.Label}}</a>{{end}}</nav>
+{{- end}}
+<div class="card-grid">
+{{- range .Cards}}
+<a class="post-card" href="{{.Href}}" data-filter-value="{{.Maturity}}">
+<div class="post-card-cover">{{template "cover" dict "tone" .Tone}}</div>
+<div class="post-card-body">
+<div class="post-card-tags"><span class="badge mat-{{.Maturity}}">{{.Stage}}</span></div>
+<h3>{{.Title}}</h3>
+{{- with .Summary}}<p>{{.}}</p>{{end}}
+<div class="post-card-meta mono">{{with .Tended}}<span>{{tr $.Lang "garden.tended"}} <time>{{.}}</time></span>{{end}}<span>{{.Minutes}}</span></div>
+</div>
+</a>
+{{- end}}
+</div>
+{{- else}}
+<p class="empty">{{tr .Lang "garden.empty"}}</p>
+{{- end}}
+</main>{{end}}

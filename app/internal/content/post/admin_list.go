@@ -23,7 +23,7 @@ type listRow struct {
 }
 
 type listFilter struct {
-	Status, Lang, Tag string
+	Kind, Status, Lang, Tag string
 }
 
 type listPage struct {
@@ -45,18 +45,18 @@ func (h *Admin) listPage(w http.ResponseWriter, r *http.Request) {
 func (h *Admin) renderList(w http.ResponseWriter, r *http.Request, status int, errMsg string) {
 	lang := i18n.FromRequest(r)
 	q := r.URL.Query()
-	f := listFilter{Status: q.Get("status"), Lang: q.Get("lang"), Tag: content.NormalizeTag(q.Get("tag"))}
+	f := listFilter{Kind: kindOf(r), Status: q.Get("status"), Lang: q.Get("lang"), Tag: content.NormalizeTag(q.Get("tag"))}
 	if !contains(listStatuses, f.Status) {
 		f.Status = ""
 	}
 	if !i18n.IsSupported(f.Lang) {
 		f.Lang = ""
 	}
-	p := listPage{Shell: h.ui.Shell(r, i18n.T(lang, "admin.posts.title"), "posts"), Filter: f, Statuses: listStatuses, Error: errMsg}
+	p := listPage{Shell: h.ui.Shell(r, i18n.T(lang, "admin.list."+f.Kind), nav(f.Kind)), Filter: f, Statuses: listStatuses, Error: errMsg}
 	if d := q.Get("done"); d == "publish" || d == "archive" {
 		p.Notice = i18n.T(lang, "admin.bulk."+d+"ed")
 	}
-	posts, err := h.repo.List(r.Context(), ListFilter{Status: f.Status, Lang: f.Lang, Tag: f.Tag, Limit: 100, Admin: true})
+	posts, err := h.repo.List(r.Context(), ListFilter{Kind: f.Kind, Status: f.Status, Lang: f.Lang, Tag: f.Tag, Limit: 100, Admin: true})
 	if err != nil {
 		h.fail(w, err)
 		return
@@ -69,12 +69,12 @@ func (h *Admin) renderList(w http.ResponseWriter, r *http.Request, status int, e
 	now := content.Clock().Unix()
 	for _, x := range posts {
 		p.Rows = append(p.Rows, listRow{
-			EntryRow: admin.EntryRow{Kind: Kind, Title: title(lang, x), Href: "/admin/posts/" + x.ID},
+			EntryRow: admin.EntryRow{Kind: x.Kind, Title: title(lang, x), Href: "/admin/posts/" + x.ID},
 			ID:       x.ID, Lang: x.Lang, StatusKey: x.Status, Status: i18n.T(lang, "admin.status."+x.Status),
 			Updated: admin.Ago(lang, x.UpdatedAt, now), Translations: trs[x.ID],
 		})
 	}
-	if p.Tags, err = h.tagSlugs(r); err != nil {
+	if p.Tags, err = h.tagSlugs(r, f.Kind); err != nil {
 		h.fail(w, err)
 		return
 	}
@@ -93,7 +93,7 @@ func (h *Admin) translationMarks(r *http.Request, posts []Post) (map[string]stri
 		args[i] = p.TranslationGroupID
 	}
 	res, err := h.db.Query(r.Context(), `SELECT translation_group_id, lang, status FROM entries
-WHERE kind = 'post' AND translation_group_id IN (?`+strings.Repeat(", ?", len(posts)-1)+`)`, args...)
+WHERE kind IN `+longForm+` AND translation_group_id IN (?`+strings.Repeat(", ?", len(posts)-1)+`)`, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -132,9 +132,9 @@ WHERE kind = 'post' AND translation_group_id IN (?`+strings.Repeat(", ?", len(po
 	return out, nil
 }
 
-func (h *Admin) tagSlugs(r *http.Request) ([]string, error) {
+func (h *Admin) tagSlugs(r *http.Request, kind string) ([]string, error) {
 	res, err := h.db.Query(r.Context(), `SELECT DISTINCT t.slug FROM tags t JOIN entry_tags et ON et.tag_id = t.id
-JOIN entries e ON e.id = et.entry_id WHERE e.kind = 'post' ORDER BY t.slug`)
+JOIN entries e ON e.id = et.entry_id WHERE e.kind = ? ORDER BY t.slug`, kind)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +177,7 @@ func (h *Admin) bulk(w http.ResponseWriter, r *http.Request) {
 			h.fail(w, err)
 			return
 		}
-		if prev == nil || prev.Kind != Kind {
+		if prev == nil || !contains(Kinds, prev.Kind) {
 			continue
 		}
 		switch action {

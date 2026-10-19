@@ -17,8 +17,14 @@ type Repo struct{ db store.DB }
 func NewRepo(db store.DB) *Repo { return &Repo{db: db} }
 
 const selectPost = `SELECT ` + content.EntryColumns + `,
-  p.reading_minutes, p.canonical_url, p.mermaid, p.comments_enabled
-FROM entries e JOIN posts p ON p.entry_id = e.id`
+  p.reading_minutes, p.canonical_url, p.mermaid, p.comments_enabled,
+  coalesce(g.maturity, '') AS maturity, g.last_tended_at, coalesce(rb.platform, '') AS platform,
+  coalesce(rb.prerequisites, '') AS prerequisites, rb.verified_on, coalesce(rb.risk, '') AS risk
+FROM entries e JOIN posts p ON p.entry_id = e.id
+LEFT JOIN garden_pages g ON g.entry_id = e.id LEFT JOIN runbooks rb ON rb.entry_id = e.id`
+
+// longForm is the SQL list of the long-form kinds.
+const longForm = `('post', 'garden', 'runbook')`
 
 // Draft is the input for Create and Save: entry fields, Markdown and tags.
 type Draft struct {
@@ -47,11 +53,42 @@ ON CONFLICT (entry_id) DO UPDATE SET reading_minutes = excluded.reading_minutes,
 	}
 }
 
+// kindRows are the garden or runbook row of p; posts have none. The
+// garden's last_tended_at belongs to Publish and is kept.
+func kindRows(p Post) []store.Stmt {
+	switch p.Kind {
+	case Garden:
+		return []store.Stmt{{SQL: `INSERT INTO garden_pages (entry_id, maturity) VALUES (?, ?)
+ON CONFLICT (entry_id) DO UPDATE SET maturity = excluded.maturity`, Args: []any{p.ID, p.Maturity}}}
+	case Runbook:
+		return []store.Stmt{{SQL: `INSERT INTO runbooks (entry_id, platform, prerequisites, verified_on, risk) VALUES (?, ?, ?, ?, ?)
+ON CONFLICT (entry_id) DO UPDATE SET platform = excluded.platform, prerequisites = excluded.prerequisites,
+  verified_on = excluded.verified_on, risk = excluded.risk`, Args: []any{p.ID, p.Platform, p.Prerequisites, p.VerifiedOn, p.Risk}}}
+	}
+	return nil
+}
+
+// defaults trims the kind fields and fills the first stage and the lowest
+// risk.
+func defaults(p *Post) {
+	p.Platform = strings.TrimSpace(p.Platform)
+	p.Prerequisites = strings.TrimSpace(strings.ReplaceAll(p.Prerequisites, "\r\n", "\n"))
+	if p.Kind == Garden && p.Maturity == "" {
+		p.Maturity = Maturities[0]
+	}
+	if p.Kind == Runbook && p.Risk == "" {
+		p.Risk = Risks[0]
+	}
+}
+
 // Create validates, renders and inserts a new post with its first revision
 // and tags, in one transaction. New posts start as drafts unless d says
 // otherwise; publishing goes through Publish.
 func (r *Repo) Create(ctx context.Context, d Draft) (Post, error) {
-	d.Kind = Kind
+	if d.Kind == "" {
+		d.Kind = Kind
+	}
+	defaults(&d.Post)
 	if d.Status == "" {
 		d.Status = content.Draft
 	}
@@ -71,6 +108,7 @@ func (r *Repo) Create(ctx context.Context, d Draft) (Post, error) {
 	}
 	stmts := content.InsertEntry(&d.Entry, body, content.OriginManual)
 	stmts = append(stmts, postRow(d.Post))
+	stmts = append(stmts, kindRows(d.Post)...)
 	stmts = append(stmts, content.SetTagsStmts(d.ID, d.Tags)...)
 	if _, err := r.db.Batch(ctx, stmts...); err != nil {
 		if content.IsConstraint(err) {
@@ -85,11 +123,13 @@ func (r *Repo) Create(ctx context.Context, d Draft) (Post, error) {
 // manual; autosaves coalesce (content.SaveRevision). Status changes to
 // published are refused here: use Publish.
 func (r *Repo) Save(ctx context.Context, d Draft, origin string) (Post, string, error) {
-	d.Kind = Kind
 	cur, err := r.Get(ctx, d.ID)
 	if err != nil {
 		return Post{}, "", err
 	}
+	d.Kind = cur.Kind // the kind is chosen when the entry is created
+	d.LastTendedAt = cur.LastTendedAt
+	defaults(&d.Post)
 	if d.Status == content.Published && cur.Status != content.Published {
 		d.Status = cur.Status
 	}
@@ -101,6 +141,7 @@ func (r *Repo) Save(ctx context.Context, d Draft, origin string) (Post, string, 
 		return Post{}, "", err
 	}
 	stmts := []store.Stmt{content.UpdateEntry(&d.Entry), postRow(d.Post)}
+	stmts = append(stmts, kindRows(d.Post)...)
 	stmts = append(stmts, content.SetTagsStmts(d.ID, d.Tags)...)
 	if _, err := r.db.Batch(ctx, stmts...); err != nil {
 		if content.IsConstraint(err) {
@@ -134,7 +175,12 @@ func (r *Repo) Publish(ctx context.Context, id string) (Post, error) {
 	if p.CurrentRevisionID == nil {
 		return Post{}, content.ValidationError{"body": "nothing to publish"}
 	}
-	if _, err := r.db.Batch(ctx, content.PublishStmts(id, *p.CurrentRevisionID, now)...); err != nil {
+	stmts := content.PublishStmts(id, *p.CurrentRevisionID, now)
+	if p.Kind == Garden {
+		// Every publish tends the page.
+		stmts = append(stmts, store.Stmt{SQL: `UPDATE garden_pages SET last_tended_at = ? WHERE entry_id = ?`, Args: []any{now, id}})
+	}
+	if _, err := r.db.Batch(ctx, stmts...); err != nil {
 		return Post{}, err
 	}
 	return r.Get(ctx, id)
@@ -162,11 +208,18 @@ func (r *Repo) Get(ctx context.Context, id string) (Post, error) {
 
 // GetPublished loads a public post by language and slug, for public pages.
 func (r *Repo) GetPublished(ctx context.Context, lang, slug string) (Post, error) {
-	return r.one(ctx, "e.lang = ? AND e.slug = ? AND e.status = 'published' AND e.visibility <> 'private'", lang, slug)
+	return r.GetPublishedKind(ctx, Kind, lang, slug)
+}
+
+// GetPublishedKind loads a public long-form entry of kind by language and
+// slug.
+func (r *Repo) GetPublishedKind(ctx context.Context, kind, lang, slug string) (Post, error) {
+	return r.one(ctx, "e.kind = ? AND e.lang = ? AND e.slug = ? AND e.status = 'published' AND e.visibility <> 'private'", kind, lang, slug)
 }
 
 // ListFilter selects posts for lists.
 type ListFilter struct {
+	Kind   string // post (default), garden or runbook
 	Lang   string
 	Status string // empty for every status (admin)
 	Tag    string // tag slug, optional
@@ -177,8 +230,12 @@ type ListFilter struct {
 
 // List returns posts newest first.
 func (r *Repo) List(ctx context.Context, f ListFilter) ([]Post, error) {
-	var where []string
-	var args []any
+	kind := f.Kind
+	if kind == "" {
+		kind = Kind
+	}
+	where := []string{"e.kind = ?"}
+	args := []any{kind}
 	if f.Lang != "" {
 		where = append(where, "e.lang = ?")
 		args = append(args, f.Lang)
@@ -205,10 +262,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]Post, error) {
 	if limit > 100 {
 		limit = 100
 	}
-	q := selectPost
-	if len(where) > 0 {
-		q += " WHERE " + strings.Join(where, " AND ")
-	}
+	q := selectPost + " WHERE " + strings.Join(where, " AND ")
 	if f.Admin {
 		q += " ORDER BY e.updated_at DESC, e.id DESC LIMIT ?"
 	} else {
@@ -225,7 +279,7 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]Post, error) {
 // Archive takes a post off the site but keeps it: lists, feeds and its URL
 // stop showing it (the URL answers 404 until it is published again).
 func (r *Repo) Archive(ctx context.Context, id string) error {
-	res, err := r.db.Query(ctx, `UPDATE entries SET status = 'archived', updated_at = ? WHERE id = ? AND kind = 'post'`, content.Clock().Unix(), id)
+	res, err := r.db.Query(ctx, `UPDATE entries SET status = 'archived', updated_at = ? WHERE id = ? AND kind IN `+longForm, content.Clock().Unix(), id)
 	if err != nil {
 		return err
 	}
@@ -238,7 +292,7 @@ func (r *Repo) Archive(ctx context.Context, id string) error {
 // Delete removes a post; revisions, tags and the posts row cascade.
 // Backlink checks and redirects come with the editor (Phase 1.6).
 func (r *Repo) Delete(ctx context.Context, id string) error {
-	res, err := r.db.Query(ctx, `DELETE FROM entries WHERE id = ? AND kind = 'post'`, id)
+	res, err := r.db.Query(ctx, `DELETE FROM entries WHERE id = ? AND kind IN `+longForm, id)
 	if err != nil {
 		return err
 	}
@@ -255,6 +309,12 @@ type row struct {
 	CanonicalURL    string `json:"canonical_url"`
 	Mermaid         int    `json:"mermaid"`
 	CommentsEnabled int    `json:"comments_enabled"`
+	Maturity        string `json:"maturity"`
+	LastTendedAt    *int64 `json:"last_tended_at"`
+	Platform        string `json:"platform"`
+	Prerequisites   string `json:"prerequisites"`
+	VerifiedOn      *int64 `json:"verified_on"`
+	Risk            string `json:"risk"`
 }
 
 func scan(res store.Result) ([]Post, error) {
@@ -271,7 +331,8 @@ func scan(res store.Result) ([]Post, error) {
 
 func scanOne(r row) (Post, error) {
 	return Post{Entry: r.Entry, ReadingMinutes: r.ReadingMinutes, CanonicalURL: r.CanonicalURL,
-		Mermaid: r.Mermaid == 1, CommentsEnabled: r.CommentsEnabled == 1}, nil
+		Mermaid: r.Mermaid == 1, CommentsEnabled: r.CommentsEnabled == 1, Maturity: r.Maturity, LastTendedAt: r.LastTendedAt,
+		Platform: r.Platform, Prerequisites: r.Prerequisites, VerifiedOn: r.VerifiedOn, Risk: r.Risk}, nil
 }
 
 // Published is a public post with its published body, for feeds.
@@ -297,7 +358,7 @@ func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int) ([]Publish
   p.reading_minutes, p.canonical_url, p.mermaid, p.comments_enabled, rv.body_html,
   (SELECT group_concat(t.slug, ' ') FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id) AS tag_list
 FROM entries e JOIN posts p ON p.entry_id = e.id JOIN revisions rv ON rv.id = e.published_revision_id
-WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
+WHERE e.kind = 'post' AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
 	args := []any{lang}
 	if tag != "" {
 		q += ` AND EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.slug = ?)`
@@ -333,8 +394,8 @@ type Translation struct {
 // Translations lists the published, non-private siblings of p.
 func (r *Repo) Translations(ctx context.Context, p Post) ([]Translation, error) {
 	res, err := r.db.Query(ctx, `SELECT lang, slug FROM entries
-WHERE translation_group_id = ? AND id <> ? AND kind = 'post' AND status = 'published' AND visibility <> 'private'
-ORDER BY lang`, p.TranslationGroupID, p.ID)
+WHERE translation_group_id = ? AND id <> ? AND kind = ? AND status = 'published' AND visibility <> 'private'
+ORDER BY lang`, p.TranslationGroupID, p.ID, p.Kind)
 	if err != nil {
 		return nil, err
 	}
@@ -368,6 +429,7 @@ func (r *Repo) Series(ctx context.Context, p Post) (*SeriesNav, error) {
 	if err != nil || len(meta) == 0 {
 		return nil, err
 	}
+	// A series can mix the long-form kinds: each part links to its own section.
 	res, err = r.db.Query(ctx, selectPost+` WHERE e.series_id = ? AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
 ORDER BY COALESCE(e.series_order, 1000000), e.published_at`, *p.SeriesID, p.Lang)
 	if err != nil {

@@ -19,8 +19,9 @@ func TestNavShowsOnlyEnabledSections(t *testing.T) {
 		t.Fatalf("nav %+v", c.Nav)
 	}
 	// Phase 2.3: notes, snippets, links and favs have pages; Phase 5.2:
-	// certificates.
-	if len(c.More) != 5 || c.More[0].Href != "/en/notes" || c.More[3].Href != "/en/favs" || c.More[4].Href != "/en/certificates" {
+	// certificates; 5.5: the garden and runbooks.
+	if len(c.More) != 7 || c.More[0].Href != "/en/notes" || c.More[3].Href != "/en/favs" || c.More[4].Href != "/en/certificates" ||
+		c.More[5].Href != "/en/garden" || c.More[6].Href != "/en/runbooks" {
 		t.Fatalf("more %+v", c.More)
 	}
 	if !c.Search {

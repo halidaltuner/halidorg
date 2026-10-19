@@ -84,9 +84,16 @@ func TestPaths(t *testing.T) {
 	if want := []string{"/en/about", "/en/now", "/en/now/archive", "/en/now/archive/2026-10-01", "/en/now/archive/2026-10-13", "/sitemap.xml", "/tr/now"}; !reflect.DeepEqual(nowPaths, want) {
 		t.Errorf("now paths =\n%v\nwant\n%v", nowPaths, want)
 	}
+	// A runbook (Phase 5.5): its page and the runbooks list with its feeds.
+	rb := Paths(Change{Now: &Ref{Kind: "runbook", Lang: "en", Slug: "zfs", Listed: true}})
+	for _, want := range []string{"/en/runbooks/zfs", "/en/runbooks", "/en/runbooks/feed.xml", "/tr/runbooks/zfs"} {
+		if !contains(rb, want) {
+			t.Errorf("runbook paths %v: no %s", rb, want)
+		}
+	}
 	// Kinds without pages yet contribute nothing.
-	if got := Paths(Change{Now: &Ref{Kind: "garden", Lang: "en", Slug: "x"}}); len(got) != 0 {
-		t.Errorf("garden paths = %v", got)
+	if got := Paths(Change{Now: &Ref{Kind: "term", Lang: "en", Slug: "x"}}); len(got) != 0 {
+		t.Errorf("term paths = %v", got)
 	}
 }
 
