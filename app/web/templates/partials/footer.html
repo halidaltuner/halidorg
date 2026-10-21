@@ -3,7 +3,7 @@
 <div class="tri-stripe" aria-hidden="true"></div>
 <div class="site-footer-row">
   <div class="site-footer-brand">
-    <span class="wordmark">halid<span class="dot">.</span></span>
+    <span class="wordmark" role="img" aria-label="halid.">{{template "wordmark-svg"}}</span>
     {{with .Footer.Tagline}}<span class="tagline">{{.}}</span>{{end}}
   </div>
   {{with .Footer.Links}}<nav class="site-footer-links">{{range .}}<a href="{{.Href}}"{{if .Muted}} class="muted"{{end}}>{{.Label}}</a>{{end}}</nav>{{end}}

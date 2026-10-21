@@ -260,8 +260,8 @@ Kind colors (dots and stream glyph tiles; the glyph sits in a 28×28 tile with t
 ## Assets
 - No real images are included. Every Cover, portrait, badge and photo is a placeholder slot. Provide real cover images, the portrait, Credly badge images and 500px embed codes.
 - Fonts: Google Fonts (IBM Plex Sans, JetBrains Mono). Self-host them in production.
-- The wordmark is text-only for now; swap in the SVG when it is available.
-- Favicon and monogram: not designed yet (see DESIGN.md §7).
+- The wordmark is an SVG drawn from the font (DESIGN.md §41).
+- Favicon and monogram: drawn in Phase 7.4 (DESIGN.md §41).
 
 ## Files
 - `Header.dc.html`, `Footer.dc.html`, `Cover.dc.html` — shared components.
