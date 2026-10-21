@@ -1,6 +1,6 @@
 {{/* post-card (design/Home.dc.html "Latest posts"). Arg: a card. */}}
 {{define "post-card"}}<a class="post-card" href="{{.Href}}">
-<div class="post-card-cover">{{template "cover" dict "tone" .Tone}}</div>
+<div class="post-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
 <div class="post-card-body">
 {{- if .Tags}}<div class="post-card-tags">{{range .Tags}}<span class="tag-pill tone-cyan">#{{.Name}}</span>{{end}}</div>{{end}}
 <h3>{{.Title}}</h3>
