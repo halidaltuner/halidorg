@@ -27,5 +27,9 @@ Code fences take the language first, then key=value pairs and flags:
 	```mermaid                                 kept as source for the Phase 7 island
 
 Dark blocks show line numbers; add "nolines" to drop them.
+
+A paragraph holding only a YouTube URL becomes a player (youtube-nocookie,
+lazy), and one holding only a link to a PDF under /media/ becomes a
+download card.
 */
 package render

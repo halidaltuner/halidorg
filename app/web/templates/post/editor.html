@@ -25,7 +25,7 @@
 <div class="ed-bar mono"><span class="ed-bar-l"><span>{{tr .Lang "admin.editor.markdown"}} · {{.Post.Lang}}</span><button type="button" class="ed-mode" data-mode hidden aria-pressed="false" data-visual="{{tr .Lang "admin.rich.mode_visual"}}" data-markdown="{{tr .Lang "admin.rich.mode_markdown"}}">{{tr .Lang "admin.rich.mode_markdown"}}</button></span><span><span id="ed-words">{{.Words}}</span> {{tr .Lang "admin.editor.words"}}</span></div>
 <input class="ed-title-in" name="title" value="{{.Post.Title}}" placeholder="{{tr .Lang "admin.editor.title"}}" aria-label="{{tr .Lang "admin.editor.title"}}" autocomplete="off">
 <p class="ed-note" id="ed-rich-note" role="status" hidden></p>
-<div class="ed-rich" id="ed-rich" hidden data-labels="{{richLabels .Lang}}" data-mermaid-src="{{asset "/static/mermaid/mermaid.esm.min.mjs"}}" lang="{{.Post.Lang}}"></div>
+<div class="ed-rich" id="ed-rich" hidden data-labels="{{richLabels .Lang}}" data-upload="/admin/media" data-mermaid-src="{{asset "/static/mermaid/mermaid.esm.min.mjs"}}" lang="{{.Post.Lang}}"></div>
 <div class="ed-src"><textarea id="md" name="markdown" spellcheck="false" aria-label="{{tr .Lang "admin.editor.markdown"}}" placeholder="{{tr .Lang "admin.editor.md_placeholder"}}">{{.Markdown}}</textarea></div>
 </div>
 <div class="ed-preview">

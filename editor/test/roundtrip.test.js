@@ -33,6 +33,15 @@ describe("markdown roundtrip", () => {
 		table: "| a | b |\n| --- | --- |\n| 1 | 2 |",
 		rule: "Above.\n\n---\n\nBelow.",
 		turkish: "Işık, ğüşöç ve İstanbul.",
+		h1: "# One\n\nText.",
+		todo: "- [ ] write the post\n- [x] pick a title",
+		youtube: "Before.\n\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n\nAfter.",
+		"youtube short link": "https://youtu.be/dQw4w9WgXcQ",
+		"url in a sentence stays a link": "See https://youtu.be/dQw4w9WgXcQ here.",
+		file: "[My CV](/media/2026/10/cv.pdf)\n\nText.",
+		"file after text": "Intro.\n\n[My CV](/media/2026/10/cv.pdf)",
+		"file link in a sentence": "Read [the CV](/media/2026/10/cv.pdf) first.",
+		"image beside text": "Text.\n\n![A cat](/media/abc/cat.jpg)",
 	};
 	for (const [name, md] of Object.entries(cases)) {
 		it(name, () => expect(norm(roundtrip(md))).toBe(norm(md)));

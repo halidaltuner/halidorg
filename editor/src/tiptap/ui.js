@@ -6,17 +6,67 @@ import Suggestion from "@tiptap/suggestion";
 import BubbleMenu from "@tiptap/extension-bubble-menu";
 import DragHandle from "@tiptap/extension-drag-handle";
 import { Placeholder } from "@tiptap/extensions";
+import { youtubeID } from "./nodes.js";
+
+// pickFile opens the file chooser and resolves to the chosen file, if any.
+function pickFile(accept) {
+	return new Promise((resolve) => {
+		const input = Object.assign(document.createElement("input"), { type: "file", accept, hidden: true });
+		input.addEventListener("change", () => {
+			resolve(input.files[0] || null);
+			input.remove();
+		});
+		document.body.append(input);
+		input.click();
+	});
+}
+
+// upload stores a file in the media library (POST /admin/media) and
+// resolves to { url, name, mime, image }.
+export async function upload(url, file) {
+	const body = new FormData();
+	body.append("file", file);
+	const res = await fetch(url, { method: "POST", body, credentials: "same-origin", headers: { "X-Upload": "1", Accept: "application/json" } });
+	if (!res.ok) throw new Error((await res.text()).trim() || String(res.status));
+	return res.json();
+}
+
+// insertUpload uploads file and puts it at the cursor: an image (asking for
+// its alt text) or a download card.
+export async function insertUpload(editor, file, t, url, pos) {
+	editor.view.dom.classList.add("is-busy");
+	try {
+		const m = await upload(url, file);
+		const chain = editor.chain().focus();
+		if (typeof pos === "number") chain.setTextSelection(pos);
+		if (m.image) chain.setImage({ src: m.url, alt: window.prompt(t("prompt_alt"), "") || "" });
+		else chain.insertContent({ type: "fileCard", attrs: { href: m.url, name: m.name.replace(/\.pdf$/i, "") } });
+		chain.run();
+	} catch (err) {
+		window.alert(t("upload_failed") + err.message);
+	} finally {
+		editor.view.dom.classList.remove("is-busy");
+	}
+}
 
 // commands lists the "/" menu. Labels come from the page (i18n catalog);
 // keys are their fallbacks and what typing after "/" also matches.
-function commands(t) {
+function commands(t, uploadURL) {
 	const ask = (key, value = "") => window.prompt(t(key), value);
+	// Upload commands pick the file after the menu closes; the chain only
+	// removes the typed "/command".
+	const later = (accept) => (c, editor) => {
+		pickFile(accept).then((file) => file && insertUpload(editor, file, t, uploadURL));
+		return c;
+	};
 	return [
 		{ key: "text", glyph: "¶", run: (c) => c.setParagraph() },
+		{ key: "h1", glyph: "H1", run: (c) => c.toggleHeading({ level: 1 }) },
 		{ key: "h2", glyph: "H2", run: (c) => c.toggleHeading({ level: 2 }) },
 		{ key: "h3", glyph: "H3", run: (c) => c.toggleHeading({ level: 3 }) },
 		{ key: "bullets", glyph: "•", run: (c) => c.toggleBulletList() },
 		{ key: "numbers", glyph: "1.", run: (c) => c.toggleOrderedList() },
+		{ key: "todo", glyph: "☐", run: (c) => c.toggleTaskList() },
 		{ key: "quote", glyph: "❝", run: (c) => c.toggleBlockquote() },
 		{ key: "note", glyph: "i", run: (c) => c.setCallout("NOTE") },
 		{ key: "tip", glyph: "✓", run: (c) => c.setCallout("TIP") },
@@ -26,15 +76,30 @@ function commands(t) {
 		{ key: "terminal", glyph: "$", run: (c) => c.setCodeBlock({ language: "terminal" }) },
 		{ key: "mermaid", glyph: "◇", run: (c) => c.setCodeBlock({ language: "mermaid" }) },
 		{ key: "table", glyph: "▦", run: (c) => c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }) },
+		{ key: "image", glyph: "▣", run: later("image/png,image/jpeg,image/gif,image/webp") },
 		{
-			key: "image",
-			glyph: "▣",
+			key: "image_url",
+			glyph: "▢",
 			run: (c) => {
 				const src = ask("prompt_image");
 				if (!src) return c;
 				return c.setImage({ src: src.trim(), alt: ask("prompt_alt") || "" });
 			},
 		},
+		{
+			key: "youtube",
+			glyph: "▶",
+			run: (c) => {
+				const src = ask("prompt_youtube");
+				if (!src) return c;
+				if (!youtubeID(src)) {
+					window.alert(t("bad_youtube"));
+					return c;
+				}
+				return c.setVideo(src.trim());
+			},
+		},
+		{ key: "file", glyph: "⎙", run: later("application/pdf") },
 		{ key: "divider", glyph: "—", run: (c) => c.setHorizontalRule() },
 		{
 			key: "footnote",
@@ -63,11 +128,11 @@ function commands(t) {
 const SlashMenu = Extension.create({
 	name: "slashMenu",
 	addOptions() {
-		return { t: (k) => k };
+		return { t: (k) => k, uploadURL: "/admin/media" };
 	},
 	addProseMirrorPlugins() {
 		const t = this.options.t;
-		const all = commands(t);
+		const all = commands(t, this.options.uploadURL);
 		return [
 			Suggestion({
 				editor: this.editor,
@@ -76,7 +141,7 @@ const SlashMenu = Extension.create({
 				startOfLine: false,
 				items: ({ query }) => {
 					const q = query.toLowerCase();
-					return all.filter((c) => !q || c.key.includes(q) || t("cmd_" + c.key).toLowerCase().includes(q)).slice(0, 12);
+					return all.filter((c) => !q || c.key.includes(q) || t("cmd_" + c.key).toLowerCase().includes(q)).slice(0, 30);
 				},
 				command: ({ editor, range, props }) => {
 					props.run(editor.chain().focus().deleteRange(range), editor).run();
@@ -196,7 +261,7 @@ function bubble(t) {
 
 // ui returns the extensions that make up the Notion-like layer, and a hook
 // to call once the editor exists.
-export function ui(t) {
+export function ui(t, uploadURL) {
 	const menu = bubble(t);
 	const handle = document.createElement("div");
 	handle.className = "tt-handle";
@@ -204,7 +269,7 @@ export function ui(t) {
 	handle.title = t("drag");
 	return {
 		extensions: [
-			SlashMenu.configure({ t }),
+			SlashMenu.configure({ t, uploadURL }),
 			BubbleMenu.configure({
 				element: menu.el,
 				// On the page, not in the scrolling editor box: positions are

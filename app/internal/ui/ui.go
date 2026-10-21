@@ -261,6 +261,7 @@ func Thousands(n int) string {
 var richKeys = []string{
 	"cmd_text", "cmd_h2", "cmd_h3", "cmd_bullets", "cmd_numbers", "cmd_quote", "cmd_note", "cmd_tip", "cmd_warning", "cmd_danger",
 	"cmd_code", "cmd_terminal", "cmd_mermaid", "cmd_table", "cmd_image", "cmd_divider", "cmd_footnote", "cmd_none",
+	"cmd_h1", "cmd_todo", "cmd_image_url", "cmd_youtube", "cmd_file", "prompt_youtube", "bad_youtube", "upload_failed",
 	"fmt_bold", "fmt_italic", "fmt_strike", "fmt_code", "fmt_link",
 	"prompt_image", "prompt_alt", "prompt_link", "placeholder", "placeholder_first", "drag", "code_info",
 	"mode_markdown", "mode_visual", "unfaithful", "unfaithful_back",
