@@ -71,8 +71,8 @@ func (s *state) label(key string) string {
 }
 
 var labels = map[string]map[string]string{
-	"en": {"copy": "copy", "wrap": "wrap", "terminal": "terminal"},
-	"tr": {"copy": "kopyala", "wrap": "kaydır", "terminal": "terminal"},
+	"en": {"copy": "copy", "wrap": "wrap", "terminal": "terminal", "video": "Video", "download": "download"},
+	"tr": {"copy": "kopyala", "wrap": "kaydır", "terminal": "terminal", "video": "Video", "download": "indir"},
 }
 
 // Markdown renders src. Raw HTML is passed through: the admin is the only
@@ -85,6 +85,7 @@ func Markdown(src []byte, opts Options) (Output, error) {
 			util.Prioritized(calloutTransformer{}, 500),
 			util.Prioritized(headingTransformer{st}, 600),
 			util.Prioritized(codeGroupTransformer{}, 700),
+			util.Prioritized(embedTransformer{}, 800),
 			// After the footnote extension's own transformer (999).
 			util.Prioritized(sidenoteTransformer{st}, 1000),
 		)),

@@ -514,9 +514,22 @@ body.dark { background: var(--dk-bg); }
 .prose > * { margin: 0; max-width: var(--w-measure); }
 .prose > .sn-row { max-width: none; }
 .prose p { text-wrap: pretty; }
-.prose h2, .prose h3 { position: relative; margin: var(--sp-24) 0 0; font-weight: 600; text-wrap: balance; scroll-margin-top: var(--sp-24); }
+.prose h1, .prose h2, .prose h3 { position: relative; margin: var(--sp-24) 0 0; font-weight: 600; text-wrap: balance; scroll-margin-top: var(--sp-24); }
 .prose h2 { font-size: var(--fs-28); line-height: 1.3; letter-spacing: -0.01em; }
 .prose h3 { font-size: var(--fs-22); line-height: 1.35; }
+.prose h1 { font-size: var(--fs-36); line-height: 1.2; letter-spacing: -0.02em; }
+/* GFM task lists: the checkbox is the bullet. */
+.prose li:has(> input[type=checkbox]), .prose li:has(> p > input[type=checkbox]) { list-style: none; margin-left: calc(-1 * var(--sp-24)); }
+.prose li > input[type=checkbox], .prose li > p > input[type=checkbox] { width: 16px; height: 16px; margin: 0 var(--sp-8) 0 0; vertical-align: -2px; accent-color: var(--link); }
+/* Embeds (internal/render/embeds.go): a YouTube player and a PDF download card. */
+.prose .embed { margin: 0; }
+.prose .embed-video { aspect-ratio: 16 / 9; border-radius: var(--radius-2); overflow: hidden; background: var(--dk-bg); }
+.prose .embed-video iframe { display: block; width: 100%; height: 100%; border: 0; }
+.prose .file-card a { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); border: 1px solid var(--border); border-radius: var(--radius-2); background: var(--surface); color: var(--text); text-decoration: none; }
+.prose .file-card a:hover { border-color: var(--link); }
+.file-kind { padding: 2px 6px; border-radius: var(--radius-1); background: var(--tone-rose-tint); color: var(--tone-rose-ink); font-size: var(--fs-12); }
+.file-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-16); }
+.file-dl { font-size: var(--fs-13); color: var(--link); }
 .h-anchor { margin-left: var(--sp-8); color: var(--text-muted); text-decoration: none; opacity: 0; transition: opacity 120ms ease-out; }
 .prose h2:hover .h-anchor, .prose h3:hover .h-anchor { opacity: 1; }
 .prose a { color: var(--link); }
@@ -597,22 +610,31 @@ body.dark { background: var(--dk-bg); }
 .prose .mermaid-figure svg { max-width: 100%; height: auto; }
 .prose pre.mermaid-error { border-color: var(--accent-2); }
 
-/* Chroma token classes (light also colors snippet files). Light: comments muted, keywords info, names link,
-   numbers warning (Post.dc.html). Dark: tags rose, attributes indigo,
-   strings green, comments muted. */
-:is(.code-light, .snip-code) .c, :is(.code-light, .snip-code) .c1, :is(.code-light, .snip-code) .cm, :is(.code-light, .snip-code) .cs, :is(.code-light, .snip-code) .cp { color: var(--text-muted); }
-:is(.code-light, .snip-code) .k, :is(.code-light, .snip-code) .kd, :is(.code-light, .snip-code) .kn, :is(.code-light, .snip-code) .kr, :is(.code-light, .snip-code) .kt, :is(.code-light, .snip-code) .kc { color: var(--info); }
-:is(.code-light, .snip-code) .nf, :is(.code-light, .snip-code) .nc, :is(.code-light, .snip-code) .nt, :is(.code-light, .snip-code) .fm { color: var(--link); }
-:is(.code-light, .snip-code) .s, :is(.code-light, .snip-code) .s1, :is(.code-light, .snip-code) .s2, :is(.code-light, .snip-code) .sb, :is(.code-light, .snip-code) .sc, :is(.code-light, .snip-code) .sr { color: var(--success); }
-:is(.code-light, .snip-code) .m, :is(.code-light, .snip-code) .mi, :is(.code-light, .snip-code) .mf, :is(.code-light, .snip-code) .mh { color: var(--warning); }
-:is(.code-light, .snip-code) .na { color: var(--info); }
-.code-dark .c, .code-dark .c1, .code-dark .cm, .code-dark .cs, .code-dark .cp { color: var(--dk-muted); }
-.code-dark .nt { color: var(--dk-rose); }
-.code-dark .na { color: var(--dk-indigo); }
-.code-dark .s, .code-dark .s1, .code-dark .s2, .code-dark .sb, .code-dark .sc, .code-dark .sr { color: var(--dk-green); }
-.code-dark .k, .code-dark .kd, .code-dark .kn, .code-dark .kr, .code-dark .kt, .code-dark .kc { color: var(--dk-indigo); }
-.code-dark .nf, .code-dark .fm { color: var(--dk-cyan); }
-.code-dark .m, .code-dark .mi, .code-dark .mf, .code-dark .mh { color: var(--dk-amber); }
+/* Syntax colors: chroma classes on rendered pages, highlight.js (hljs-*)
+   classes in the admin's block editor. Light (Post.dc.html): comments
+   muted, keywords info, names link, strings success, numbers warning. Dark
+   (design/README.md): tags rose, attributes indigo, strings green, comments
+   muted, keywords indigo, names cyan, numbers amber. Light also colors
+   snippet files. */
+.code-light, .snip-code, .tt-code:not(.is-dark) {
+  --syn-comment: var(--text-muted); --syn-keyword: var(--info); --syn-name: var(--link);
+  --syn-string: var(--success); --syn-number: var(--warning); --syn-tag: var(--tone-rose-ink);
+  --syn-attr: var(--info); --syn-del: var(--accent-2);
+}
+.code-dark, .code-term, .tt-code.is-dark {
+  --syn-comment: var(--dk-muted); --syn-keyword: var(--dk-indigo); --syn-name: var(--dk-cyan);
+  --syn-string: var(--dk-green); --syn-number: var(--dk-amber); --syn-tag: var(--dk-rose);
+  --syn-attr: var(--dk-indigo); --syn-del: var(--dk-rose);
+}
+:is(.c, .c1, .cm, .cs, .cp, .cpf, .ch, .hljs-comment, .hljs-quote, .hljs-meta) { color: var(--syn-comment); }
+:is(.k, .kd, .kn, .kr, .kt, .kc, .kp, .ow, .hljs-keyword, .hljs-built_in, .hljs-type, .hljs-literal, .hljs-selector-tag) { color: var(--syn-keyword); }
+:is(.nf, .fm, .nc, .nb, .bp, .nn, .nd, .ne, .nv, .vc, .vg, .vi, .hljs-title, .hljs-variable, .hljs-template-variable, .hljs-section) { color: var(--syn-name); }
+:is(.s, .s1, .s2, .sa, .sb, .sc, .sd, .se, .sh, .si, .sx, .sr, .ss, .dl, .gi, .hljs-string, .hljs-regexp, .hljs-symbol, .hljs-addition) { color: var(--syn-string); }
+:is(.m, .mi, .mf, .mh, .mo, .mb, .il, .hljs-number) { color: var(--syn-number); }
+:is(.nt, .hljs-name, .hljs-tag) { color: var(--syn-tag); }
+:is(.na, .py, .hljs-attr, .hljs-attribute, .hljs-property, .hljs-params) { color: var(--syn-attr); }
+:is(.gd, .err, .hljs-deletion) { color: var(--syn-del); }
+.code-light .nt { color: var(--link); }
 
 /* Shared page bits (Phase 1.4) */
 .eyebrow { font-family: var(--font-mono); font-size: var(--fs-13); color: var(--tone-cyan-ink); }
@@ -2190,6 +2212,20 @@ html.ph-locked { overflow: hidden; }
 .tt-prose th, .tt-prose td { border: 1px solid var(--border); padding: 6px 10px; vertical-align: top; }
 .tt-prose th { background: var(--surface-2); font-weight: 600; text-align: left; }
 .tt-prose .selectedCell { background: var(--tone-cyan-tint); }
+.tt-prose.is-busy { cursor: progress; }
+/* To-do lists: Tiptap renders a label with the checkbox before the text. */
+.tt-prose ul[data-type="taskList"] { list-style: none; padding-left: 0; }
+.tt-prose ul[data-type="taskList"] > li { display: flex; align-items: flex-start; gap: var(--sp-8); }
+.tt-prose ul[data-type="taskList"] > li > label { flex: none; display: flex; align-items: center; height: 1.7em; }
+.tt-prose ul[data-type="taskList"] > li > label input { width: 16px; height: 16px; margin: 0; accent-color: var(--link); }
+.tt-prose ul[data-type="taskList"] > li > div { flex: 1; min-width: 0; }
+.tt-prose ul[data-type="taskList"] > li > div > p { margin: 0; }
+.tt-prose ul[data-type="taskList"] > li[data-checked="true"] > div { color: var(--text-muted); text-decoration: line-through; }
+/* Embeds look like their rendered selves (see .prose .embed-video, .file-card). */
+.tt-video { aspect-ratio: 16 / 9; border-radius: var(--radius-2); overflow: hidden; background: var(--dk-bg); }
+.tt-video iframe { display: block; width: 100%; height: 100%; border: 0; pointer-events: none; }
+.tt-file { display: flex; align-items: center; gap: var(--sp-12); padding: var(--sp-12) var(--sp-16); border: 1px solid var(--border); border-radius: var(--radius-2); background: var(--surface); }
+.tt-file-href { font-size: var(--fs-12); color: var(--text-muted); }
 .tt-callout { --c: var(--info); padding: var(--sp-12) var(--sp-16); border-left: 3px solid var(--c); background: var(--surface); display: flex; flex-direction: column; gap: var(--sp-8); }
 .tt-callout::before { content: attr(data-label); font-family: var(--font-mono); font-size: var(--fs-12); color: var(--c); text-transform: lowercase; }
 .tt-callout.k-tip { --c: var(--success); }

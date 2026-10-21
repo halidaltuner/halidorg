@@ -1,12 +1,14 @@
 package media
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"halid.org/engine/internal/admin"
 	"halid.org/engine/internal/auth"
@@ -140,6 +142,14 @@ func (h *Handlers) upload(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("X-Upload") == "1" {
 		if len(errs) > 0 {
 			http.Error(w, errs[0], http.StatusUnprocessableEntity)
+			return
+		}
+		if strings.Contains(r.Header.Get("Accept"), "application/json") {
+			// The block editor inserts the file itself (static/js/editor.js).
+			it := cards[0].Item
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(map[string]any{"id": it.ID, "url": it.URL(), "name": it.Name, "mime": it.Mime, "image": it.IsImage()})
 			return
 		}
 		h.ui.Fragment(w, http.StatusCreated, h.page, "media-card", cards[0])

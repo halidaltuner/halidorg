@@ -3,6 +3,7 @@ package media
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"image"
 	"image/color"
 	"image/png"
@@ -170,5 +171,33 @@ func TestUploadTooLarge(t *testing.T) {
 	big := append(pngBytes(t, 1, 1), make([]byte, MaxBytes)...)
 	if rec := st.upload(t, true, map[string][]byte{"big.png": big}); rec.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("too large %d", rec.Code)
+	}
+}
+
+// The block editor uploads one file and inserts it from the JSON reply.
+func TestUploadJSON(t *testing.T) {
+	st := newSite(t)
+	var body bytes.Buffer
+	mw := multipart.NewWriter(&body)
+	fw, _ := mw.CreateFormFile("file", "Shot.png")
+	_, _ = fw.Write(pngBytes(t, 4, 3))
+	_ = mw.Close()
+	req := httptest.NewRequest("POST", "/admin/media", &body)
+	req.Header.Set("Content-Type", mw.FormDataContentType())
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.Header.Set("X-Upload", "1")
+	req.Header.Set("Accept", "application/json")
+	req.AddCookie(st.c)
+	rec := httptest.NewRecorder()
+	st.mux.ServeHTTP(rec, req)
+	var got struct {
+		ID, URL, Name, Mime string
+		Image               bool
+	}
+	if rec.Code != http.StatusCreated || json.Unmarshal(rec.Body.Bytes(), &got) != nil {
+		t.Fatalf("json upload %d %s", rec.Code, rec.Body.String())
+	}
+	if got.ID == "" || !strings.HasPrefix(got.URL, "/media/") || got.Name != "Shot.png" || got.Mime != "image/png" || !got.Image {
+		t.Fatalf("reply %+v", got)
 	}
 }

@@ -29,6 +29,7 @@ func (r *nodeRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 	reg.Register(ast.KindFencedCodeBlock, r.fence)
 	reg.Register(kindCallout, r.callout)
 	reg.Register(kindCodeGroup, r.codeGroup)
+	reg.Register(kindEmbed, r.embed)
 	reg.Register(kindSidenoteRow, r.sidenoteRow)
 	reg.Register(kindSidenote, r.sidenote)
 	reg.Register(east.KindFootnoteLink, r.footnoteLink)
@@ -256,6 +257,10 @@ func langAttr(lang string) string {
 // highlight writes chroma spans with class names; colors live in app.css.
 func highlight(w util.BufWriter, lang, code string, lineNumbers bool) {
 	lexer := lexers.Get(lang)
+	if lexer == nil && lang == "" {
+		// A fence without a language: guess from the code, as the editor does.
+		lexer = lexers.Analyse(code)
+	}
 	if lexer == nil {
 		lexer = lexers.Fallback
 	}
