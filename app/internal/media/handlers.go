@@ -38,6 +38,7 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 	s := func(f http.HandlerFunc) http.Handler { return h.auth.RequireSession(f) }
 	w := func(f http.HandlerFunc) http.Handler { return admin.Guard(s(f)) }
 	mux.Handle("GET /admin/media", s(h.list))
+	mux.Handle("GET /admin/media/picker", s(h.picker))
 	mux.Handle("POST /admin/media", w(h.upload))
 	mux.Handle("POST /admin/media/{id}/alt", w(h.alt))
 	mux.Handle("POST /admin/media/{id}/delete", w(h.delete))
@@ -92,6 +93,48 @@ func (h *Handlers) render(w http.ResponseWriter, r *http.Request, status int, er
 	h.ui.Render(w, status, h.page, p)
 }
 
+// PickerItem is one image in the cover picker (static/js/cover.js).
+type PickerItem struct {
+	ID    string `json:"id"`
+	URL   string `json:"url"`
+	Name  string `json:"name"`
+	AltTR string `json:"alt_tr"`
+	AltEN string `json:"alt_en"`
+	Ready bool   `json:"ready"`
+}
+
+func pickerItem(it Item) PickerItem {
+	return PickerItem{ID: it.ID, URL: it.URL(), Name: it.Name, AltTR: it.AltTR, AltEN: it.AltEN, Ready: it.Ready()}
+}
+
+// picker lists the newest images as JSON for the cover picker; those
+// without both alt texts are marked, the picker asks for them.
+func (h *Handlers) picker(w http.ResponseWriter, r *http.Request) {
+	items, err := h.repo.List(r.Context(), 200)
+	if err != nil {
+		h.fail(w, err)
+		return
+	}
+	out := []PickerItem{}
+	for _, it := range items {
+		if it.IsImage() {
+			out = append(out, pickerItem(it))
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
+}
+
+func wantsJSON(r *http.Request) bool {
+	return strings.Contains(r.Header.Get("Accept"), "application/json")
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
+}
+
 // upload stores every file in the "file" field. The JS island sends one
 // file per request (for its progress bar) and gets the card back; the plain
 // form sends several and returns to the grid.
@@ -144,12 +187,10 @@ func (h *Handlers) upload(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, errs[0], http.StatusUnprocessableEntity)
 			return
 		}
-		if strings.Contains(r.Header.Get("Accept"), "application/json") {
-			// The block editor inserts the file itself (static/js/editor.js).
+		if wantsJSON(r) {
+			// The block editor and the cover picker insert the file themselves.
 			it := cards[0].Item
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusCreated)
-			_ = json.NewEncoder(w).Encode(map[string]any{"id": it.ID, "url": it.URL(), "name": it.Name, "mime": it.Mime, "image": it.IsImage()})
+			writeJSON(w, http.StatusCreated, map[string]any{"id": it.ID, "url": it.URL(), "name": it.Name, "mime": it.Mime, "image": it.IsImage()})
 			return
 		}
 		h.ui.Fragment(w, http.StatusCreated, h.page, "media-card", cards[0])
@@ -179,6 +220,10 @@ func (h *Handlers) alt(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		h.fail(w, err)
+		return
+	}
+	if wantsJSON(r) {
+		writeJSON(w, http.StatusOK, pickerItem(it))
 		return
 	}
 	if admin.IsHTMX(r) {

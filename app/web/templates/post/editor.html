@@ -70,9 +70,9 @@
 </div>
 <div class="ed-sec">
 <label class="ed-label" for="ed-cover">{{tr .Lang "admin.editor.cover"}}</label>
-{{- if .CoverURL}}<img class="ed-cover" src="{{.CoverURL}}" alt="" loading="lazy" onerror="this.remove()">{{else}}<div class="ed-drop">{{tr .Lang "admin.editor.cover_drop"}}</div>{{end}}
-<select id="ed-cover" name="cover"><option value="">{{tr .Lang "admin.editor.no_cover"}}</option>{{range .Covers}}<option value="{{.ID}}"{{if .Selected}} selected{{end}}>{{.Name}}</option>{{end}}</select>
-<a class="ed-small" href="/admin/media" target="_blank" rel="noopener">{{tr .Lang "admin.editor.cover_library"}}</a>
+{{- if .CoverURL}}<img class="ed-cover" src="{{.CoverURL}}" alt="" loading="lazy" onerror="this.remove()" data-cover-nojs>{{else}}<div class="ed-drop" data-cover-nojs>{{tr .Lang "admin.editor.cover_drop"}}</div>{{end}}
+<select id="ed-cover" name="cover" data-cover data-aspect="1200/630" data-empty="{{tr .Lang "admin.editor.cover_drop"}}" data-labels="{{coverLabels .Lang}}"><option value="">{{tr .Lang "admin.editor.no_cover"}}</option>{{range .Covers}}<option value="{{.ID}}"{{if .Selected}} selected{{end}}>{{.Name}}</option>{{end}}</select>
+<a class="ed-small" href="/admin/media" target="_blank" rel="noopener" data-cover-nojs>{{tr .Lang "admin.editor.cover_library"}}</a>
 </div>
 <div class="ed-sec">
 <label class="ed-label" for="ed-seo">{{tr .Lang "admin.editor.seo"}} · <span id="ed-seo-n">{{.SEOLen}}</span>/160</label>
@@ -124,6 +124,8 @@
 {{/* editor.js imports the vendored bundles by plain path; the map points
      those paths at the content-hashed URLs so a deploy is never hidden
      behind an hour of cached JS. */}}
+<script src="{{asset "/static/js/cover.js"}}" defer></script>
+<script src="{{asset "/static/js/loader.js"}}" defer></script>
 <script type="importmap">{"imports": {"/static/vendor/cm.js": "{{asset "/static/vendor/cm.js"}}", "/static/vendor/tt.js": "{{asset "/static/vendor/tt.js"}}"}}</script>
 <script type="module" src="{{asset "/static/js/editor.js"}}"></script>
 {{end}}

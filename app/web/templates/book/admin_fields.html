@@ -14,5 +14,5 @@
 <fieldset class="ent-langs"><legend>{{tr .Lang "kind.fav.rating"}}</legend>
 {{- range $o.Ratings}}<label class="check"><input type="radio" name="rating" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
 </fieldset>
-<label>{{tr .Lang "kind.book.cover"}}<select name="cover">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label>{{tr .Lang "kind.book.cover"}}<select name="cover" data-cover data-aspect="2/3">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
 {{end}}

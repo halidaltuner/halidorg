@@ -201,3 +201,39 @@ func TestUploadJSON(t *testing.T) {
 		t.Fatalf("reply %+v", got)
 	}
 }
+
+// The cover picker lists images as JSON and saves alt texts through the
+// same endpoint the grid uses, getting JSON back.
+func TestPickerAndAltJSON(t *testing.T) {
+	st := newSite(t)
+	_ = st.upload(t, true, map[string][]byte{"a.png": pngBytes(t, 4, 3)})
+	get := func() []PickerItem {
+		req := httptest.NewRequest("GET", "/admin/media/picker", nil)
+		req.AddCookie(st.c)
+		rec := httptest.NewRecorder()
+		st.mux.ServeHTTP(rec, req)
+		var items []PickerItem
+		if rec.Code != http.StatusOK || json.Unmarshal(rec.Body.Bytes(), &items) != nil {
+			t.Fatalf("picker %d %s", rec.Code, rec.Body.String())
+		}
+		return items
+	}
+	items := get()
+	if len(items) != 1 || items[0].Ready || !strings.HasPrefix(items[0].URL, "/media/") {
+		t.Fatalf("picker items %+v", items)
+	}
+	req := httptest.NewRequest("POST", "/admin/media/"+items[0].ID+"/alt", strings.NewReader(url.Values{"alt_tr": {"Bir kedi"}, "alt_en": {"A cat"}}.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.Header.Set("Accept", "application/json")
+	req.AddCookie(st.c)
+	rec := httptest.NewRecorder()
+	st.mux.ServeHTTP(rec, req)
+	var it PickerItem
+	if rec.Code != http.StatusOK || json.Unmarshal(rec.Body.Bytes(), &it) != nil || !it.Ready || it.AltEN != "A cat" {
+		t.Fatalf("alt json %d %s", rec.Code, rec.Body.String())
+	}
+	if !get()[0].Ready {
+		t.Fatal("not ready after alt")
+	}
+}

@@ -172,11 +172,12 @@ func Env() string {
 func Funcs() template.FuncMap {
 	return template.FuncMap{
 		"tr": i18n.T, "dict": dict, "date": Date, "minutes": Minutes, "asset": web.Asset,
-		"langs":      func() []string { return i18n.Supported },
-		"add":        func(a, b int) int { return a + b },
-		"sub":        func(a, b int) int { return a - b },
-		"thousands":  Thousands,
-		"richLabels": RichLabels,
+		"langs":       func() []string { return i18n.Supported },
+		"add":         func(a, b int) int { return a + b },
+		"sub":         func(a, b int) int { return a - b },
+		"thousands":   Thousands,
+		"richLabels":  RichLabels,
+		"coverLabels": CoverLabels,
 		// deref reads an optional string field (a nullable column) in templates.
 		"deref": func(p *string) string {
 			if p == nil {
@@ -265,6 +266,19 @@ var richKeys = []string{
 	"fmt_bold", "fmt_italic", "fmt_strike", "fmt_code", "fmt_link",
 	"prompt_image", "prompt_alt", "prompt_link", "placeholder", "placeholder_first", "drag", "code_info",
 	"mode_markdown", "mode_visual", "unfaithful", "unfaithful_back",
+}
+
+// coverKeys are the cover picker's strings (static/js/cover.js).
+var coverKeys = []string{"upload", "library", "title", "remove", "drop", "alt_title", "alt_hint", "alt_tr", "alt_en", "save", "cancel", "missing", "search", "empty", "close", "uploading", "failed"}
+
+// CoverLabels is the cover picker's copy in lang, as JSON for a data attribute.
+func CoverLabels(lang string) string {
+	m := make(map[string]string, len(coverKeys))
+	for _, k := range coverKeys {
+		m[k] = i18n.T(lang, "admin.cover."+k)
+	}
+	b, _ := json.Marshal(m)
+	return string(b)
 }
 
 // RichLabels is the block editor's copy in lang, as JSON for a data attribute.

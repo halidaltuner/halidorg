@@ -27,11 +27,13 @@
 </form>
 {{with .Env}}<span class="adm-env">{{.}}</span>{{end}}
 </header>
-<main class="adm-main" id="main">
+<main class="adm-main" id="main" data-cover-labels="{{coverLabels .Lang}}">
 {{template "main" .}}
 </main>
 </div>
 </div>
 <script src="{{asset "/static/vendor/htmx.min.js"}}" defer></script>
 <script src="{{asset "/static/js/admin.js"}}" defer></script>
+<script src="{{asset "/static/js/cover.js"}}" defer></script>
+<script src="{{asset "/static/js/loader.js"}}" defer></script>
 {{end}}
