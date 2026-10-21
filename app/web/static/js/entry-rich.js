@@ -25,14 +25,13 @@ for (const md of document.querySelectorAll("textarea[data-rich]")) {
 		md.hidden = visual;
 		btn.setAttribute("aria-pressed", String(!visual));
 		btn.textContent = visual ? btn.dataset.markdown : btn.dataset.visual;
-		try { localStorage.setItem("ed-mode", visual ? "visual" : "markdown"); } catch {}
 	};
-	let saved = "visual";
-	try { saved = localStorage.getItem("ed-mode") || "visual"; } catch {}
+	// Always the visual view first: the post editor's remembered choice
+	// ("ed-mode") is for long writing, not for these short forms.
 	if (!r.faithful) {
 		say(labels.unfaithful);
 		show(false);
-	} else show(saved !== "markdown");
+	} else show(true);
 	btn.hidden = false;
 	btn.addEventListener("click", () => {
 		if (md.hidden) return show(false);
