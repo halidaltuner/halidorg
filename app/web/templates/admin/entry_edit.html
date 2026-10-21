@@ -21,7 +21,11 @@
 {{template "entry-fields" .}}
 <label>{{tr .Lang (print "kind." .Kind ".summary")}}<textarea name="summary" rows="3">{{.Entry.Summary}}</textarea></label>
 {{- if .Body}}
-<label>{{tr .Lang (print "kind." .Kind ".body")}}<textarea name="markdown" rows="10" class="mono" spellcheck="true">{{.Markdown}}</textarea></label>
+<div class="ent-body">
+<div class="ent-body-head"><label for="ent-md" id="ent-md-label">{{tr .Lang (print "kind." .Kind ".body")}}</label><button type="button" class="ed-mode mono" data-mode hidden aria-pressed="false" data-visual="{{tr .Lang "admin.rich.mode_visual"}}" data-markdown="{{tr .Lang "admin.rich.mode_markdown"}}">{{tr .Lang "admin.rich.mode_markdown"}}</button></div>
+<p class="ent-rich-note" role="status" hidden></p>
+<textarea id="ent-md" name="markdown" rows="10" class="mono" spellcheck="true" lang="{{.Entry.Lang}}" data-rich data-labels="{{richLabels .Lang}}" data-upload="/admin/media" data-mermaid-src="{{asset "/static/mermaid/mermaid.esm.min.mjs"}}">{{.Markdown}}</textarea>
+</div>
 {{- end}}
 <label>{{tr .Lang "admin.editor.tags"}}<input name="tags" value="{{.TagsValue}}" placeholder="{{tr .Lang "admin.editor.tags_hint"}}" autocapitalize="off" spellcheck="false"></label>
 <label>{{tr .Lang "admin.editor.slug"}}<input name="slug" value="{{.Entry.Slug}}" class="mono" autocapitalize="off" spellcheck="false"{{if .New}} placeholder="{{tr .Lang "entry.slug_auto"}}"{{end}}></label>
@@ -33,6 +37,10 @@
 </form>
 </section>
 {{- block "entry-after" .}}{{end}}
+{{- if .Body}}
+<script type="importmap">{"imports": {"/static/vendor/tt.js": "{{asset "/static/vendor/tt.js"}}"}}</script>
+<script type="module" src="{{asset "/static/js/entry-rich.js"}}"></script>
+{{- end}}
 {{- if not .New}}
 <details class="adm-panel ent-delete">
 <summary class="mono">{{tr .Lang "admin.delete.button"}}</summary>

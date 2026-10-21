@@ -1030,7 +1030,7 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
 .adm-head .mono { font-size: var(--fs-12); }
 .adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: var(--sp-16); align-items: start; }
 .adm-panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); min-width: 0; }
-.adm-panel h2 {
+.adm-panel h2:not(.tt-prose h2) {
   margin: 0; padding: var(--sp-12) var(--sp-16); border-bottom: 1px solid var(--border);
   font-size: var(--fs-14); font-weight: 600; display: flex; justify-content: space-between; gap: var(--sp-8);
 }
@@ -1445,6 +1445,15 @@ html.pal-open { overflow: hidden; }
 .ent-panel { max-width: 760px; }
 .ent-form { border-bottom: 0; padding: var(--sp-16); gap: var(--sp-12); }
 .ent-form textarea { resize: vertical; line-height: 1.5; }
+/* Body field with the block editor (entry-rich.js, DESIGN.md §38). */
+.ent-body { display: flex; flex-direction: column; gap: 4px; }
+.ent-body-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-8); }
+.ent-body-head label { font-family: var(--font-mono); font-size: var(--fs-11); color: var(--text-muted); }
+.ent-body textarea[hidden], .ent-rich[hidden] { display: none; }
+.ent-rich-note { margin: 0; padding: 6px var(--sp-12); font-size: var(--fs-12); color: var(--tone-amber-ink); background: var(--tone-amber-tint); border-radius: var(--radius-1); }
+.ent-rich { position: relative; padding: var(--sp-12) var(--sp-16) var(--sp-12) var(--sp-40); border: 1px solid var(--border); border-radius: var(--radius-1); background: var(--surface); }
+.ent-rich:focus-within { border-color: var(--link); }
+.ent-rich .tt-prose { max-width: none; min-height: 160px; font-size: var(--fs-16); }
 .ent-form fieldset { margin: 0; padding: 0; border: 0; display: flex; flex-wrap: wrap; gap: var(--sp-8) var(--sp-16); }
 .ent-form legend { padding: 0; margin-bottom: 4px; font-family: var(--font-mono); font-size: var(--fs-11); color: var(--text-muted); }
 .ent-langs label.check { min-height: 32px; }
