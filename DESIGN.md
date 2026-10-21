@@ -4,7 +4,7 @@
 
 ## 1. Identity
 
-- **Wordmark:** `halid` in JetBrains Mono 700, letter-spacing −0.03em, followed by a `.` in `#E11D48`. Text-only until the SVG exists.
+- **Wordmark:** `halid` in JetBrains Mono 700, letter-spacing −0.03em, followed by a `.` in `#E11D48`. Drawn as an SVG from the font (§41).
 - **Chromatic aberration:** light bg `text-shadow: -1.5px 0 rgba(225,29,72,.7), 1.5px 0 rgba(8,145,178,.7)`; dark bg `rgba(251,113,133,.8)` / `rgba(34,211,238,.8)`; hover grows the offset to 2.5px.
 - **Wordmark sizes:** 24 header, 28 footer, 32 login, 44 OG.
 - **Tri-stripe:** 3px bar above header and footer, `linear-gradient(90deg, #E11D48 0 33%, #0891B2 33% 66%, #4F46E5 66%)`.
@@ -127,7 +127,7 @@ Kind dots (more menu squares, palette rows; from `Header.dc.html`): post `#0891B
 | Garden, runbooks, series index, glossary, reading list | 5 | tones: garden green, runbook navy, reading amber |
 | Admin radar editor, jobs, settings | 6 / 9 | |
 | Search results page (no-JS fallback for ⌘K) | 7 | |
-| Favicon and monogram | 7 | design/README.md says not designed |
+| Favicon and monogram | 7.4 | drawn: §41 |
 
 ## 7. Admin rules
 - 14px base, denser tables. 208px sidebar, 52px top bar with dark quick-capture `+`, ⌘K search, `staging` badge in amber.
@@ -143,7 +143,7 @@ Kind dots (more menu squares, palette rows; from `Header.dc.html`): post `#0891B
 - `lang` attribute per page and per mixed-language block.
 
 ## 9. Assets needed
-Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG wordmark, favicon. All prototype content (names, bio, posts, certs, photos) is placeholder.
+Real cover images, portrait (4:5), Credly badge images, 500px embed codes. All prototype content (names, bio, posts, certs, photos) is placeholder.
 
 ## 10. Do not port
 `design/support.js`, `design/image-slot.js` and inline styles in `.dc.html` are prototype tooling. Rebuild in Go templates + one CSS bundle.
@@ -324,3 +324,8 @@ Real cover images, portrait (4:5), Credly badge images, 500px embed codes, SVG w
 - Kind lists (posts, garden, runbooks, notes, snippets, links, favs, projects, homelab, presentations, glossary, reading, awesome) also show entries written only in the other language: the title carries a small mono language tag (11px, 1px `--border`, 4px radius, `--text-muted`) and `lang`, and the row links to the entry's own page. An entry with a translation shows once, in the page's language. Home, the stream and the feeds stay in one language.
 - Pages with a translation emit `hreflang="x-default"` pointing at the English version.
 - Admin lists show each entry's other languages: ✓ published, … a draft, ✕ none.
+
+## 41. Brand assets (Phase 7.4)
+- `scripts/brand.py` turns the wordmark into SVG paths from the vendored JetBrains Mono 700 (tracking −0.03em): `static/brand/wordmark.svg` (ink, rose dot), `wordmark-dark.svg` (dark bands) and the inline `partials/wordmark.html` the header, footer and login use (`currentColor` letters, the dot from `--wm-dot`; the aberration is two `drop-shadow`s, 1.5px, 2px on login, 2.5px on hover). The sizes are unchanged (24/28/32), set by `font-size`.
+- Monogram: "h." on the dark tile (`--dk-bg`, 12/64 radius), the letter in `--dk-text` with the rose and cyan aberration behind it, the dot in `--dk-rose`. `monogram.svg` is the favicon; `scripts/brand-png.mjs` renders favicon.ico (16, 32, 48), apple-touch-icon (180, square, iOS rounds it), icon-192/512 and a maskable 512 with an 80% safe zone.
+- `/favicon.ico`, `/apple-touch-icon.png` and `/manifest.webmanifest` are served at the root (a day of cache); theme color `--surface`, background `--bg`.

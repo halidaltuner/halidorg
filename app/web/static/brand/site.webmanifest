@@ -1,0 +1,13 @@
+{
+  "name": "halid.org",
+  "short_name": "halid.",
+  "start_url": "/",
+  "display": "minimal-ui",
+  "background_color": "#F7F8FA",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "/static/brand/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/brand/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/brand/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

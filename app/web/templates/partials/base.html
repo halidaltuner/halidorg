@@ -21,7 +21,12 @@
 <meta name="twitter:card" content="summary_large_image">
 {{end}}<link rel="alternate" type="application/rss+xml" title="{{tr .Lang "feed.posts"}}" href="/{{.Lang}}/feed.xml">
 {{range .Head.Feeds}}<link rel="alternate" type="application/rss+xml" title="{{.Title}}" href="{{.Href}}">
-{{end}}<link rel="stylesheet" href="{{asset "/static/css/tokens.css"}}">
+{{end}}<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="{{asset "/static/brand/monogram.svg"}}" type="image/svg+xml">
+<link rel="apple-touch-icon" href="{{asset "/static/brand/apple-touch-icon.png"}}">
+<link rel="stylesheet" href="{{asset "/static/css/tokens.css"}}">
 <link rel="stylesheet" href="{{asset "/static/css/app.css"}}">
 <script src="{{asset "/static/js/header.js"}}" defer></script>
 <script src="{{asset "/static/js/code.js"}}" defer></script>

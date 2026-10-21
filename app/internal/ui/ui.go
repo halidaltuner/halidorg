@@ -233,6 +233,7 @@ var Partials = []string{
 	"templates/partials/lang_switch.html",
 	"templates/partials/header.html",
 	"templates/partials/footer.html",
+	"templates/partials/wordmark.html",
 	"templates/partials/cover.html",
 	"templates/partials/chips.html",
 	"templates/partials/stream.html",

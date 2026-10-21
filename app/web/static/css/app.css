@@ -21,19 +21,20 @@ body { margin: 0; font-family: var(--font-sans); color: var(--text); background:
 
 .tri-stripe { height: 3px; background: var(--tri-stripe); }
 
-/* Wordmark: light by default; the dark band variants below override it. */
+/* Wordmark: the SVG from scripts/brand.py (partials/wordmark.html), sized by
+   font-size like the text it replaces. The aberration is two drop shadows;
+   light by default, the dark band variants below set the colors. */
 .wordmark {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: var(--fs-24);
-  letter-spacing: -0.03em;
-  color: var(--text);
-  text-decoration: none;
-  text-shadow: -1.5px 0 var(--ab-rose), 1.5px 0 var(--ab-cyan);
-  transition: text-shadow var(--dur) var(--ease);
+  --wm-l: var(--ab-rose); --wm-r: var(--ab-cyan); --wm-off: 1.5px; --wm-dot: var(--accent-2);
+  display: inline-flex; font-size: var(--fs-24); color: var(--text); text-decoration: none; line-height: 1;
 }
-a.wordmark:hover { text-shadow: -2.5px 0 var(--ab-rose-hover), 2.5px 0 var(--ab-cyan-hover); }
-.wordmark .dot { color: var(--accent-2); text-shadow: none; }
+.wm {
+  display: block; height: .836em; width: auto; overflow: visible;
+  filter: drop-shadow(calc(-1 * var(--wm-off)) 0 0 var(--wm-l)) drop-shadow(var(--wm-off) 0 0 var(--wm-r));
+  transition: filter var(--dur) var(--ease);
+}
+.wm-dot { fill: var(--wm-dot); }
+a.wordmark:hover { --wm-l: var(--ab-rose-hover); --wm-r: var(--ab-cyan-hover); --wm-off: 2.5px; }
 
 /* Header (design/Header.dc.html) */
 .site-header { position: relative; z-index: 20; background: var(--surface); border-bottom: 1px solid var(--border); color: var(--text); }
@@ -200,8 +201,7 @@ a.wordmark:hover { text-shadow: -2.5px 0 var(--ab-rose-hover), 2.5px 0 var(--ab-
   align-items: flex-end;
 }
 .site-footer-brand { display: flex; flex-direction: column; gap: var(--sp-12); flex: 1; min-width: 240px; }
-.site-footer .wordmark { font-size: var(--fs-28); color: var(--dk-text); text-shadow: -1.5px 0 var(--dk-aberration-rose), 1.5px 0 var(--dk-aberration-cyan); }
-.site-footer .wordmark .dot { color: var(--dk-rose); }
+.site-footer .wordmark { font-size: var(--fs-28); color: var(--dk-text); --wm-l: var(--dk-aberration-rose); --wm-r: var(--dk-aberration-cyan); --wm-dot: var(--dk-rose); }
 .site-footer .tagline { font-family: var(--font-sans); font-size: var(--fs-14); }
 .site-footer-links { display: flex; gap: var(--sp-16); flex-wrap: wrap; }
 .site-footer-links a { color: var(--dk-text); text-decoration: none; }
@@ -360,16 +360,7 @@ body.dark { background: var(--dk-bg); }
 }
 .login-ring.rose { border-color: var(--dk-rose); right: -108px; bottom: -128px; }
 
-.dark a.wordmark {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 32px;
-  letter-spacing: -0.03em;
-  color: var(--dk-text);
-  text-decoration: none;
-  text-shadow: -2px 0 var(--dk-aberration-rose), 2px 0 var(--dk-aberration-cyan);
-}
-.dark .wordmark .dot { color: var(--dk-rose); }
+.dark a.wordmark { font-size: 32px; color: var(--dk-text); --wm-l: var(--dk-aberration-rose); --wm-r: var(--dk-aberration-cyan); --wm-off: 2px; --wm-dot: var(--dk-rose); }
 
 .login-pitch { display: flex; flex-direction: column; gap: 16px; max-width: 420px; }
 .login-eyebrow { font-family: var(--font-mono); font-size: 13px; color: var(--dk-cyan); }

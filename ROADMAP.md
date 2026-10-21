@@ -87,7 +87,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [x] Full-site search behind the palette (FTS5 or Pagefind), no-JS search results page **(derive)** (7.1: FTS5, photos and certificates indexed, recency boost, rebuild job, `/{lang}/search`)
 - [x] Mermaid: lazy client render first, server SVG later (7.2: vendored Mermaid 11.17.2, loaded only near a diagram; server SVG options in docs/mermaid.md)
 - [x] Bilingual polish: paired URLs, untranslated fallbacks everywhere (7.3: kind lists show entries with no translation in the page's language, tagged and linking to their own page; hreflang x-default; translation column in every admin list; a test that every template key is in the catalog)
-- [ ] SVG wordmark, favicon and monogram (design needed)
+- [x] SVG wordmark, favicon and monogram (7.4: drawn from the font by scripts/brand.py; favicon set, apple-touch icon, web manifest)
 - [ ] Performance budget: LCP < 1.2s, JS < 30KB on content pages
 - [x] Block editor (Tiptap, Notion-like) for posts, garden pages and runbooks: "/" commands, a formatting menu on selected text, drag handles; Markdown stays the stored text and CodeMirror stays as the Markdown view (7.6a); then H1, to-do lists, YouTube embeds, file and image upload, syntax colors in the editor (7.6a+)
 - [x] Block editor for every other body editor: short kinds, presentations, terms, books, projects, build logs and the About page, all through the shared entry form (7.6b)
