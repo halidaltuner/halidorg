@@ -121,6 +121,10 @@
 </div>
 <script src="{{asset "/static/vendor/htmx.min.js"}}" defer></script>
 <script src="{{asset "/static/js/code.js"}}" defer></script>
+{{/* editor.js imports the vendored bundles by plain path; the map points
+     those paths at the content-hashed URLs so a deploy is never hidden
+     behind an hour of cached JS. */}}
+<script type="importmap">{"imports": {"/static/vendor/cm.js": "{{asset "/static/vendor/cm.js"}}", "/static/vendor/tt.js": "{{asset "/static/vendor/tt.js"}}"}}</script>
 <script type="module" src="{{asset "/static/js/editor.js"}}"></script>
 {{end}}
 
