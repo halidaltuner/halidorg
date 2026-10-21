@@ -133,6 +133,8 @@ function modes(form, md, rich) {
 		if (!cm) cm = mount(md);
 		else cm.dispatch({ changes: { from: 0, to: cm.state.doc.length, insert: md.value } });
 		show(false);
+		// The preview sleeps in the visual view; bring it up to date.
+		window.htmx?.trigger("#preview", "ed-refresh");
 	};
 	const toVisual = () => {
 		if (!r.load()) {

@@ -30,7 +30,7 @@
 </div>
 <div class="ed-preview">
 <div class="ed-bar-plain mono">{{tr .Lang "admin.editor.preview"}}</div>
-<div class="prose ed-prose" id="preview" lang="{{.Post.Lang}}" hx-post="/admin/preview" hx-trigger="input[!document.querySelector('.ed-cols.is-rich')] from:#md delay:300ms, input[!document.querySelector('.ed-cols.is-rich')] from:.ed-title-in delay:300ms" hx-include="#md, #ed-lang, .ed-title-in" hx-target="this" hx-swap="innerHTML" hx-sync="this:replace">{{if .Post.Title}}<h1 class="ed-prev-title">{{.Post.Title}}</h1>{{end}}{{.Preview}}</div>
+<div class="prose ed-prose" id="preview" lang="{{.Post.Lang}}" hx-post="/admin/preview" hx-trigger="input[!document.querySelector('.ed-cols.is-rich')] from:#md delay:300ms, input[!document.querySelector('.ed-cols.is-rich')] from:.ed-title-in delay:300ms, ed-refresh" hx-include="#md, #ed-lang, .ed-title-in" hx-target="this" hx-swap="innerHTML" hx-sync="this:replace">{{if .Post.Title}}<h1 class="ed-prev-title">{{.Post.Title}}</h1>{{end}}{{.Preview}}</div>
 </div>
 <aside class="ed-side">
 <div id="ed-errors" class="ed-errors"{{if not .Errors}} hidden{{end}}>{{range .Errors}}<p class="adm-error" role="alert">{{.}}</p>{{end}}</div>
