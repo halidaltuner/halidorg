@@ -1,6 +1,6 @@
 {{define "page-tone"}}<select name="{{.name}}" aria-label="{{tr .lang "kind.project.tone"}}"><option value="">{{tr .lang "page.tone_none"}}</option>{{range .tones}}<option value="{{.}}"{{if eq . $.on}} selected{{end}}>{{.}}</option>{{end}}</select>{{end}}
 
-{{define "page-media"}}<select name="{{.name}}" aria-label="{{.label}}">{{range .opts}}<option value="{{.Value}}"{{if eq .Value $.on}} selected{{end}}>{{.Label}}</option>{{end}}</select>{{end}}
+{{define "page-media"}}<select name="{{.name}}" aria-label="{{.label}}" data-cover="small">{{range .opts}}<option value="{{.Value}}"{{if eq .Value $.on}} selected{{end}}>{{.Label}}</option>{{end}}</select>{{end}}
 
 {{define "entry-fields"}}{{$o := .Options}}{{$t := .Item.Template}}{{$l := .Lang}}
 {{- if not .Item.ID}}

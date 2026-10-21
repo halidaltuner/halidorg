@@ -14,7 +14,7 @@
 <label>{{tr .Lang "kind.project.ended"}}<input type="month" name="ended" value="{{$o.Ended}}"></label>
 </div>
 <fieldset class="ent-langs"><legend>{{tr .Lang "kind.project.tone"}}</legend>{{template "tone-picker" dict "form" "" "tones" $o.Tones "on" $o.Tone "lang" .Lang}}</fieldset>
-<label>{{tr .Lang "kind.project.cover"}}<select name="cover">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label>{{tr .Lang "kind.project.cover"}}<select name="cover" data-cover data-aspect="16/9">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
 
 <fieldset class="ent-rows"><legend>{{tr .Lang "entry.row.links"}}</legend>
 <p class="ent-hint">{{tr .Lang "kind.project.links_hint"}}</p>

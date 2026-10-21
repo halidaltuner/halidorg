@@ -12,7 +12,7 @@
 {{- range $o.Langs}}<label class="check"><input type="radio" name="talk_lang" value="{{.Value}}"{{if .On}} checked{{end}}>{{.Label}}</label>{{end}}
 </fieldset>
 </div>
-<label>{{tr .Lang "kind.presentation.cover"}}<select name="cover">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
+<label>{{tr .Lang "kind.presentation.cover"}}<select name="cover" data-cover data-aspect="16/9">{{range $o.Covers}}<option value="{{.Value}}"{{if .On}} selected{{end}}>{{.Label}}</option>{{end}}</select></label>
 <p class="ent-hint">{{tr .Lang "kind.presentation.cover_hint"}}</p>
 <div class="ent-two">
 <label>{{tr .Lang "kind.presentation.recording"}}<input name="recording_url" value="{{$o.Recording}}" class="mono" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://"></label>
