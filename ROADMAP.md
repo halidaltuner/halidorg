@@ -90,7 +90,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] SVG wordmark, favicon and monogram (design needed)
 - [ ] Performance budget: LCP < 1.2s, JS < 30KB on content pages
 - [x] Block editor (Tiptap, Notion-like) for posts, garden pages and runbooks: "/" commands, a formatting menu on selected text, drag handles; Markdown stays the stored text and CodeMirror stays as the Markdown view (7.6a); then H1, to-do lists, YouTube embeds, file and image upload, syntax colors in the editor (7.6a+)
-- [ ] Block editor for every other body editor: short kinds, presentations, terms, books, About and Now (7.6b)
+- [x] Block editor for every other body editor: short kinds, presentations, terms, books, projects, build logs and the About page, all through the shared entry form (7.6b)
 
 ## Phase 8: IndieWeb and distribution (S/M)
 - [ ] Webmention receive + moderation (dashboard panel **(designed)**), send on publish
