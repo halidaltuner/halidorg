@@ -200,7 +200,8 @@ func ItemPath(r Ref) string {
 //
 // For an entry of kind K in lang L: its page (kinds with item pages), the
 // same slug in the other languages (the untranslated fallback), K's list
-// page and K's feeds, home (the stream), each tag page and tag feed (old and
+// page and K's feeds, K's list page in the other languages (it shows there
+// while untranslated), home (the stream), each tag page and tag feed (old and
 // new tags), the language feeds (posts), the sitemap, and the pages of its
 // translations. A slug change also covers the old URL. Snippets add their
 // raw files and, when the list changes, the pages of the other snippets;
@@ -302,6 +303,32 @@ func Paths(c Change) []string {
 				for _, c := range r.Categories {
 					if content.ValidSlug(c) {
 						add(l + "/awesome/" + c)
+					}
+				}
+			}
+			// The other languages' lists show it while it has no
+			// translation there (content.LangOrFallback), and drop it once
+			// it has one: their list pages (not their feeds or home).
+			for _, o := range i18n.Supported {
+				if o == r.Lang {
+					continue
+				}
+				ol := "/" + o
+				add(ol + "/" + seg)
+				for _, t := range r.Tags {
+					if r.Kind == "post" && content.ValidSlug(t) {
+						add(ol + "/tags/" + t)
+					}
+				}
+				if r.Kind == "project" && r.Homelab {
+					add(ol + "/homelab")
+				}
+				if r.Kind == "link" && len(r.Categories) > 0 {
+					add(ol + "/awesome")
+					for _, c := range r.Categories {
+						if content.ValidSlug(c) {
+							add(ol + "/awesome/" + c)
+						}
 					}
 				}
 			}

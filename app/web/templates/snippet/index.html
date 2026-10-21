@@ -4,7 +4,7 @@
 <p>{{tr .Lang "snippets.intro"}}</p>
 {{- if .List}}
 <nav class="snip-list" aria-label="{{tr .Lang "nav.snippets"}}">
-{{- range .List}}<a href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="snip-list-title">{{.Title}}</span><span class="snip-list-meta mono">{{.Meta}}</span></a>{{end}}
+{{- range .List}}<a href="{{.Href}}"{{if .Current}} aria-current="page"{{end}}><span class="snip-list-title"{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</span><span class="snip-list-meta mono">{{.Meta}}</span></a>{{end}}
 </nav>
 {{- end}}
 </aside>

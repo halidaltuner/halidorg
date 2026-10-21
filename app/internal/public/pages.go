@@ -23,6 +23,7 @@ import (
 type card struct {
 	Cover   *image // the entry's cover; nil draws the tone pattern
 	Href    string
+	Other   string // its language, when not the page's (fallback)
 	Title   string
 	Summary string
 	Date    string
@@ -106,7 +107,7 @@ func (h *Handlers) cards(r *http.Request, lang string, items []post.Published) (
 	}
 	out := make([]card, len(items))
 	for i, p := range items {
-		out[i] = card{Href: "/" + lang + "/posts/" + p.Slug, Title: p.Title, Summary: p.Summary,
+		out[i] = card{Href: "/" + p.Lang + "/posts/" + p.Slug, Other: other(lang, p.Lang), Title: p.Title, Summary: p.Summary,
 			Date: date(p.PublishedAt), Minutes: minutes(lang, p.ReadingMinutes), Tone: tone(p.Entry), Tags: tagLinks(lang, p.Tags, names),
 			Cover: coverOf(covers, p.Entry)}
 	}
@@ -201,7 +202,7 @@ WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`, lang)
 }
 
 func (h *Handlers) home(w http.ResponseWriter, r *http.Request, lang string) {
-	items, err := h.posts.Feed(r.Context(), lang, "", 20)
+	items, err := h.posts.Feed(r.Context(), lang, "", 20, false)
 	if err != nil {
 		h.fail(w, r, err)
 		return
@@ -247,7 +248,7 @@ type listPage struct {
 }
 
 func (h *Handlers) list(w http.ResponseWriter, r *http.Request, lang, tag string) {
-	items, err := h.posts.Feed(r.Context(), lang, tag, 50)
+	items, err := h.posts.Feed(r.Context(), lang, tag, 50, true)
 	if err != nil {
 		h.fail(w, r, err)
 		return

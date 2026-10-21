@@ -43,6 +43,16 @@ func findPublished[T any](lang, slug string, get func(lang, slug string) (T, err
 	return v, false, content.NotFound("entry", lang+"/"+slug)
 }
 
+// other is an entry's language on a list in page, or "" when they match: a
+// list shows entries with no translation in its language (Phase 7.3), with
+// a small language tag.
+func other(page, lang string) string {
+	if lang == page {
+		return ""
+	}
+	return lang
+}
+
 // itemPage builds the chrome and head of an entry page under /{lang}/{seg}/:
 // language switch and hreflang from its translations, canonical to the
 // entry, noindex on the untranslated fallback. It answers false after
@@ -138,6 +148,7 @@ func (h *Handlers) tagNames(ctx context.Context, lang string, slugs []string) ([
 
 type snippetRow struct {
 	Href, Title, Meta string
+	Other             string // its language, when not the page's (fallback)
 	Current           bool
 }
 
@@ -193,7 +204,7 @@ func (h *Handlers) snippets(w http.ResponseWriter, r *http.Request, lang, slug s
 		p = snippetPage{page: h.newPage(lang, "snippets", i18n.T(lang, "nav.snippets")+" · halid.org", "/snippets", nil)}
 		p.Head.Description = i18n.T(lang, "snippets.intro")
 		if len(items) > 0 {
-			if cur, err = h.snippetRepo.GetPublished(ctx, lang, items[0].Slug); err != nil {
+			if cur, err = h.snippetRepo.GetPublished(ctx, items[0].Lang, items[0].Slug); err != nil {
 				h.fail(w, r, err)
 				return
 			}
@@ -206,8 +217,8 @@ func (h *Handlers) snippets(w http.ResponseWriter, r *http.Request, lang, slug s
 		if it.Language != "" {
 			meta += " · " + it.Language
 		}
-		p.List = append(p.List, snippetRow{Href: "/" + lang + "/snippets/" + it.Slug, Title: it.Title, Meta: meta,
-			Current: cur.ID != "" && cur.Lang == lang && it.Slug == cur.Slug})
+		p.List = append(p.List, snippetRow{Href: "/" + it.Lang + "/snippets/" + it.Slug, Title: it.Title, Meta: meta, Other: other(lang, it.Lang),
+			Current: cur.ID != "" && cur.Lang == it.Lang && it.Slug == cur.Slug})
 	}
 	if cur.ID != "" {
 		v, err := h.snippetView(ctx, lang, cur)
@@ -266,6 +277,7 @@ func (h *Handlers) snippetRaw(w http.ResponseWriter, r *http.Request, lang strin
 
 type noteCard struct {
 	Href, Title, Time, DateTime string
+	Other                       string // its language, when not the page's (fallback)
 	Body                        template.HTML
 	Tags                        []string
 	TIL                         bool
@@ -300,7 +312,7 @@ func (h *Handlers) noteCards(ctx context.Context, lang string, notes []note.Note
 		if err != nil {
 			return nil, err
 		}
-		c := noteCard{Href: "/" + n.Lang + "/notes/" + n.Slug, Title: n.Title, Tags: names, TIL: n.TIL,
+		c := noteCard{Href: "/" + n.Lang + "/notes/" + n.Slug, Other: other(lang, n.Lang), Title: n.Title, Tags: names, TIL: n.TIL,
 			Body: template.HTML(n.HTML)} // renderer output (ADR-002)
 		if n.PublishedAt != nil {
 			t := time.Unix(*n.PublishedAt, 0).UTC()

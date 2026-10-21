@@ -10,7 +10,7 @@ Every content item with its own page has one row here. Type-specific fields live
 | kind | TEXT | `post`, `note`, `garden`, `runbook`, `snippet`, `link`, `fav`, `project`, `buildlog`, `presentation`, `book`, `term`, `radar_item`, `page` |
 | slug | TEXT | unique per (kind, lang) |
 | lang | TEXT | `tr` or `en` |
-| translation_group_id | TEXT | links TR/EN siblings |
+| translation_group_id | TEXT | links TR/EN siblings; public lists in one language also show entries whose group has nothing published in it (`content.LangOrFallback`) |
 | title | TEXT | |
 | summary | TEXT | lists, OG, feeds, SEO description (≤160 enforced in editor) |
 | status | TEXT | `draft`, `scheduled`, `published`, `archived` |

@@ -250,6 +250,12 @@ a.wordmark:hover { text-shadow: -2.5px 0 var(--ab-rose-hover), 2.5px 0 var(--ab-
 .chip:hover { color: var(--text); }
 .chip[aria-current] { background: var(--t-ink); border-color: var(--t-ink); color: var(--surface); }
 
+/* A list row in the other language (Phase 7.3, partials/chips.html lang-tag). */
+.lang-tag {
+  display: inline-block; margin-left: 6px; padding: 0 5px; vertical-align: 0.15em;
+  font-family: var(--font-mono); font-size: var(--fs-11); font-weight: 400; line-height: 1.5; letter-spacing: 0;
+  text-transform: none; color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-1);
+}
 .tag-pill {
   display: inline-block;
   font-family: var(--font-mono);

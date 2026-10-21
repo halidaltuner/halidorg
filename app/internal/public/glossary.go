@@ -16,6 +16,7 @@ import (
 // glossaryRow is one term on /{lang}/glossary.
 type glossaryRow struct {
 	Href, Term, Aliases, Def, Slug string
+	Other                          string // its language, when not the page's (fallback)
 }
 
 // glossaryGroup is the terms under one letter.
@@ -61,7 +62,7 @@ func (h *Handlers) glossary(w http.ResponseWriter, r *http.Request, lang string)
 			p.Letters = append(p.Letters, l)
 		}
 		g := &p.Groups[len(p.Groups)-1]
-		g.Rows = append(g.Rows, glossaryRow{Href: "/" + lang + "/glossary/" + t.Slug, Term: t.Title, Aliases: strings.Join(t.Aliases, ", "),
+		g.Rows = append(g.Rows, glossaryRow{Href: "/" + t.Lang + "/glossary/" + t.Slug, Term: t.Title, Other: other(lang, t.Lang), Aliases: strings.Join(t.Aliases, ", "),
 			Def: t.ShortDef, Slug: t.Slug})
 	}
 	h.render(w, r, "glossary", p)
@@ -110,6 +111,7 @@ func (h *Handlers) term(w http.ResponseWriter, r *http.Request, lang string) {
 // readingBook is one book on /{lang}/reading.
 type readingBook struct {
 	Slug, Title, Author, Take, Started, Finished, Tone string
+	Other                                              string // its language, when not the page's (fallback)
 	Progress                                           int
 	Rating                                             []bool // five stars, on or off
 	Cover                                              *image
@@ -150,7 +152,7 @@ func (h *Handlers) reading(w http.ResponseWriter, r *http.Request, lang string) 
 	p.Head.Feeds = []feedLink{{Title: i18n.T(lang, "feed.reading"), Href: "/" + lang + "/reading/feed.xml"}}
 	byState := map[string][]readingBook{}
 	for _, b := range list {
-		x := readingBook{Slug: b.Slug, Title: b.Title, Author: b.Author, Take: b.Summary, Progress: b.Progress, Tone: "amber",
+		x := readingBook{Slug: b.Slug, Title: b.Title, Author: b.Author, Take: b.Summary, Progress: b.Progress, Tone: "amber", Other: other(lang, b.Lang),
 			Started: book.Day(b.StartedAt), Finished: book.Day(b.FinishedAt)}
 		if b.Tone != nil {
 			x.Tone = *b.Tone

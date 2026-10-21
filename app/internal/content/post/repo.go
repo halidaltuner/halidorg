@@ -236,7 +236,10 @@ func (r *Repo) List(ctx context.Context, f ListFilter) ([]Post, error) {
 	}
 	where := []string{"e.kind = ?"}
 	args := []any{kind}
-	if f.Lang != "" {
+	if f.Lang != "" && f.Status == content.Published && !f.Admin {
+		where = append(where, content.LangOrFallback("e"))
+		args = append(args, f.Lang, f.Lang)
+	} else if f.Lang != "" {
 		where = append(where, "e.lang = ?")
 		args = append(args, f.Lang)
 	}
@@ -349,8 +352,10 @@ type publishedRow struct {
 }
 
 // Feed returns the newest public posts in lang with the published body,
-// optionally only those tagged tag.
-func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int) ([]Published, error) {
+// optionally only those tagged tag. With fallback, posts in another
+// language with no translation in lang are included (list pages, Phase 7.3);
+// feeds and home keep to lang.
+func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int, fallback bool) ([]Published, error) {
 	if limit <= 0 || limit > 50 {
 		limit = 20
 	}
@@ -360,6 +365,10 @@ func (r *Repo) Feed(ctx context.Context, lang, tag string, limit int) ([]Publish
 FROM entries e JOIN posts p ON p.entry_id = e.id JOIN revisions rv ON rv.id = e.published_revision_id
 WHERE e.kind = 'post' AND e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
 	args := []any{lang}
+	if fallback {
+		q = strings.Replace(q, "e.lang = ?", content.LangOrFallback("e"), 1)
+		args = append(args, lang)
+	}
 	if tag != "" {
 		q += ` AND EXISTS (SELECT 1 FROM entry_tags et JOIN tags t ON t.id = et.tag_id WHERE et.entry_id = e.id AND t.slug = ?)`
 		args = append(args, tag)

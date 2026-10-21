@@ -220,8 +220,8 @@ func (r *Repo) Get(ctx context.Context, id string) (Book, error) {
 // statuses (all when none): the ones being read by progress, the rest
 // newest first.
 func (r *Repo) List(ctx context.Context, lang string, statuses ...string) ([]Book, error) {
-	q := selectBook + ` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
-	args := []any{lang}
+	q := selectBook + ` WHERE ` + content.LangOrFallback("e") + ` AND e.status = 'published' AND e.visibility = 'public'`
+	args := []any{lang, lang}
 	if len(statuses) > 0 {
 		q += ` AND b.status IN (?` + strings.Repeat(", ?", len(statuses)-1) + `)`
 		for _, s := range statuses {

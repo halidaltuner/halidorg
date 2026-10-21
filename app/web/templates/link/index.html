@@ -16,7 +16,7 @@
 <div class="lk-row" data-filter-value="{{if .Read}}read{{else}}unread{{end}}">
 {{- if .Favicon}}<img class="lk-icon" src="{{.Favicon}}" alt="" width="16" height="16" loading="lazy">{{else}}<span class="lk-icon lk-initial mono" aria-hidden="true">{{.Initial}}</span>{{end}}
 <div class="lk-body">
-<div class="lk-line"><a class="lk-title" href="{{.URL}}">{{.Title}}</a><span class="lk-domain mono">{{.Domain}}</span></div>
+<div class="lk-line"><a class="lk-title" href="{{.URL}}"{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}</a>{{template "lang-tag" .Other}}<span class="lk-domain mono">{{.Domain}}</span></div>
 {{- with .Comment}}<p>{{.}}</p>{{end}}
 </div>
 <span class="lk-status mono{{if .Read}} is-read{{end}}" data-link-id="{{.ID}}" data-label-read="{{tr $.Lang "links.read"}}" data-label-unread="{{tr $.Lang "links.unread"}}" data-toggle-title="{{tr $.Lang "links.toggle"}}">{{if .Read}}{{tr $.Lang "links.read"}}{{else}}{{tr $.Lang "links.unread"}}{{end}}</span>

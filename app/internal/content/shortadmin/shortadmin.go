@@ -135,7 +135,7 @@ func (h *Admin) Register(mux *http.ServeMux) {
 // --- List -------------------------------------------------------------------
 
 type listRow struct {
-	Href, Title, Lang, Status, StatusKey, Updated string
+	Href, Title, Lang, Status, StatusKey, Updated, Translations string
 }
 
 type listPage struct {
@@ -171,7 +171,9 @@ func (h *Admin) listPage(w http.ResponseWriter, r *http.Request) {
 		p.Notice = fmt.Sprintf(i18n.T(lang, "entry.deleted"), s)
 	}
 	// The body's start names untitled notes.
-	res, err := h.db.Query(r.Context(), `SELECT e.id, e.title, e.summary, e.slug, e.lang, e.status, e.updated_at, substr(r.body_md, 1, 120) AS body
+	res, err := h.db.Query(r.Context(), `SELECT e.id, e.title, e.summary, e.slug, e.lang, e.status, e.updated_at, substr(r.body_md, 1, 120) AS body,
+  (SELECT group_concat(s.lang || ':' || s.status, ' ') FROM entries s
+   WHERE s.translation_group_id = e.translation_group_id AND s.id <> e.id AND s.kind = e.kind) AS siblings
 FROM entries e LEFT JOIN revisions r ON r.id = e.current_revision_id
 WHERE `+where+` ORDER BY e.updated_at DESC LIMIT 200`, args...)
 	if err != nil {
@@ -187,6 +189,7 @@ WHERE `+where+` ORDER BY e.updated_at DESC LIMIT 200`, args...)
 		Status    string  `json:"status"`
 		UpdatedAt int64   `json:"updated_at"`
 		Body      *string `json:"body"`
+		Siblings  *string `json:"siblings"`
 	}](res)
 	if err != nil {
 		h.fail(w, err)
@@ -201,8 +204,17 @@ WHERE `+where+` ORDER BY e.updated_at DESC LIMIT 200`, args...)
 		if t == "" {
 			t = i18n.T(lang, "admin.untitled") + " · " + x.Slug
 		}
+		have := map[string]string{}
+		if x.Siblings != nil {
+			for _, s := range strings.Fields(*x.Siblings) {
+				if l, st, ok := strings.Cut(s, ":"); ok {
+					have[l] = st
+				}
+			}
+		}
 		p.Rows = append(p.Rows, listRow{Href: h.base() + "/" + x.ID, Title: t, Lang: x.Lang, StatusKey: x.Status,
-			Status: i18n.T(lang, "admin.status."+x.Status), Updated: admin.Ago(lang, x.UpdatedAt, now)})
+			Status: i18n.T(lang, "admin.status."+x.Status), Updated: admin.Ago(lang, x.UpdatedAt, now),
+			Translations: content.TranslationMarks(x.Lang, have)})
 	}
 	h.ui.Render(w, http.StatusOK, h.list, p)
 }

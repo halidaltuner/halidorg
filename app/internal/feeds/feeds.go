@@ -134,7 +134,7 @@ func (h *Handlers) load(w http.ResponseWriter, r *http.Request, lang, kind, tag 
 }
 
 func (h *Handlers) postItems(ctx context.Context, lang, tag string) ([]item, error) {
-	posts, err := h.posts.Feed(ctx, lang, tag, 20)
+	posts, err := h.posts.Feed(ctx, lang, tag, 20, false)
 	if err != nil {
 		return nil, err
 	}

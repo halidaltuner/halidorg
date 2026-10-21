@@ -10,7 +10,7 @@
 <a class="pj-card" href="{{.Href}}">
 <div class="pj-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}<span class="pj-status st-{{.StatusTone}} mono">{{.Status}}</span></div>
 <div class="pj-card-body">
-<h2 class="mono">{{.Name}}</h2>
+<h2 class="mono"{{with .Other}} lang="{{.}}"{{end}}>{{.Name}}{{template "lang-tag" .Other}}</h2>
 {{- with .Tagline}}<p>{{.}}</p>{{end}}
 {{- with .Pills}}<div class="pj-pills">{{range .}}<span class="mono">{{.}}</span>{{end}}</div>{{end}}
 <div class="pj-card-foot mono">{{with .Stars}}<span>★ {{.}}</span>{{end}}{{with .Activity}}<span>{{.}}</span>{{end}}<span class="pj-details">{{tr $.Lang "projects.details"}} →</span></div>

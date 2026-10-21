@@ -8,7 +8,7 @@
 <ul class="rb-list">
 {{- range .Rows}}
 <li><a href="{{.Href}}">
-<span class="rb-title">{{.Title}}</span>
+<span class="rb-title"{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</span>
 {{- with .Summary}}<span class="rb-sum">{{.}}</span>{{end}}
 <span class="rb-meta mono">{{with .Platform}}<span>{{.}}</span>{{end}}<span class="badge risk-{{.Risk}}">{{.RiskLabel}}</span>{{with .Verified}}<span>{{tr $.Lang "runbook.verified"}} <time>{{.}}</time></span>{{end}}</span>
 </a></li>

@@ -193,8 +193,8 @@ func (r *Repo) one(ctx context.Context, where string, args ...any) (Term, error)
 
 // List returns the published public terms in lang, A to Z.
 func (r *Repo) List(ctx context.Context, lang string) ([]Term, error) {
-	res, err := r.db.Query(ctx, selectTerm+` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
-ORDER BY lower(t.term), e.id LIMIT 1000`, lang)
+	res, err := r.db.Query(ctx, selectTerm+` WHERE `+content.LangOrFallback("e")+` AND e.status = 'published' AND e.visibility = 'public'
+ORDER BY lower(t.term), e.id LIMIT 1000`, lang, lang)
 	if err != nil {
 		return nil, err
 	}

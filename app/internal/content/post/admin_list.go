@@ -113,21 +113,7 @@ WHERE kind IN `+longForm+` AND translation_group_id IN (?`+strings.Repeat(", ?",
 		have[x.Group][x.Lang] = x.Status
 	}
 	for _, p := range posts {
-		var marks []string
-		for _, l := range i18n.Supported {
-			if l == p.Lang {
-				continue
-			}
-			switch have[p.TranslationGroupID][l] {
-			case content.Published:
-				marks = append(marks, l+" ✓")
-			case "":
-				marks = append(marks, l+" ✕")
-			default:
-				marks = append(marks, l+" …") // a draft exists
-			}
-		}
-		out[p.ID] = strings.Join(marks, " · ")
+		out[p.ID] = content.TranslationMarks(p.Lang, have[p.TranslationGroupID])
 	}
 	return out, nil
 }

@@ -11,7 +11,7 @@
 <section class="aw-section" id="{{.ID}}">
 <h2>{{.Name}}</h2>
 <ul>
-{{- range .Items}}<li><a href="{{.URL}}">{{.Title}}</a> <span class="mono">{{.Domain}}</span>{{with .Comment}}<span class="aw-comment">{{.}}</span>{{end}}</li>{{end}}
+{{- range .Items}}<li><a href="{{.URL}}"{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}</a>{{template "lang-tag" .Other}} <span class="mono">{{.Domain}}</span>{{with .Comment}}<span class="aw-comment">{{.}}</span>{{end}}</li>{{end}}
 </ul>
 </section>
 {{- end}}

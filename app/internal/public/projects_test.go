@@ -131,8 +131,9 @@ func TestProjectsPages(t *testing.T) {
 		t.Fatalf("fallback %d", code)
 	}
 	must(t, body, `Bu proje henüz Türkçeye çevrilmedi.`, `<meta name="robots" content="noindex">`, `lang="en"`)
+	// The tr list shows the en project, tagged, linking to its own page.
 	_, body = get(t, mux, "/tr/projects")
-	must(t, body, `Henüz yayınlanmış proje yok.`)
+	must(t, body, `href="/en/projects/site"`, `<span class="lang-tag mono" title="en">en</span>`)
 }
 
 func TestHomelabPageAndTiles(t *testing.T) {
@@ -180,7 +181,7 @@ func TestHomelabPageAndTiles(t *testing.T) {
 		t.Error("other category in the network filter")
 	}
 	_, body = get(t, mux, "/tr/homelab")
-	must(t, body, `Henüz yayınlanmış kurulum yok.`, `<dd>0</dd>`)
+	must(t, body, `href="/en/projects/rack"`, `<span class="lang-tag mono" title="en">en</span>`)
 
 	// Home: the projects and homelab tiles with live counts.
 	_, body = get(t, mux, "/en/")

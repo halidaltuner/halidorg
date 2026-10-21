@@ -110,6 +110,7 @@ func (h *Handlers) kindLine(ctx context.Context, lang string, p project.Project)
 
 type projectCard struct {
 	Href, Name, Tagline, Status, StatusTone, Tone string
+	Other                                         string // its language, when not the page's (fallback)
 	Pills                                         []string
 	Cover                                         *image
 	Repo                                          string // github_repo, for the stars
@@ -154,7 +155,7 @@ func (h *Handlers) projects(w http.ResponseWriter, r *http.Request, lang string)
 				return
 			}
 		}
-		c := projectCard{Href: "/" + lang + "/projects/" + x.Slug, Name: x.Title, Tagline: x.Tagline,
+		c := projectCard{Href: "/" + x.Lang + "/projects/" + x.Slug, Other: other(lang, x.Lang), Name: x.Title, Tagline: x.Tagline,
 			Status: i18n.T(lang, "kind.project.status."+x.ProjectStatus), StatusTone: statusTone[x.ProjectStatus],
 			Tone: h.projectTone(ctx, x), Pills: h.kindLine(ctx, lang, full)}
 		if x.CoverMediaID != nil {

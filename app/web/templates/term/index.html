@@ -11,7 +11,7 @@
 <h2 class="gl-letter mono" id="h-{{.Letter}}">{{.Letter}}</h2>
 <dl class="gl-terms">
 {{- range .Rows}}
-<div id="{{.Slug}}"><dt><a href="{{.Href}}">{{.Term}}</a>{{with .Aliases}} <span class="gl-aka mono">{{.}}</span>{{end}}</dt>{{with .Def}}<dd>{{.}}</dd>{{end}}</div>
+<div id="{{.Slug}}"><dt><a href="{{.Href}}"{{with .Other}} hreflang="{{.}}" lang="{{.}}"{{end}}>{{.Term}}</a>{{template "lang-tag" .Other}}{{with .Aliases}} <span class="gl-aka mono">{{.}}</span>{{end}}</dt>{{with .Def}}<dd>{{.}}</dd>{{end}}</div>
 {{- end}}
 </dl>
 </section>

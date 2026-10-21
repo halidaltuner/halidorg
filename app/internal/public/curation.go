@@ -34,6 +34,7 @@ func chips(lang, path, param, current string, keys []string, label func(string) 
 
 type linkRow struct {
 	ID, Title, URL, Domain, Comment, Favicon, Initial string
+	Other                                             string // its language, when not the page's (fallback)
 	Read                                              bool
 }
 
@@ -101,7 +102,7 @@ func (h *Handlers) links(w http.ResponseWriter, r *http.Request, lang string) {
 	}
 	byCat := map[string][]linkRow{}
 	for _, l := range list {
-		row := linkRow{ID: l.ID, Title: l.Title, URL: l.URL, Domain: l.Domain, Comment: l.Summary, Initial: initial(l.Domain), Read: l.ReadStatus == link.Read}
+		row := linkRow{ID: l.ID, Title: l.Title, URL: l.URL, Domain: l.Domain, Comment: l.Summary, Initial: initial(l.Domain), Read: l.ReadStatus == link.Read, Other: other(lang, l.Lang)}
 		if strings.HasPrefix(l.FaviconURL, "/favicons/") {
 			row.Favicon = l.FaviconURL
 		}
@@ -140,6 +141,7 @@ func catKey(id *string) string {
 
 type favCard struct {
 	Slug, Type, TypeLabel, Title, Author, URL, Rating string
+	Other                                             string // its language, when not the page's (fallback)
 	Squares                                           []bool
 }
 
@@ -182,7 +184,7 @@ func (h *Handlers) favs(w http.ResponseWriter, r *http.Request, lang string) {
 		if typ != "" && f.Type != typ {
 			continue
 		}
-		c := favCard{Slug: f.Slug, Type: f.Type, TypeLabel: label(f.Type), Title: f.Title, Author: f.Author, URL: f.URL}
+		c := favCard{Slug: f.Slug, Type: f.Type, TypeLabel: label(f.Type), Title: f.Title, Author: f.Author, URL: f.URL, Other: other(lang, f.Lang)}
 		if f.Rating != nil {
 			c.Rating = strings.Replace(i18n.T(lang, "favs.rating"), "%d", strconv.Itoa(*f.Rating), 1)
 			for i := 1; i <= 5; i++ {
@@ -252,7 +254,7 @@ func (h *Handlers) awesome(w http.ResponseWriter, r *http.Request, lang string) 
 		if !ok || l.CategoryID == nil {
 			continue
 		}
-		sections[i].Items = append(sections[i].Items, linkRow{ID: l.ID, Title: l.Title, URL: l.URL, Domain: l.Domain, Comment: l.Summary})
+		sections[i].Items = append(sections[i].Items, linkRow{ID: l.ID, Title: l.Title, URL: l.URL, Domain: l.Domain, Comment: l.Summary, Other: other(lang, l.Lang)})
 		n++
 	}
 	if n == 0 {

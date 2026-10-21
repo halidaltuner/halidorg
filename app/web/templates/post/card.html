@@ -3,7 +3,7 @@
 <div class="post-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
 <div class="post-card-body">
 {{- if .Tags}}<div class="post-card-tags">{{range .Tags}}<span class="tag-pill tone-cyan">#{{.Name}}</span>{{end}}</div>{{end}}
-<h3>{{.Title}}</h3>
+<h3{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</h3>
 {{- with .Summary}}<p>{{.}}</p>{{end}}
 <div class="post-card-meta mono"><time>{{.Date}}</time><span>{{.Minutes}}</span></div>
 </div>

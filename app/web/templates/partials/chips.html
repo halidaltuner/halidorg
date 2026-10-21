@@ -17,3 +17,7 @@
 
 {{/* bookmarklet: the draggable Quick Capture chip and its hint. Data: .Lang, .Bookmarklet. */}}
 {{define "bookmarklet"}}<span class="bm"><a class="bm-chip mono" href="{{.Bookmarklet}}" title="{{tr .Lang "qc.bm_title"}}" data-bookmarklet data-hint="{{tr .Lang "qc.bm_click"}}">⇱ {{tr .Lang "qc.title"}}</a><span class="bm-hint">{{tr .Lang "qc.bookmarklet"}}</span></span>{{end}}
+
+{{/* lang-tag marks a list row in another language than the page (Phase 7.3:
+   lists show entries with no translation). Arg: the row's language, "" for none. */}}
+{{define "lang-tag"}}{{with .}} <span class="lang-tag mono" title="{{.}}">{{.}}</span>{{end}}{{end}}

@@ -160,8 +160,8 @@ func (r *Repo) List(ctx context.Context, lang string, limit int) ([]Note, error)
 	if limit <= 0 || limit > 100 {
 		limit = 50
 	}
-	res, err := r.db.Query(ctx, selectPublished+` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'
-ORDER BY e.published_at DESC, e.id DESC LIMIT ?`, lang, limit)
+	res, err := r.db.Query(ctx, selectPublished+` WHERE `+content.LangOrFallback("e")+` AND e.status = 'published' AND e.visibility = 'public'
+ORDER BY e.published_at DESC, e.id DESC LIMIT ?`, lang, lang, limit)
 	if err != nil {
 		return nil, err
 	}

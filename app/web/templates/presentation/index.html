@@ -18,7 +18,7 @@
 {{- if .Slides}}<span class="pr-badge mono">{{printf (tr $.Lang "pres.slides_html") .Slides}}</span>{{end}}</div>
 <div class="pr-card-body">
 <div class="pr-card-top mono"><span class="pr-event">{{.Event}}</span><span>{{.Lang}}</span></div>
-<h2>{{.Title}}</h2>
+<h2{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</h2>
 {{- with .Desc}}<p>{{.}}</p>{{end}}
 <div class="pr-card-foot mono">{{.Date}}{{if and .Date .City}} · {{end}}{{.City}}</div>
 </div>

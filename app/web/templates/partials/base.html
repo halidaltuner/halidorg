@@ -9,6 +9,7 @@
 {{end}}{{with .Head.Canonical}}<link rel="canonical" href="{{.}}">
 <meta property="og:url" content="{{.}}">
 {{end}}{{range .Head.Alternates}}<link rel="alternate" hreflang="{{.Lang}}" href="{{.Href}}">
+{{end}}{{with .Head.XDefault}}<link rel="alternate" hreflang="x-default" href="{{.}}">
 {{end}}<meta property="og:site_name" content="halid.org">
 <meta property="og:title" content="{{.Head.Title}}">
 {{with .Head.Description}}<meta property="og:description" content="{{.}}">

@@ -49,7 +49,7 @@ func (h *Handlers) garden(w http.ResponseWriter, r *http.Request, lang string) {
 	for _, x := range list {
 		count[x.Maturity]++
 		p.Cards = append(p.Cards, gardenCard{
-			card: card{Href: x.Path(), Title: x.Title, Summary: x.Summary, Date: date(x.PublishedAt),
+			card: card{Href: x.Path(), Other: other(lang, x.Lang), Title: x.Title, Summary: x.Summary, Date: date(x.PublishedAt),
 				Minutes: minutes(lang, x.ReadingMinutes), Tone: articleTone(x), Cover: coverOf(covers, x.Entry)},
 			Maturity: x.Maturity, Stage: i18n.T(lang, "garden.maturity."+x.Maturity), Tended: date(x.LastTendedAt)})
 	}
@@ -81,6 +81,7 @@ func (h *Handlers) garden(w http.ResponseWriter, r *http.Request, lang string) {
 // runbookRow is one runbook on /{lang}/runbooks.
 type runbookRow struct {
 	Href, Title, Summary, Platform, Risk, RiskLabel, Verified string
+	Other                                                     string // its language, when not the page's (fallback)
 }
 
 type runbooksPage struct {
@@ -100,7 +101,7 @@ func (h *Handlers) runbooks(w http.ResponseWriter, r *http.Request, lang string)
 	p.Head.Description = i18n.T(lang, "runbook.sub")
 	p.Head.Feeds = []feedLink{{Title: i18n.T(lang, "feed.runbooks"), Href: "/" + lang + "/runbooks/feed.xml"}}
 	for _, x := range list {
-		p.Rows = append(p.Rows, runbookRow{Href: x.Path(), Title: x.Title, Summary: x.Summary, Platform: x.Platform,
+		p.Rows = append(p.Rows, runbookRow{Href: x.Path(), Other: other(lang, x.Lang), Title: x.Title, Summary: x.Summary, Platform: x.Platform,
 			Risk: x.Risk, RiskLabel: i18n.T(lang, "runbook.risk."+x.Risk), Verified: date(x.VerifiedOn)})
 	}
 	h.render(w, r, "runbooks", p)

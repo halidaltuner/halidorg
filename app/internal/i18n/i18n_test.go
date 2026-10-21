@@ -1,8 +1,13 @@
 package i18n
 
 import (
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 	"testing"
 )
 
@@ -48,5 +53,29 @@ func TestCatalogsMatch(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+// Every key a template names literally ({{tr .Lang "key"}}) is in the
+// catalog; keys built at run time (print "kind." .Kind) are not checked.
+func TestTemplateKeys(t *testing.T) {
+	re := regexp.MustCompile(`\btr \S+ "([^"]+)"`)
+	err := filepath.WalkDir("../../web/templates", func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || !strings.HasSuffix(path, ".html") {
+			return err
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		for _, m := range re.FindAllStringSubmatch(string(b), -1) {
+			if _, ok := catalog[Default][m[1]]; !ok {
+				t.Errorf("%s: %q is not in the catalog", path, m[1])
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
 	}
 }

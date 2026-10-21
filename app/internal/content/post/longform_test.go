@@ -82,7 +82,7 @@ func TestGardenAndRunbookKinds(t *testing.T) {
 	if p, err := r.GetPublishedKind(ctx, Garden, "en", "tending"); err != nil || p.Maturity != "budding" {
 		t.Errorf("garden page %+v %v", p, err)
 	}
-	if f, _ := r.Feed(ctx, "en", "", 20); len(f) != 0 {
+	if f, _ := r.Feed(ctx, "en", "", 20, false); len(f) != 0 {
 		t.Errorf("the posts feed has %d entries, want none published", len(f))
 	}
 }

@@ -230,7 +230,8 @@ func TestLinkNoteFavEditors(t *testing.T) {
 	if n.Slug != "go-1-22-loop-variables" || !n.TIL || n.Lang != "tr" {
 		t.Fatalf("note %+v", n)
 	}
-	must(t, st.do(st.fresh, "GET", "/admin/notes", nil).Body.String(), `<span class="ent-title">Go 1.22 loop variables</span>`)
+	must(t, st.do(st.fresh, "GET", "/admin/notes", nil).Body.String(), `<span class="ent-title">Go 1.22 loop variables</span>`,
+		`<span class="muted" title="translation">en ✕</span>`) // no en copy yet
 
 	// Fav: type, rating, then the rating cleared.
 	fid := idOf(t, st.do(st.fresh, "POST", "/admin/favs", url.Values{"title": {"Helix"}, "lang": {"en"}, "fav_type": {"tool"}, "rating": {"4"},
