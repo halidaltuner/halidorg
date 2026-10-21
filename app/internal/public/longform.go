@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"slices"
 
+	"halid.org/engine/internal/content"
 	"halid.org/engine/internal/content/post"
 	"halid.org/engine/internal/i18n"
 )
@@ -35,12 +36,21 @@ func (h *Handlers) garden(w http.ResponseWriter, r *http.Request, lang string) {
 	p := gardenPage{page: h.newPage(lang, "garden", i18n.T(lang, "nav.garden")+" · halid.org", "/garden", nil)}
 	p.Head.Description = i18n.T(lang, "garden.sub")
 	p.Head.Feeds = []feedLink{{Title: i18n.T(lang, "feed.garden"), Href: "/" + lang + "/garden/feed.xml"}}
+	es := make([]content.Entry, len(list))
+	for i, x := range list {
+		es[i] = x.Entry
+	}
+	covers, err := h.covers(r.Context(), lang, es)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	count := map[string]int{}
 	for _, x := range list {
 		count[x.Maturity]++
 		p.Cards = append(p.Cards, gardenCard{
 			card: card{Href: x.Path(), Title: x.Title, Summary: x.Summary, Date: date(x.PublishedAt),
-				Minutes: minutes(lang, x.ReadingMinutes), Tone: articleTone(x)},
+				Minutes: minutes(lang, x.ReadingMinutes), Tone: articleTone(x), Cover: coverOf(covers, x.Entry)},
 			Maturity: x.Maturity, Stage: i18n.T(lang, "garden.maturity."+x.Maturity), Tended: date(x.LastTendedAt)})
 	}
 	var keys []string

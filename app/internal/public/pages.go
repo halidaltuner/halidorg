@@ -21,6 +21,7 @@ import (
 
 // card is one post card (post/card.html).
 type card struct {
+	Cover   *image // the entry's cover; nil draws the tone pattern
 	Href    string
 	Title   string
 	Summary string
@@ -63,6 +64,29 @@ func tone(e content.Entry) string {
 	return "cyan"
 }
 
+// covers reads the cover images of entries, keyed by media id, with alt
+// text in lang.
+func (h *Handlers) covers(ctx context.Context, lang string, entries []content.Entry) (map[string]image, error) {
+	var ids []string
+	for _, e := range entries {
+		if e.CoverMediaID != nil {
+			ids = append(ids, *e.CoverMediaID)
+		}
+	}
+	return h.images(ctx, lang, ids)
+}
+
+// coverOf is e's cover from imgs, or nil.
+func coverOf(imgs map[string]image, e content.Entry) *image {
+	if e.CoverMediaID == nil {
+		return nil
+	}
+	if im, ok := imgs[*e.CoverMediaID]; ok {
+		return &im
+	}
+	return nil
+}
+
 func (h *Handlers) cards(r *http.Request, lang string, items []post.Published) ([]card, error) {
 	var slugs []string
 	for _, p := range items {
@@ -72,10 +96,19 @@ func (h *Handlers) cards(r *http.Request, lang string, items []post.Published) (
 	if err != nil {
 		return nil, err
 	}
+	es := make([]content.Entry, len(items))
+	for i, p := range items {
+		es[i] = p.Entry
+	}
+	covers, err := h.covers(r.Context(), lang, es)
+	if err != nil {
+		return nil, err
+	}
 	out := make([]card, len(items))
 	for i, p := range items {
 		out[i] = card{Href: "/" + lang + "/posts/" + p.Slug, Title: p.Title, Summary: p.Summary,
-			Date: date(p.PublishedAt), Minutes: minutes(lang, p.ReadingMinutes), Tone: tone(p.Entry), Tags: tagLinks(lang, p.Tags, names)}
+			Date: date(p.PublishedAt), Minutes: minutes(lang, p.ReadingMinutes), Tone: tone(p.Entry), Tags: tagLinks(lang, p.Tags, names),
+			Cover: coverOf(covers, p.Entry)}
 	}
 	return out, nil
 }
@@ -265,6 +298,7 @@ type postPage struct {
 	Untranslated bool
 	OtherURL     string
 	Tone         string
+	Cover        *image
 }
 
 type backlink struct {
@@ -418,6 +452,14 @@ func (h *Handlers) article(w http.ResponseWriter, r *http.Request, lang, kind st
 		Tone:         articleTone(p),
 	}
 	pg.Conn = conn
+	if p.CoverMediaID != nil {
+		imgs, err := h.images(r.Context(), lang, []string{*p.CoverMediaID})
+		if err != nil {
+			h.fail(w, r, err)
+			return
+		}
+		pg.Cover = coverOf(imgs, p.Entry)
+	}
 	pg.TOC, _ = decodeTOC(rev.TOCJSON)
 	pg.Head.Description = p.Summary
 	pg.Head.OGType = "article"

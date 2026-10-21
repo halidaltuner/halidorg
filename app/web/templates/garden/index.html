@@ -11,7 +11,7 @@
 <div class="card-grid">
 {{- range .Cards}}
 <a class="post-card" href="{{.Href}}" data-filter-value="{{.Maturity}}">
-<div class="post-card-cover">{{template "cover" dict "tone" .Tone}}</div>
+<div class="post-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
 <div class="post-card-body">
 <div class="post-card-tags"><span class="badge mat-{{.Maturity}}">{{.Stage}}</span></div>
 <h3>{{.Title}}</h3>
