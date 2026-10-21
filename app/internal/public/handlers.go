@@ -47,6 +47,21 @@ type Head struct {
 	Feeds       []feedLink // the page's own feeds, after the language feed
 }
 
+// XDefault is the hreflang="x-default" URL: the page in the default
+// language (i18n.Default) when it has one, else the first alternate; ""
+// when the page has no other-language version.
+func (h Head) XDefault() string {
+	if len(h.Alternates) < 2 {
+		return ""
+	}
+	for _, a := range h.Alternates {
+		if a.Lang == i18n.Default {
+			return a.Href
+		}
+	}
+	return h.Alternates[0].Href
+}
+
 type feedLink struct {
 	Title, Href string
 }

@@ -13,7 +13,7 @@
 <div class="fv-cover mono" aria-hidden="true">{{.TypeLabel}}</div>
 <div class="fv-body">
 <div class="fv-type mono"><span class="kdot" aria-hidden="true"></span>{{.TypeLabel}}</div>
-<div class="fv-title">{{.Title}}</div>
+<div class="fv-title"{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</div>
 {{- with .Author}}<div class="fv-author">{{.}}</div>{{end}}
 {{- if .Squares}}<div class="fv-rating" role="img" aria-label="{{.Rating}}">{{range .Squares}}<span{{if .}} class="on"{{end}}></span>{{end}}</div>{{end}}
 </div>

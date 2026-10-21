@@ -318,7 +318,10 @@ type ListFilter struct {
 // List returns projects without their rows, featured first, then newest.
 func (r *Repo) List(ctx context.Context, f ListFilter) ([]Project, error) {
 	where, args := []string{"1 = 1"}, []any{}
-	if f.Lang != "" {
+	switch {
+	case f.Lang != "" && !f.Admin:
+		where, args = append(where, content.LangOrFallback("e")), append(args, f.Lang, f.Lang)
+	case f.Lang != "":
 		where, args = append(where, "e.lang = ?"), append(args, f.Lang)
 	}
 	if f.Type != "" {

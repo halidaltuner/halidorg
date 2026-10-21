@@ -1,7 +1,7 @@
 {{/* note-card (derive: indigo tone, no title emphasis, the time is the permalink). Arg: dict "n" noteCard "lang" page lang. */}}
-{{define "note-card"}}<article class="note-card tone-indigo">
+{{define "note-card"}}<article class="note-card tone-indigo"{{with .n.Other}} lang="{{.}}"{{end}}>
 <div class="note-meta mono"><span class="glyph" aria-hidden="true">~</span>{{with .n.Time}}<a class="note-time" href="{{$.n.Href}}"><time datetime="{{$.n.DateTime}}">{{.}}</time></a>{{end}}
-{{- if .n.TIL}}<span class="tag-pill">TIL</span>{{end}}</div>
+{{- if .n.TIL}}<span class="tag-pill">TIL</span>{{end}}{{template "lang-tag" .n.Other}}</div>
 {{- with .n.Title}}<p class="note-title">{{.}}</p>{{end}}
 <div class="prose note-body">{{.n.Body}}</div>
 {{- if or .n.Tags .n.Source}}

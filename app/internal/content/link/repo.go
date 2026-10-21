@@ -172,8 +172,8 @@ type ListFilter struct {
 
 // List returns published public links, newest first.
 func (r *Repo) List(ctx context.Context, f ListFilter) ([]Link, error) {
-	q := selectLink + ` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
-	args := []any{f.Lang}
+	q := selectLink + ` WHERE ` + content.LangOrFallback("e") + ` AND e.status = 'published' AND e.visibility = 'public'`
+	args := []any{f.Lang, f.Lang}
 	if f.ReadStatus == Read || f.ReadStatus == Unread {
 		q += ` AND l.read_status = ?`
 		args = append(args, f.ReadStatus)

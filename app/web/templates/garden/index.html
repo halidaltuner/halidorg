@@ -14,7 +14,7 @@
 <div class="post-card-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
 <div class="post-card-body">
 <div class="post-card-tags"><span class="badge mat-{{.Maturity}}">{{.Stage}}</span></div>
-<h3>{{.Title}}</h3>
+<h3{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</h3>
 {{- with .Summary}}<p>{{.}}</p>{{end}}
 <div class="post-card-meta mono">{{with .Tended}}<span>{{tr $.Lang "garden.tended"}} <time>{{.}}</time></span>{{end}}<span>{{.Minutes}}</span></div>
 </div>

@@ -29,6 +29,7 @@ type Snippet struct {
 type Item struct {
 	Slug        string `json:"slug"`
 	Title       string `json:"title"`
+	Lang        string `json:"lang"` // differs from the page's on a fallback row
 	PublishedAt *int64 `json:"published_at"`
 	Language    string `json:"language"` // first file's language
 }

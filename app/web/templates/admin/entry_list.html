@@ -13,7 +13,7 @@
 <section class="adm-panel">
 <ul class="ent-list">
 {{- range .Rows}}
-<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono"><span>{{.Lang}}</span><span class="adm-st s-{{.StatusKey}}">{{.Status}}</span><span>{{.Updated}}</span></span></a></li>
+<li><a href="{{.Href}}"><span class="ent-title">{{.Title}}</span><span class="ent-meta mono"><span>{{.Lang}}</span><span class="muted" title="{{tr $.Lang "admin.posts.col_translation"}}">{{.Translations}}</span><span class="adm-st s-{{.StatusKey}}">{{.Status}}</span><span>{{.Updated}}</span></span></a></li>
 {{- else}}
 <li class="adm-empty">{{tr $.Lang "entry.empty"}}</li>
 {{- end}}

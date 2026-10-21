@@ -12,7 +12,7 @@
 <li class="rd-book tone-{{.Tone}}" id="{{.Slug}}">
 <div class="rd-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt "radius" 1}}{{else}}{{template "cover" dict "tone" .Tone "radius" 1}}{{end}}</div>
 <div class="rd-body">
-<h3>{{.Title}}</h3>
+<h3{{with .Other}} lang="{{.}}"{{end}}>{{.Title}}{{template "lang-tag" .Other}}</h3>
 {{- with .Author}}<span class="rd-author">{{.}}</span>{{end}}
 {{- with .Take}}<p>{{.}}</p>{{end}}
 <div class="rd-meta mono">

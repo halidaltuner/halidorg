@@ -137,8 +137,8 @@ func (r *Repo) Get(ctx context.Context, id string) (Fav, error) {
 
 // List returns published public favs in lang, optionally of one type.
 func (r *Repo) List(ctx context.Context, lang, typ string) ([]Fav, error) {
-	q := selectFav + ` WHERE e.lang = ? AND e.status = 'published' AND e.visibility = 'public'`
-	args := []any{lang}
+	q := selectFav + ` WHERE ` + content.LangOrFallback("e") + ` AND e.status = 'published' AND e.visibility = 'public'`
+	args := []any{lang, lang}
 	if slices.Contains(Types, typ) {
 		q += ` AND f.fav_type = ?`
 		args = append(args, typ)

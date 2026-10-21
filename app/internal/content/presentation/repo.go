@@ -279,7 +279,10 @@ type ListFilter struct {
 // they were given.
 func (r *Repo) List(ctx context.Context, f ListFilter) ([]Presentation, error) {
 	where, args := []string{"1 = 1"}, []any{}
-	if f.Lang != "" {
+	switch {
+	case f.Lang != "" && !f.Admin:
+		where, args = append(where, content.LangOrFallback("e")), append(args, f.Lang, f.Lang)
+	case f.Lang != "":
 		where, args = append(where, "e.lang = ?"), append(args, f.Lang)
 	}
 	if !f.Admin {

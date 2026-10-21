@@ -111,11 +111,9 @@ func TestSnippetsPage(t *testing.T) {
 	}
 	must(t, body, `<section class="snip-view" lang="en">`, `Bu snippet henüz Türkçeye çevrilmedi.`,
 		`<meta name="robots" content="noindex">`, `<link rel="canonical" href="https://halid.org/en/snippets/graceful">`)
-	if strings.Contains(body, `class="snip-list"`) {
-		t.Error("en snippets in the tr list")
-	}
+	// With no tr snippets, the tr list holds the en ones, tagged (Phase 7.3).
 	_, body = get(t, mux, "/tr/snippets")
-	must(t, body, `Henüz yayınlanmış snippet yok.`)
+	must(t, body, `href="/en/snippets/graceful"`, `<span class="lang-tag mono" title="en">en</span>`)
 }
 
 func TestNotesPages(t *testing.T) {
@@ -158,7 +156,7 @@ func TestNotesPages(t *testing.T) {
 		t.Errorf("missing note: %d", code)
 	}
 	_, body = get(t, mux, "/tr/notes")
-	must(t, body, `Henüz yayınlanmış not yok.`)
+	must(t, body, `<article class="note-card tone-indigo" lang="en">`, `<span class="lang-tag mono" title="en">en</span>`)
 }
 
 func TestHomeStreamKinds(t *testing.T) {

@@ -171,7 +171,11 @@ func TestAwesomePage(t *testing.T) {
 	if code, body := get(t, mux, "/en/awesome/arch-books"); code != 200 || !strings.Contains(body, "Hypermedia Systems") {
 		t.Errorf("child page %d", code)
 	}
-	for _, p := range []string{"/tr/awesome/architecture", "/en/awesome/nope", "/en/awesome/Bad_Slug"} {
+	// No tr links: the tr page lists the en ones, tagged (Phase 7.3).
+	if code, body := get(t, mux, "/tr/awesome/architecture"); code != 200 || !strings.Contains(body, `<span class="lang-tag mono" title="en">en</span>`) {
+		t.Errorf("tr fallback page %d", code)
+	}
+	for _, p := range []string{"/en/awesome/nope", "/en/awesome/Bad_Slug"} {
 		if code, _ := get(t, mux, p); code != 404 {
 			t.Errorf("%s: %d", p, code)
 		}
@@ -198,5 +202,5 @@ func TestAwesomeIndex(t *testing.T) {
 		t.Error("lists not in category order")
 	}
 	_, body = get(t, mux, "/tr/awesome")
-	must(t, body, `Burada henüz bağlantı yok.`)
+	must(t, body, `awesome architecture tr</a><span class="mono">3 bağlantı</span>`)
 }

@@ -15,6 +15,7 @@ import (
 // presCard is one card on /{lang}/presentations (design/Presentations).
 type presCard struct {
 	Href, Title, Desc, Event, Lang, Date, City, Type, Tone string
+	Other                                                  string // its page language, when not the page's (fallback)
 	Slides                                                 int
 	Cover                                                  *image
 }
@@ -57,7 +58,7 @@ func (h *Handlers) presentations(w http.ResponseWriter, r *http.Request, lang st
 	p.Head.Feeds = []feedLink{{Title: i18n.T(lang, "feed.presentations"), Href: "/" + lang + "/presentations/feed.xml"}}
 	count := map[string]int{}
 	for _, x := range list {
-		c := presCard{Href: "/" + lang + "/presentations/" + x.Slug, Title: x.Title, Desc: x.Summary, Event: x.Event, Lang: x.TalkLang,
+		c := presCard{Href: "/" + x.Lang + "/presentations/" + x.Slug, Other: other(lang, x.Lang), Title: x.Title, Desc: x.Summary, Event: x.Event, Lang: x.TalkLang,
 			Date: presentation.Day(x.HeldOn), City: x.City, Type: x.Type, Tone: presTone(x), Slides: x.SlideCount}
 		if x.CoverMediaID != nil {
 			if im, ok := imgs[*x.CoverMediaID]; ok {

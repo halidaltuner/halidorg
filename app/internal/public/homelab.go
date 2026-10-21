@@ -22,6 +22,7 @@ type homelabChip struct {
 
 type buildCard struct {
 	Href, Name, Tagline, Category, CategoryKey, Tone, Status, Cost, Time string
+	Other                                                                string // its language, when not the page's (fallback)
 	Cover                                                                *image
 }
 
@@ -84,7 +85,7 @@ func (h *Handlers) homelab(w http.ResponseWriter, r *http.Request, lang string) 
 	var all []buildCard
 	present := map[string]bool{}
 	for _, x := range list {
-		c := buildCard{Href: "/" + lang + "/projects/" + x.Slug, Name: x.Title, Tagline: x.Tagline, Time: x.TimeSpent,
+		c := buildCard{Href: "/" + x.Lang + "/projects/" + x.Slug, Other: other(lang, x.Lang), Name: x.Title, Tagline: x.Tagline, Time: x.TimeSpent,
 			Status: i18n.T(lang, "kind.project.status."+x.ProjectStatus), Tone: h.projectTone(ctx, x)}
 		if x.CategoryID != nil {
 			if cat, ok := byID[*x.CategoryID]; ok {
