@@ -11,7 +11,7 @@
 {{- with $p.Tagline}}<p class="pd-tagline" lang="{{$.ArticleLang}}">{{.}}</p>{{end}}
 {{- with $p.Links}}<div class="pd-links">{{range $i, $l := .}}<a class="pd-btn{{if eq $i 0}} primary{{end}}" href="{{$l.URL}}">{{$l.Label}}</a>{{end}}</div>{{end}}
 </div>
-<div class="pd-cover">{{if $p.Cover}}{{template "cover" dict "tone" $p.Tone "image" $p.Cover.URL "alt" $p.Cover.Alt}}{{else}}{{template "cover" dict "tone" $p.Tone}}{{end}}</div>
+<div class="pd-cover">{{if $p.Cover}}{{template "cover" dict "tone" $p.Tone "image" $p.Cover.URL "alt" $p.Cover.Alt "eager" true}}{{else}}{{template "cover" dict "tone" $p.Tone}}{{end}}</div>
 </div>
 </section>
 <div class="pd-wrap">

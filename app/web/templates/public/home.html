@@ -8,7 +8,7 @@
 </div>
 {{- with .Featured}}
 <a class="featured" href="{{.Href}}">
-<div class="featured-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
+<div class="featured-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt "eager" true}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
 <div class="featured-body"><span class="mono">{{tr $.Lang "home.featured"}} · {{.Date}} · {{.Minutes}}</span><span class="featured-title">{{.Title}}</span></div>
 </a>{{end}}
 </div>

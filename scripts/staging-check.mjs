@@ -1,7 +1,7 @@
 // Exit checks against staging: Phase 1 (prompts/phase-1.md, "Phase 1 exit
 // check"), Phase 4 (projects, homelab, GitHub, stream) and Phase 5 (about,
-// now, certificates, photos, presentations, the derived sections) and Phase 6
-// (the tech radar). Read-only: it
+// now, certificates, photos, presentations, the derived sections), Phase 6
+// (the tech radar) and Phase 7.5 (Lighthouse, scripts/lighthouse.mjs). Read-only: it
 // never signs in to the admin and never writes.
 // Run by .github/workflows/staging-check.yml with the Access service token.
 //
@@ -9,6 +9,7 @@
 //     node scripts/staging-check.mjs out/
 import { chromium } from "playwright";
 import fs from "node:fs";
+import { runLighthouse } from "./lighthouse.mjs";
 
 const origin = (process.env.STAGING_ORIGIN || "https://staging.halid.org").replace(/\/$/, "");
 const out = process.argv[2] || "out";
@@ -302,6 +303,13 @@ for (const [w, h] of [[1280, 900], [390, 844]]) {
 	await ctx.close();
 }
 await browser.close();
+
+// 9. Lighthouse (Phase 7.5): desktop LCP and script budget on home, a post
+// and a list; mobile reported. Pages are warm (KV HITs) by now.
+await runLighthouse({
+	origin, headers: access, chromePath: chromium.executablePath(), out, check,
+	paths: ["/en/", ...(slug ? [`/en/posts/${slug}`] : []), "/en/projects"],
+});
 
 fs.writeFileSync(`${out}/report.json`, JSON.stringify({ origin, at: new Date().toISOString(), results }, null, 2));
 const failed = results.filter((r) => !r.ok);
