@@ -1,9 +1,11 @@
 {{/* Cover (design/Cover.dc.html). Args via dict: tone (cyan, indigo, amber, green,
-   orange, rose, violet, navy), image, alt, radius (1 or 2). Fills its parent,
+   orange, rose, violet, navy), image, alt, radius (1 or 2), eager (the page's
+   hero, likely its LCP: loaded at once, high priority). Fills its parent,
    which must be position:relative with an aspect ratio. Without an image it
    draws the striped tone fallback. */}}
 {{define "cover"}}<div class="cover tone-{{or .tone "cyan"}}{{with .radius}} r-{{.}}{{end}}">
-{{- if .image}}<img src="{{.image}}" alt="{{.alt}}" loading="lazy" decoding="async">
+{{- if and .image .eager}}<img src="{{.image}}" alt="{{.alt}}" fetchpriority="high" decoding="async">
+{{- else if .image}}<img src="{{.image}}" alt="{{.alt}}" loading="lazy" decoding="async">
 {{- else}}<span class="cover-stripes" aria-hidden="true"></span><span class="cover-ring" aria-hidden="true"></span><span class="cover-ring ab" aria-hidden="true"></span>{{end -}}
 </div>{{end}}
 

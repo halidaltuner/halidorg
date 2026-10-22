@@ -22,7 +22,7 @@ jobs:
         working-directory: scripts
         run: |
           npm init -y >/dev/null
-          npm install --no-save playwright@1.56.0
+          npm install --no-save playwright@1.56.0 lighthouse@12.8.2
           npx playwright install --with-deps chromium
       - name: Check staging
         working-directory: scripts

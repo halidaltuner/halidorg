@@ -26,6 +26,10 @@
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="{{asset "/static/brand/monogram.svg"}}" type="image/svg+xml">
 <link rel="apple-touch-icon" href="{{asset "/static/brand/apple-touch-icon.png"}}">
+{{/* The text fonts most pages paint first (Phase 7.5): body, headings, meta. */}}
+<link rel="preload" href="/static/fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/ibm-plex-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="{{asset "/static/css/tokens.css"}}">
 <link rel="stylesheet" href="{{asset "/static/css/app.css"}}">
 <script src="{{asset "/static/js/header.js"}}" defer></script>

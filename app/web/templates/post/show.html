@@ -1,4 +1,4 @@
-{{define "content"}}<div class="post-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
+{{define "content"}}<div class="post-cover">{{if .Cover}}{{template "cover" dict "tone" .Tone "image" .Cover.URL "alt" .Cover.Alt "eager" true}}{{else}}{{template "cover" dict "tone" .Tone}}{{end}}</div>
 <div class="post-layout">
 {{- if .TOC}}
 <aside class="toc" aria-label="{{tr .Lang "post.contents"}}">

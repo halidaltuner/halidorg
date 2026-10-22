@@ -19,7 +19,7 @@
 </div>
 {{- else}}
 <div class="prd-deck prd-nodeck">
-<div class="prd-frame">{{if $p.Cover}}{{template "cover" dict "tone" $p.Tone "image" $p.Cover.URL "alt" $p.Cover.Alt}}{{else}}{{template "pres-slide" dict "tone" $p.Tone "title" $p.Title "event" $p.Event}}{{end}}</div>
+<div class="prd-frame">{{if $p.Cover}}{{template "cover" dict "tone" $p.Tone "image" $p.Cover.URL "alt" $p.Cover.Alt "eager" true}}{{else}}{{template "pres-slide" dict "tone" $p.Tone "title" $p.Title "event" $p.Event}}{{end}}</div>
 <p class="prd-bar mono">{{tr .Lang "pres.no_deck"}}</p>
 </div>
 {{- end}}
