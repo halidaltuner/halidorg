@@ -204,6 +204,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	jobs.NewEntryJobs(stores.DB, stores.Search, stores.Blob, jobs.NewWarmer(mux, stores.KV)).
 		WithFavicons(fetch.New(5 * time.Second)).Register(runner)
 	webmention.NewReceiver(stores.DB, stores.Blob, fetch.New(8*time.Second)).Register(runner)
+	webmention.NewSender(stores.DB, fetch.New(8*time.Second)).Register(runner)
 	runner.Register(mux)
 
 	seed := authn.RequireSession(devseed.New(stores.DB, runner))

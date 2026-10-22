@@ -303,6 +303,7 @@ type postPage struct {
 	OtherURL     string
 	Tone         string
 	Cover        *image
+	Author       author // the h-card in the h-entry (Phase 8.2)
 }
 
 type backlink struct {
@@ -509,6 +510,10 @@ func (h *Handlers) article(w http.ResponseWriter, r *http.Request, lang, kind st
 		Tone:         articleTone(p),
 	}
 	pg.Conn = conn
+	if pg.Author, err = h.author(r.Context(), p.Lang); err != nil {
+		h.fail(w, r, err)
+		return
+	}
 	if p.CoverMediaID != nil {
 		imgs, err := h.images(r.Context(), lang, []string{*p.CoverMediaID})
 		if err != nil {

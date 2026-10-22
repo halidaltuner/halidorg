@@ -105,7 +105,7 @@ func TestPostPage(t *testing.T) {
 	}
 	must(t, body,
 		`<title>Notes on an htmx-first admin · halid.org</title>`,
-		`<article class="post" lang="en">`,
+		`<article class="post h-entry" lang="en">`,
 		`<a class="toc-l2" href="#why-not-an-spa">Why not an SPA</a>`,
 		`<aside class="sn" id="sn-1">`,
 		`series: <a href="/en/series/kromatik">building kromatik</a> (2/2)`,
@@ -136,7 +136,7 @@ func TestUntranslatedFallback(t *testing.T) {
 	}
 	must(t, body,
 		`<html lang="tr">`,
-		`<article class="post" lang="en">`,
+		`<article class="post h-entry" lang="en">`,
 		`Bu yazı henüz Türkçeye çevrilmedi.`,
 		`<a href="/en/posts/htmx-admin">özgün sürüm →</a>`,
 		`<meta name="robots" content="noindex">`,

@@ -111,3 +111,24 @@ func TestRedirectsAndLimits(t *testing.T) {
 		t.Errorf("redirect followed: %v %+v", err, res)
 	}
 }
+
+func TestPostForm(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = r.ParseForm()
+		w.Header().Set("Link", `<https://a.example.com/wm>; rel="webmention"`)
+		w.WriteHeader(http.StatusAccepted)
+		_, _ = w.Write([]byte(r.Method + " " + r.Header.Get("Content-Type") + " " + r.PostForm.Get("source")))
+	}))
+	defer srv.Close()
+	c := clientTo(t, srv, func(netip.Addr) bool { return true })
+	res, err := c.PostForm(context.Background(), "http://a.example.com/wm", url.Values{"source": {"https://halid.org/en/posts/x"}}, 1<<10)
+	if err != nil || res.Status != http.StatusAccepted || string(res.Body) != "POST application/x-www-form-urlencoded https://halid.org/en/posts/x" {
+		t.Fatalf("post: %v %+v", err, res)
+	}
+	if res.Header.Get("Link") == "" {
+		t.Error("headers not returned")
+	}
+	if _, err := c.PostForm(context.Background(), "http://localhost/wm", url.Values{}, 1<<10); !errors.Is(err, ErrBlocked) {
+		t.Errorf("localhost post: %v", err)
+	}
+}

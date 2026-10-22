@@ -2,8 +2,11 @@ package public
 
 import (
 	"context"
+	"net/url"
 	"strings"
 	"testing"
+
+	"willnorris.com/go/microformats"
 
 	"halid.org/engine/internal/content/post"
 )
@@ -48,4 +51,34 @@ VALUES (?, ?, '', ?, 'Ada', ?, ?, ?, ?, 1792131120, 1, 1)`, "01WM000000000000000
 	}
 	_, body = get(t, mux, "/tr/posts/htmx-admin")
 	must(t, body, `webmention&#39;lar · 1 yanıt · 2 beğeni`)
+}
+
+// A post page is an h-entry with its permalink, date and an author h-card
+// (Phase 8.2), as the receiver's own parser reads it.
+func TestPostMicroformats(t *testing.T) {
+	mux, db := newSite(t)
+	seed(t, db)
+	_, body := get(t, mux, "/en/posts/htmx-admin")
+	u, _ := url.Parse("https://halid.org/en/posts/htmx-admin")
+	data := microformats.Parse(strings.NewReader(body), u)
+	var entry *microformats.Microformat
+	for _, it := range data.Items {
+		if len(it.Type) > 0 && it.Type[0] == "h-entry" {
+			entry = it
+		}
+	}
+	if entry == nil {
+		t.Fatal("no h-entry")
+	}
+	p := entry.Properties
+	if len(p["name"]) == 0 || len(p["published"]) == 0 || len(p["content"]) == 0 || len(p["url"]) == 0 || len(p["author"]) == 0 {
+		t.Fatalf("h-entry properties %v", p)
+	}
+	if !strings.HasSuffix(p["url"][0].(string), "/en/posts/htmx-admin") {
+		t.Errorf("u-url %v", p["url"])
+	}
+	a, ok := p["author"][0].(*microformats.Microformat)
+	if !ok || a.Type[0] != "h-card" || len(a.Properties["name"]) == 0 || !strings.HasSuffix(a.Properties["url"][0].(string), "/about") {
+		t.Errorf("author %+v", p["author"][0])
+	}
 }

@@ -6,18 +6,18 @@
 {{- range .TOC}}<a class="toc-l{{.Level}}" href="#{{.ID}}">{{.Text}}</a>{{end}}
 </aside>
 {{- end}}
-<article class="post" lang="{{.ArticleLang}}">
+<article class="post h-entry" lang="{{.ArticleLang}}">
 {{- if .Untranslated}}
 <div class="banner-untranslated" lang="{{.Lang}}">{{tr .Lang "post.untranslated"}} <a href="{{.OtherURL}}">{{tr .Lang "post.read_original"}} →</a></div>
 {{- end}}
 <header class="post-head">
 <span class="post-crumb mono"><a href="/{{.Lang}}/{{.Section}}">← {{tr .Lang (print "nav." .Section)}}</a>{{with .Series}} · {{tr $.Lang "post.series"}}: <a href="/{{$.ArticleLang}}/series/{{.Slug}}">{{.Title}}</a> ({{.Index}}/{{.Total}}){{end}}</span>
-<h1>{{.Post.Title}}</h1>
+<h1 class="p-name">{{.Post.Title}}</h1>
 <div class="post-meta mono">
 {{- if eq .Post.Kind "garden"}}<span class="badge mat-{{.Post.Maturity}}">{{tr .Lang (print "garden.maturity." .Post.Maturity)}}</span>{{with .Post.LastTendedAt}}<span>{{tr $.Lang "garden.tended"}} {{date .}}</span>{{end}}
-{{- else}}{{with .Post.PublishedAt}}<time>{{date .}}</time>{{end}}{{end}}
+{{- else}}{{with .Post.PublishedAt}}<time class="dt-published" datetime="{{datetime .}}">{{date .}}</time>{{end}}{{end}}
 <span>{{minutes $.Lang .Post.ReadingMinutes}}</span>
-{{- if .Tags}}<span>{{range .Tags}}<a href="{{.Href}}">#{{.Name}}</a> {{end}}</span>{{end}}
+{{- if .Tags}}<span>{{range .Tags}}<a class="p-category" href="{{.Href}}">#{{.Name}}</a> {{end}}</span>{{end}}
 {{- range .Translations}}<span lang="{{.Lang}}">{{if .Missing}}{{.Lang}}: {{tr $.Lang "post.not_yet"}}{{else}}<a href="{{.Href}}" hreflang="{{.Lang}}">{{.Lang}} ↗</a>{{end}}</span>{{end}}
 </div>
 </header>
@@ -34,7 +34,9 @@
 </aside>
 {{- end}}
 {{- end}}
-<div class="prose">{{.Body}}</div>
+<div class="prose e-content">{{.Body}}</div>
+{{- /* The h-entry's permalink and author for IndieWeb readers (Phase 8.2); not shown. */}}
+<div class="mf-hidden"><a class="u-url" href="{{.Head.Canonical}}"></a>{{with .Post.Summary}}<span class="p-summary">{{.}}</span>{{end}}{{with .Author}}<a class="p-author h-card" href="{{.URL}}">{{with .Photo}}<img class="u-photo" src="{{.}}" alt="">{{end}}<span class="p-name">{{.Name}}</span></a>{{end}}</div>
 {{- with .Series}}{{if or .Prev .Next}}
 <nav class="series-nav" aria-label="{{tr $.Lang "post.series"}}">
 {{- with .Prev}}<a href="{{.Path}}"><span class="mono">← {{sub $.Series.Index 1}}/{{$.Series.Total}}</span><span>{{.Title}}</span></a>{{else}}<span></span>{{end}}

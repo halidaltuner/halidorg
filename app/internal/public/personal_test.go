@@ -43,7 +43,7 @@ func TestAboutAndNow(t *testing.T) {
 		t.Fatalf("about %d", code)
 	}
 	must(t, body,
-		`<h1>Hi, I’m <span class="ab-name mono">Halid</span>.</h1>`, `<strong>Istanbul</strong>`,
+		`<h1>Hi, I’m <span class="ab-name mono p-name">Halid</span>.</h1>`, `<strong>Istanbul</strong>`,
 		`<a class="cta-primary" href="mailto:me@halid.org">say hello</a><a class="cta-outline" href="/`+cv.R2Key+`" download>cv.pdf</a><a class="cta-outline" href="https://github.com/x">github</a>`,
 		`<div class="ab-skill tone-cyan"><span class="h mono">languages</span><div class="ab-pills"><span>Go</span><span>SQL</span></div></div>`,
 		`<span class="when mono">2023 – now</span><span class="role">Platform Engineer <span class="org">· Acme</span></span>`,

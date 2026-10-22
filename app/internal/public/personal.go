@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"net/url"
 	"time"
 
 	"halid.org/engine/internal/content"
@@ -49,6 +50,49 @@ type aboutCard struct {
 type aboutBadge struct {
 	ID, Tone string
 	Image    *image
+}
+
+// author is the site owner as an h-card on articles (Phase 8.2): the About
+// page's name and portrait, in lang or else the other language. Empty
+// fields when there is no About page yet; the card then names the host.
+type author struct {
+	Name, URL, Photo string
+}
+
+func (h *Handlers) author(ctx context.Context, lang string) (author, error) {
+	a := author{URL: h.origin + "/" + lang + "/about"}
+	langs := []string{lang}
+	for _, l := range i18n.Supported {
+		if l != lang {
+			langs = append(langs, l)
+		}
+	}
+	for _, l := range langs {
+		pg, err := h.pageRepo.GetPublished(ctx, l, pages.About)
+		if errors.Is(err, content.ErrNotFound) {
+			continue
+		}
+		if err != nil {
+			return a, err
+		}
+		a.Name, a.URL = pg.Data.Name, h.origin+"/"+l+"/about"
+		if pg.Data.Portrait != "" {
+			imgs, err := h.images(ctx, l, []string{pg.Data.Portrait})
+			if err != nil {
+				return a, err
+			}
+			if im, ok := imgs[pg.Data.Portrait]; ok {
+				a.Photo = h.origin + im.URL
+			}
+		}
+		break
+	}
+	if a.Name == "" {
+		if u, err := url.Parse(h.origin); err == nil {
+			a.Name = u.Hostname()
+		}
+	}
+	return a, nil
 }
 
 func (h *Handlers) about(w http.ResponseWriter, r *http.Request, lang string) {

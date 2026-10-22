@@ -1,15 +1,16 @@
-{{define "content"}}<section class="ab-hero dark">
+{{define "content"}}<section class="ab-hero dark h-card">
 <div class="ab-hero-in">
 <div class="ab-copy">
 <span class="eyebrow mono">// {{tr .Lang "about.eyebrow"}}</span>
-<h1>{{tr .Lang "about.hi"}}{{with .Name}} <span class="ab-name mono">{{.}}</span>{{end}}.</h1>
-<div class="ab-bio">{{.Bio}}</div>
+<h1>{{tr .Lang "about.hi"}}{{with .Name}} <span class="ab-name mono p-name">{{.}}</span>{{end}}.</h1>
+<div class="ab-bio p-note">{{.Bio}}</div>
+<a class="u-url u-uid mf-hidden" href="{{.Head.Canonical}}" rel="me"></a>
 {{- with .CTAs}}
 <div class="home-ctas">{{range .}}<a class="{{if .Primary}}cta-primary{{else}}cta-outline{{end}}" href="{{.Href}}"{{if .Download}} download{{end}}>{{.Label}}</a>{{end}}</div>
 {{- end}}
 </div>
 {{- with .Portrait}}
-<div class="ab-portrait"><span class="ab-frame r" aria-hidden="true"></span><span class="ab-frame c" aria-hidden="true"></span><img src="{{.URL}}" alt="{{.Alt}}" decoding="async"></div>
+<div class="ab-portrait"><span class="ab-frame r" aria-hidden="true"></span><span class="ab-frame c" aria-hidden="true"></span><img class="u-photo" src="{{.URL}}" alt="{{.Alt}}" decoding="async"></div>
 {{- end}}
 </div>
 </section>

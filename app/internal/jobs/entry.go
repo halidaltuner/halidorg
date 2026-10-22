@@ -80,6 +80,7 @@ type entryRow struct {
 	Parent     *string `json:"parent"`
 	Logs       *string `json:"logs"`
 	Published  *int64  `json:"published_at"`
+	PubRev     *string `json:"published_revision_id"`
 	Minutes    *int    `json:"reading_minutes"`
 	Version    *string `json:"version_day"`
 	Series     *string `json:"series"`
@@ -91,7 +92,7 @@ type entryRow struct {
 // finds drafts by their latest text). nil when the entry is gone.
 func load(ctx context.Context, db store.DB, id string) (*entryRow, error) {
 	res, err := db.Query(ctx, `SELECT e.id, e.kind, e.lang, e.slug, e.title, e.summary, e.status, e.visibility,
-  e.translation_group_id, r.body_md, r.data_json, e.published_at,
+  e.translation_group_id, r.body_md, r.data_json, e.published_at, e.published_revision_id,
   -- kind fields worth finding: a link's domain and URL, a fav's author
   CASE e.kind WHEN 'link' THEN (SELECT l.domain || ' ' || l.url FROM links l WHERE l.entry_id = e.id)
               WHEN 'fav' THEN (SELECT coalesce(f.author, '') || ' ' || f.fav_type FROM favs f WHERE f.entry_id = e.id)
@@ -223,7 +224,50 @@ func (e *EntryJobs) changed(ctx context.Context, raw json.RawMessage) error {
 	if _, err := e.warm.Warm(ctx, Paths(c)); err != nil {
 		return err
 	}
-	return e.index(ctx, p.EntryID, row)
+	if err := e.index(ctx, p.EntryID, row); err != nil {
+		return err
+	}
+	return e.queueSend(ctx, p.EntryID, c, row)
+}
+
+// TypeWebmentionSend notifies the outside pages an entry links to (Phase
+// 8.2, internal/webmention).
+const TypeWebmentionSend = "webmention.send"
+
+// WebmentionSend is its payload.
+type WebmentionSend struct {
+	EntryID string `json:"entry_id"`
+}
+
+// queueSend queues webmention.send when what the outside should know
+// changed: a public entry's published revision or URL differs from the
+// last one sent, or an entry that was sent is no longer public. Saves that
+// leave the published revision alone queue nothing.
+func (e *EntryJobs) queueSend(ctx context.Context, id string, c Change, row *entryRow) error {
+	if e.jobs == nil || e.origin == "" {
+		return nil
+	}
+	res, err := e.db.Query(ctx, `SELECT source_url, revision_id FROM webmention_sources WHERE entry_id = ?`, id)
+	if err != nil {
+		return err
+	}
+	sent, err := store.Scan[struct {
+		Source string `json:"source_url"`
+		Rev    string `json:"revision_id"`
+	}](res)
+	if err != nil {
+		return err
+	}
+	want := len(sent) == 1 // gone or unlisted: tell the old targets
+	if c.Now != nil && c.Now.Listed && ItemPath(*c.Now) != "" && row != nil && row.PubRev != nil {
+		src := e.origin + ItemPath(*c.Now)
+		want = len(sent) == 0 || sent[0].Source != src || sent[0].Rev != *row.PubRev
+	}
+	if !want {
+		return nil
+	}
+	_, err = e.jobs.Enqueue(ctx, TypeWebmentionSend, WebmentionSend{EntryID: id})
+	return err
 }
 
 // cards keeps OG images in step with the entry: rendered while it is listed,
