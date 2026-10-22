@@ -131,6 +131,7 @@ type Response struct {
 	URL         *url.URL // after redirects
 	Status      int
 	ContentType string // from the server; sniff before trusting it
+	Header      http.Header
 	Body        []byte
 }
 
@@ -146,7 +147,18 @@ func (c *Client) GetPrefix(ctx context.Context, raw string, max int64) (*Respons
 	return c.get(ctx, raw, max, true)
 }
 
+// PostForm posts form, url-encoded, to raw and reads at most max bytes of
+// the answer (a larger one is cut, not an error). Redirects are followed
+// as GETs, each checked like Get's.
+func (c *Client) PostForm(ctx context.Context, raw string, form url.Values, max int64) (*Response, error) {
+	return c.do(ctx, http.MethodPost, raw, form, max, true)
+}
+
 func (c *Client) get(ctx context.Context, raw string, max int64, prefix bool) (*Response, error) {
+	return c.do(ctx, http.MethodGet, raw, nil, max, prefix)
+}
+
+func (c *Client) do(ctx context.Context, method, raw string, form url.Values, max int64, prefix bool) (*Response, error) {
 	u, err := url.Parse(raw)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrBlocked, err)
@@ -154,12 +166,19 @@ func (c *Client) get(ctx context.Context, raw string, max int64, prefix bool) (*
 	if err := Check(u); err != nil {
 		return nil, err
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
+	var body io.Reader
+	if form != nil {
+		body = strings.NewReader(form.Encode())
+	}
+	req, err := http.NewRequestWithContext(ctx, method, u.String(), body)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("User-Agent", UserAgent)
 	req.Header.Set("Accept", "*/*")
+	if form != nil {
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	}
 	res, err := c.hc.Do(req)
 	if err != nil {
 		return nil, err
@@ -168,15 +187,15 @@ func (c *Client) get(ctx context.Context, raw string, max int64, prefix bool) (*
 	if res.ContentLength > max && !prefix {
 		return nil, ErrTooLarge
 	}
-	body, err := io.ReadAll(io.LimitReader(res.Body, max+1))
+	data, err := io.ReadAll(io.LimitReader(res.Body, max+1))
 	if err != nil {
 		return nil, err
 	}
-	if int64(len(body)) > max {
+	if int64(len(data)) > max {
 		if !prefix {
 			return nil, ErrTooLarge
 		}
-		body = body[:max]
+		data = data[:max]
 	}
-	return &Response{URL: res.Request.URL, Status: res.StatusCode, ContentType: res.Header.Get("Content-Type"), Body: body}, nil
+	return &Response{URL: res.Request.URL, Status: res.StatusCode, ContentType: res.Header.Get("Content-Type"), Header: res.Header, Body: data}, nil
 }

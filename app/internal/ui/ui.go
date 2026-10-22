@@ -176,6 +176,7 @@ func Funcs() template.FuncMap {
 		"add":         func(a, b int) int { return a + b },
 		"sub":         func(a, b int) int { return a - b },
 		"thousands":   Thousands,
+		"datetime":    DateTime,
 		"richLabels":  RichLabels,
 		"coverLabels": CoverLabels,
 		// deref reads an optional string field (a nullable column) in templates.
@@ -196,6 +197,20 @@ func Date(v any) string {
 	case *int64:
 		if t != nil {
 			return time.Unix(*t, 0).UTC().Format("2006-01-02")
+		}
+	}
+	return ""
+}
+
+// DateTime formats unix seconds (int64 or *int64) as RFC 3339 in UTC, for
+// datetime attributes and dt-published.
+func DateTime(v any) string {
+	switch t := v.(type) {
+	case int64:
+		return time.Unix(t, 0).UTC().Format(time.RFC3339)
+	case *int64:
+		if t != nil {
+			return time.Unix(*t, 0).UTC().Format(time.RFC3339)
 		}
 	}
 	return ""

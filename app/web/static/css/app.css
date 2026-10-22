@@ -935,6 +935,8 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
 .backlinks p { margin: 0; font-size: var(--fs-15); color: var(--text-muted); }
 .backlinks > a { font-size: var(--fs-16); text-decoration: none; }
 .backlinks + .backlinks { margin-top: var(--sp-32); }
+/* Microformats that only machines read (h-entry permalink, author h-card). */
+.mf-hidden { display: none; }
 /* Webmentions under a detail page (design/Post.dc.html #mentions). */
 .mentions { max-width: var(--w-prose); margin-top: var(--sp-48); display: flex; flex-direction: column; gap: var(--sp-16); }
 .mentions h3 { margin: 0; font-size: var(--fs-13); font-weight: 500; color: var(--text-muted); }
