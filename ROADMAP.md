@@ -41,7 +41,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] Post list, tag page **(derive)**, 404/410 **(derive)**
 
 **Admin**
-- [ ] Dashboard **(designed)**: drafts, scheduled + recent, failed jobs, 404s (webmentions panel hidden until Phase 8)
+- [ ] Dashboard **(designed)**: drafts, scheduled + recent, failed jobs, 404s (webmentions panel since Phase 8.1)
 - [ ] Editor **(designed)**: CodeMirror 6 | htmx preview | side panel, autosave 800ms, ⌘S / ⌘⇧P, SEO counter, translation status, revisions list, typed-slug delete
 - [ ] Re-auth gate on publish and delete
 - [ ] Entry list, media library, revisions diff **(derive)**
@@ -93,7 +93,8 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [x] Block editor for every other body editor: short kinds, presentations, terms, books, projects, build logs and the About page, all through the shared entry form (7.6b)
 
 ## Phase 8: IndieWeb and distribution (S/M)
-- [ ] Webmention receive + moderation (dashboard panel **(designed)**), send on publish
+- [x] Webmention receive + moderation (dashboard panel **(designed)**) and display on detail pages (8.1)
+- [ ] Webmention send on publish
 - [ ] POSSE to X and LinkedIn (manual confirm), syndication URLs
 - [ ] Newsletter optional
 

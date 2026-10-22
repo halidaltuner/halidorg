@@ -15,6 +15,7 @@ import (
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/search"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/webmention"
 )
 
 // EntryRow is one entry in a dashboard panel or search result.
@@ -65,6 +66,13 @@ type dashPage struct {
 	Redirect                  redirectForm
 	Deleted                   string // slug of an entry just deleted from its editor
 	Bookmarklet               template.URL
+	Mentions                  []mentionRow
+	MentionCount              int
+}
+
+// mentionRow is a webmention waiting in the moderation panel.
+type mentionRow struct {
+	Lang, ID, Source, Host, Kind, Target, Text string
 }
 
 type entryRec struct {
@@ -185,6 +193,20 @@ func (h *Handlers) renderDash(w http.ResponseWriter, r *http.Request, f redirect
 		h.fail(w, err)
 		return
 	}
+	queued, n, err := h.mentions.Pending(ctx, 8)
+	if err != nil {
+		h.fail(w, err)
+		return
+	}
+	p.MentionCount = n
+	for _, m := range queued {
+		text := m.Content
+		if m.Author != "" {
+			text = m.Author + ": " + text
+		}
+		p.Mentions = append(p.Mentions, mentionRow{Lang: lang, ID: m.ID, Source: m.SourceURL, Host: webmention.Host(m.SourceURL),
+			Kind: i18n.T(lang, "admin.wm."+m.Type), Target: m.Title, Text: strings.TrimSuffix(text, ": ")})
+	}
 	h.ui.Render(w, status, h.dash, p)
 }
 
@@ -240,6 +262,39 @@ func (h *Handlers) retryJob(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	h.ui.Fragment(w, http.StatusOK, h.dash, "job-row", row)
+}
+
+// moderate approves or rejects a webmention. Either way it leaves the
+// panel: htmx gets an empty row and the new count; a plain post returns to
+// the dashboard. Approving re-renders the pages that show it.
+func (h *Handlers) moderate(status string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		paths, err := h.mentions.Moderate(ctx, r.PathValue("id"), status)
+		if errors.Is(err, content.ErrNotFound) {
+			http.NotFound(w, r)
+			return
+		}
+		if err != nil {
+			h.fail(w, err)
+			return
+		}
+		if len(paths) > 0 {
+			if err := jobs.EnqueuePages(ctx, h.jobs, paths...); err != nil {
+				slog.Error("webmention: enqueue pages", "err", err) // the job row stays queued for a retry
+			}
+		}
+		if !IsHTMX(r) {
+			http.Redirect(w, r, "/admin", http.StatusSeeOther)
+			return
+		}
+		_, n, err := h.mentions.Pending(ctx, 0)
+		if err != nil {
+			h.fail(w, err)
+			return
+		}
+		h.ui.Fragment(w, http.StatusOK, h.dash, "wm-count", n)
+	}
 }
 
 // addRedirect stores a redirect (or a 410 tombstone) for a path that 404s.

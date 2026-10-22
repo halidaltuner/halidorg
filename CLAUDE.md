@@ -34,6 +34,7 @@ Phase 0 spike findings. Full list in `prompts/_constraints.md`, details in `docs
 - KV pages carry the deploy SHA that rendered them (`PageMeta.deploy`). The Worker serves a page from an older deploy and re-renders it in the background (`X-Cache: STALE`), and `scripts/refresh-edge.sh` touches every page after each deploy. Template and CSS changes therefore reach unchanged content without a purge.
 - Presentation decks are served only on the decks host (`DECKS_ORIGIN`) by `worker/src/decks.ts`, which never falls through to KV or the container. The page and a deck talk via `postMessage` (`deck.js`, `presentation.Bridge`).
 - Public R2 objects (`/og/*`, `/media/*`) are served by the Worker (`worker/src/r2public.ts`), never by the container; the Content-Type comes from the key's extension, which the app picks after sniffing the bytes. Media is images and PDFs (the CV, served as a download), no SVG.
+- Webmentions are accepted by the Worker (`worker/src/webmention.ts`: checks, rate limit, queues `webmention.receive`), never by the container. The job (`internal/webmention`) is the only place that fetches a source; stored text is plain, never HTML.
 - Admin JS vendors (htmx, CodeMirror 6, Tiptap 3) are built by `scripts/build-editor.sh` from pinned versions in `editor/package.json` and committed under `app/web/static/vendor`. The Tiptap editor stores Markdown: every node writes its syntax back unchanged (`editor/test/roundtrip.test.js`), and a document it cannot write back opens in the Markdown view.
 
 ## Conventions

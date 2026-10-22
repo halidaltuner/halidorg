@@ -21,6 +21,7 @@ Every prompt that touches Worker, container, storage or routes should be read to
 ## Jobs
 - The container cannot consume Queues. A **consumer Worker** receives messages and forwards each job to the container over the internal path. Queue bindings are defined per env in `wrangler.jsonc`.
 - Cron triggers enqueue; they never call the container directly.
+- Webmentions: the Worker answers `POST /webmention` (checks, 60 per 10 minutes, queues `webmention.receive`); the container job verifies the source with `internal/fetch` and stores plain text only.
 
 ## Auth (ADR-005)
 - Re-auth uses `max_age=0` + `claims={"id_token":{"auth_time":{"essential":true}}}` (Google does not support `prompt=login`). Missing `auth_time` fails closed.

@@ -25,6 +25,20 @@
 </section>
 
 <section class="adm-panel">
+<h2>{{tr .Lang "admin.wm.title"}}{{template "wm-count" .MentionCount}}</h2>
+{{- range .Mentions}}
+<form class="adm-wm" method="post" action="/admin/webmentions/{{.ID}}/approve" hx-target="this" hx-swap="delete">
+<div class="adm-wm-src mono"><span><a href="{{.Source}}" rel="nofollow noopener" target="_blank">{{.Host}}</a> · {{.Kind}}</span><span class="tgt">→ {{.Target}}</span></div>
+{{- with .Text}}<div class="adm-wm-text">{{.}}</div>{{end}}
+<div class="adm-wm-acts">
+<button type="submit" class="adm-btn ok" hx-post="/admin/webmentions/{{.ID}}/approve">{{tr .Lang "admin.wm.approve"}}</button>
+<button type="submit" class="adm-btn bad" formaction="/admin/webmentions/{{.ID}}/reject" hx-post="/admin/webmentions/{{.ID}}/reject">{{tr .Lang "admin.wm.reject"}}</button>
+</div>
+</form>
+{{- else}}<p class="adm-empty">{{tr $.Lang "admin.wm.empty"}}</p>{{end}}
+</section>
+
+<section class="adm-panel">
 <h2>{{tr .Lang "admin.dash.failed"}}<span class="n bad">{{len .Failed}}</span></h2>
 {{- range .Failed}}
 {{template "job-row" .}}
@@ -33,6 +47,9 @@
 </section>
 </div>
 {{end}}
+
+{{/* wm-count: the moderation queue size; moderating swaps it out of band. */}}
+{{define "wm-count"}}<span class="n muted" id="wm-n" hx-swap-oob="true">{{.}}</span>{{end}}
 
 {{define "entry-row"}}{{if .Href}}<a class="adm-row" href="{{.Href}}">{{else}}<div class="adm-row">{{end}}<span class="kdot" style="--k: var(--kind-{{.Kind}})"></span><span class="t">{{.Title}}</span><span class="mono muted">{{.Meta}}</span>{{if .Href}}</a>{{else}}</div>{{end}}{{end}}
 

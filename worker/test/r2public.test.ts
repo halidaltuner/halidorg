@@ -78,6 +78,18 @@ describe("serveR2Public", () => {
 		}
 	});
 
+	it("serves webmention avatars for a day, by hash only", async () => {
+		const key = "avatars/0123456789abcdef01234567.jpg";
+		const a = env({ [key]: "jpg" });
+		const res = (await serve(req("/" + key), a))!;
+		expect(res.status).toBe(200);
+		expect(res.headers.get("Content-Type")).toBe("image/jpeg");
+		expect(res.headers.get("Cache-Control")).toBe("public, max-age=86400");
+		for (const p of ["/avatars/me.jpg", "/avatars/0123456789abcdef01234567.svg", "/avatars/0123456789ABCDEF01234567.jpg"]) {
+			expect((await serve(req(p), a))!.status, p).toBe(404);
+		}
+	});
+
 	it("rejects writes", async () => {
 		expect((await serve(req("/og/en/posts/htmx.png", { method: "POST" }), e))!.status).toBe(405);
 	});

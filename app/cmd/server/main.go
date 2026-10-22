@@ -45,6 +45,7 @@ import (
 	"halid.org/engine/internal/styleguide"
 	"halid.org/engine/internal/taxonomy"
 	"halid.org/engine/internal/ui"
+	"halid.org/engine/internal/webmention"
 	"halid.org/engine/web"
 )
 
@@ -202,6 +203,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 	// so a purge re-renders pages exactly as visitors would get them.
 	jobs.NewEntryJobs(stores.DB, stores.Search, stores.Blob, jobs.NewWarmer(mux, stores.KV)).
 		WithFavicons(fetch.New(5 * time.Second)).Register(runner)
+	webmention.NewReceiver(stores.DB, stores.Blob, fetch.New(8*time.Second)).Register(runner)
 	runner.Register(mux)
 
 	seed := authn.RequireSession(devseed.New(stores.DB, runner))

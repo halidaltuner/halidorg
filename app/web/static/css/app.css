@@ -935,6 +935,18 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
 .backlinks p { margin: 0; font-size: var(--fs-15); color: var(--text-muted); }
 .backlinks > a { font-size: var(--fs-16); text-decoration: none; }
 .backlinks + .backlinks { margin-top: var(--sp-32); }
+/* Webmentions under a detail page (design/Post.dc.html #mentions). */
+.mentions { max-width: var(--w-prose); margin-top: var(--sp-48); display: flex; flex-direction: column; gap: var(--sp-16); }
+.mentions h3 { margin: 0; font-size: var(--fs-13); font-weight: 500; color: var(--text-muted); }
+.wm-card { display: flex; gap: var(--sp-12); padding: var(--sp-16); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-2); }
+.wm-av { width: 32px; height: 32px; border-radius: 50%; background: var(--surface-2); flex: none; object-fit: cover;
+  display: grid; place-items: center; font-size: var(--fs-13); color: var(--text-muted); }
+.wm-body { display: flex; flex-direction: column; gap: var(--sp-4); font-size: var(--fs-15); line-height: 1.6; min-width: 0; overflow-wrap: anywhere; }
+.wm-body p { margin: 0; }
+.wm-meta { font-size: var(--fs-12); color: var(--text-muted); }
+.wm-meta a { color: var(--link); text-decoration: none; }
+.wm-meta time { white-space: nowrap; }
+.wm-meta a:hover { text-decoration: underline; }
 .related-row { display: flex; gap: var(--sp-12); align-items: flex-start; color: var(--text); }
 .related-row .glyph { flex: none; }
 .related-text { display: flex; flex-direction: column; gap: var(--sp-4); }
@@ -1056,6 +1068,16 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
 .adm-job { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 9px var(--sp-16); border-top: 1px solid var(--border-soft); }
 .adm-job > .mono:first-child { font-size: var(--fs-13); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .adm-job .err { font-size: var(--fs-12); }
+/* Webmentions to moderate (design/Admin Dashboard.dc.html). */
+.adm-wm { display: flex; flex-direction: column; gap: 6px; padding: 10px var(--sp-16); border-top: 1px solid var(--border-soft); }
+.adm h2 + .adm-wm { border-top: 0; }
+.adm-wm-src { display: flex; justify-content: space-between; gap: var(--sp-8); font-size: var(--fs-12); color: var(--text-muted); min-width: 0; }
+.adm-wm-src a { color: var(--link); text-decoration: none; }
+.adm-wm-src span { flex: none; }
+.adm-wm-src .tgt { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.adm-wm-text { line-height: 1.5; overflow-wrap: anywhere; }
+.adm-wm-acts { display: flex; gap: var(--sp-8); }
+.adm-btn.ok { border-color: var(--success); }
 .adm-btn {
   font: inherit; font-size: var(--fs-12); padding: 3px 10px; border-radius: var(--radius-1);
   border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer;
