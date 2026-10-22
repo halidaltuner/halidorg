@@ -7,6 +7,7 @@ import { isDecksHost, serveDeck } from "./decks";
 import { consume, enqueueScheduled, type JobMessage, logNotFound } from "./jobs";
 import { serveR2Public } from "./r2public";
 import { serveSearch } from "./search";
+import { PATH as WEBMENTION, serveWebmention } from "./webmention";
 
 // Required by outboundByHost: without it the container fails to start.
 export { ContainerProxy } from "@cloudflare/containers";
@@ -54,6 +55,8 @@ export default {
 		if (url.pathname === "/internal" || url.pathname.startsWith("/internal/")) {
 			return new Response("Not Found", { status: 404 });
 		}
+		// Webmentions are queued at the edge (Phase 8.1): no container involved.
+		if (url.pathname === WEBMENTION) return serveWebmention(req, env);
 		const obj = await serveR2Public(req, url, env);
 		if (obj) return obj;
 		// The palette searches at the edge (ADR-010): no container involved.

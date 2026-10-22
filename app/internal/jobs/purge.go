@@ -172,6 +172,16 @@ func ListSegment(kind string) string { return listPath[kind] }
 // has none.
 func ItemSegment(kind string) string { return kindPath[kind] }
 
+// KindOfSegment is the kind whose item pages live under seg, or "".
+func KindOfSegment(seg string) string {
+	for k, s := range kindPath {
+		if s == seg {
+			return k
+		}
+	}
+	return ""
+}
+
 // ItemPath is the public path of one entry, or "" for kinds without pages yet.
 // A build log lives under its project: /{lang}/projects/{project}/log/{slug}.
 func ItemPath(r Ref) string {

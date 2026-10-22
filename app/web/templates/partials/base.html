@@ -22,6 +22,7 @@
 {{end}}<link rel="alternate" type="application/rss+xml" title="{{tr .Lang "feed.posts"}}" href="/{{.Lang}}/feed.xml">
 {{range .Head.Feeds}}<link rel="alternate" type="application/rss+xml" title="{{.Title}}" href="{{.Href}}">
 {{end}}<link rel="manifest" href="/manifest.webmanifest">
+<link rel="webmention" href="/webmention">
 <meta name="theme-color" content="#FFFFFF">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="{{asset "/static/brand/monogram.svg"}}" type="image/svg+xml">

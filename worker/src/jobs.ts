@@ -93,11 +93,22 @@ export async function enqueueScheduled(
 ): Promise<string | null> {
 	const type = SCHEDULES[cron];
 	if (!type) return null;
-	await env.DB.prepare(`INSERT INTO job_runs (id, type, payload, max_attempts, created_at) VALUES (?, ?, '{}', 4, ?)`)
-		.bind(id, type, Math.floor(now / 1000))
+	return enqueue(env, type, {}, now, id);
+}
+
+/** Enqueues a job like the container's jobs.Enqueue: the job_runs row, then the message. */
+export async function enqueue(
+	env: { DB: D1Database; JOBS: Queue<JobMessage> },
+	type: string,
+	payload: unknown,
+	now: number,
+	id = ulid(now),
+): Promise<string> {
+	await env.DB.prepare(`INSERT INTO job_runs (id, type, payload, max_attempts, created_at) VALUES (?, ?, ?, 4, ?)`)
+		.bind(id, type, JSON.stringify(payload), Math.floor(now / 1000))
 		.run();
 	try {
-		await env.JOBS.send({ id, type, payload: {} });
+		await env.JOBS.send({ id, type, payload });
 	} catch (err) {
 		await env.DB.prepare(`UPDATE job_runs SET status = 'failed', error = ? WHERE id = ?`)
 			.bind("enqueue: " + String(err), id)

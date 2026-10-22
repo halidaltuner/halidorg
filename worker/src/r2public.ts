@@ -3,6 +3,7 @@
 //   /og/...    OG cards rendered by the entry.changed job (render/og)
 //   /media/... images and PDFs from the admin media library (internal/media)
 //   /favicons/{domain}.{ext} link favicons fetched by the entry.changed job
+//   /avatars/{hash}.{ext} webmention authors' photos (internal/webmention)
 
 export interface R2PublicEnv {
 	MEDIA: R2Bucket;
@@ -12,9 +13,10 @@ const KEYS = [
 	/^og\/[a-z]{2}\/(?:[a-z0-9-]+\/)?[a-z0-9-]+\.png$/,
 	/^media\/[0-9A-Z]{26}\/[a-z0-9-]+\.(?:png|jpg|gif|webp|pdf)$/,
 	/^favicons\/[a-z0-9-]+(?:\.[a-z0-9-]+)+\.(?:png|jpg|gif|webp|ico)$/,
+	/^avatars\/[0-9a-f]{24}\.(?:png|jpg|gif|webp|ico)$/,
 ];
 
-const PREFIXES = ["/og/", "/media/", "/favicons/"];
+const PREFIXES = ["/og/", "/media/", "/favicons/", "/avatars/"];
 
 const TYPES: Record<string, string> = {
 	png: "image/png",
@@ -25,7 +27,7 @@ const TYPES: Record<string, string> = {
 	pdf: "application/pdf",
 };
 
-/** Returns the object for /og/, /media/ and /favicons/ paths, or null for other paths. */
+/** Returns the object for /og/, /media/, /favicons/ and /avatars/ paths, or null for other paths. */
 export async function serveR2Public(req: Request, url: URL, env: R2PublicEnv): Promise<Response | null> {
 	if (!PREFIXES.some((p) => url.pathname.startsWith(p))) return null;
 	if (req.method !== "GET" && req.method !== "HEAD") {
@@ -36,9 +38,10 @@ export async function serveR2Public(req: Request, url: URL, env: R2PublicEnv): P
 	const obj = await env.MEDIA.get(key);
 	if (!obj) return notFound();
 	// Media keys carry a ULID and never change; OG cards are versioned by ?v=.
-	// A favicon keeps its key when the job fetches it again.
+	// A favicon keeps its key when the job fetches it again; an avatar's key
+	// is its photo URL's hash, rewritten when the photo there changes.
 	const immutable = key.startsWith("media/") || url.searchParams.has("v");
-	const maxAge = key.startsWith("favicons/") ? 86400 : 3600;
+	const maxAge = key.startsWith("favicons/") || key.startsWith("avatars/") ? 86400 : 3600;
 	const ext = key.slice(key.lastIndexOf(".") + 1);
 	const headers = new Headers({
 		// The type comes from the extension the app chose after sniffing, not

@@ -8,6 +8,8 @@ import (
 	"log/slog"
 	"net/http"
 	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"halid.org/engine/internal/content"
@@ -17,6 +19,7 @@ import (
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
+	"halid.org/engine/internal/webmention"
 )
 
 // card is one post card (post/card.html).
@@ -314,6 +317,56 @@ type connections struct {
 	Backlinks []backlink
 	Related   []relatedRow
 	Always    bool
+	Mentions  *mentions
+}
+
+// mentions are the entry's approved webmentions (design/Post.dc.html
+// #mentions): replies and mentions as cards, likes and reposts counted.
+type mentions struct {
+	Summary string // "2 replies · 14 likes"
+	Cards   []mentionCard
+}
+
+type mentionCard struct {
+	Source, Host, Author, AuthorURL, Avatar, Initial, Content string
+	Day                                                       int64
+}
+
+func (h *Handlers) mentionsOf(ctx context.Context, lang, entryID string) (*mentions, error) {
+	rows, err := h.mentions.Approved(ctx, entryID)
+	if err != nil || len(rows) == 0 {
+		return nil, err
+	}
+	m := &mentions{}
+	n := map[string]int{}
+	for _, r := range rows {
+		n[r.Type]++
+		if r.Type == webmention.Like || r.Type == webmention.Repost {
+			continue
+		}
+		c := mentionCard{Source: r.SourceURL, Host: webmention.Host(r.SourceURL), Author: r.Author, AuthorURL: r.AuthorURL,
+			Avatar: r.Avatar, Content: r.Content, Day: r.Day()}
+		for _, name := range []string{r.Author, c.Host} {
+			if rs := []rune(strings.TrimSpace(name)); len(rs) > 0 {
+				c.Initial = strings.ToUpper(string(rs[0]))
+				break
+			}
+		}
+		m.Cards = append(m.Cards, c)
+	}
+	var parts []string
+	for _, t := range []string{webmention.Reply, webmention.Mention, webmention.Like, webmention.Repost} {
+		if n[t] == 0 {
+			continue
+		}
+		key := "wm." + t + "_many"
+		if n[t] == 1 {
+			key = "wm." + t + "_one"
+		}
+		parts = append(parts, strings.Replace(i18n.T(lang, key), "%d", strconv.Itoa(n[t]), 1))
+	}
+	m.Summary = strings.Join(parts, " · ")
+	return m, nil
 }
 
 type relatedRow struct {
@@ -353,7 +406,10 @@ func (h *Handlers) connections(ctx context.Context, lang string, e content.Entry
 		}
 		c.Related = append(c.Related, relatedRow{Href: "/" + x.Lang + "/" + seg + "/" + x.Slug, Title: untitled(lang, x.Title, x.Kind, x.PublishedAt), Summary: x.Summary, Kind: x.Kind, Glyph: glyphs[x.Kind]})
 	}
-	if !always && len(c.Backlinks) == 0 && len(c.Related) == 0 {
+	if c.Mentions, err = h.mentionsOf(ctx, lang, e.ID); err != nil {
+		return nil, err
+	}
+	if !always && len(c.Backlinks) == 0 && len(c.Related) == 0 && c.Mentions == nil {
 		return nil, nil
 	}
 	return c, nil

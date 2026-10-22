@@ -15,6 +15,7 @@ import (
 	"halid.org/engine/internal/jobs"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
+	"halid.org/engine/internal/webmention"
 )
 
 // Handlers holds the admin templates, the auth flow and the stores the
@@ -29,6 +30,7 @@ type Handlers struct {
 	login    *template.Template
 	dash     *template.Template
 	searchT  *template.Template
+	mentions *webmention.Repo
 }
 
 // New parses the admin templates. APP_ENV and DEPLOY_SHA come from the Worker.
@@ -46,7 +48,7 @@ func New(a *auth.Auth, u *UI, db, searchDB store.DB, j *jobs.Jobs) (*Handlers, e
 		return nil, err
 	}
 	return &Handlers{auth: a, ui: u, db: db, searchDB: searchDB, jobs: j, env: ui.Env(),
-		login: login, dash: dash, searchT: searchT}, nil
+		login: login, dash: dash, searchT: searchT, mentions: webmention.NewRepo(db)}, nil
 }
 
 // Register adds the admin routes to mux. Every POST goes through Guard.
@@ -61,6 +63,8 @@ func (h *Handlers) Register(mux *http.ServeMux) {
 	mux.Handle("GET /admin/search", session(h.search))
 	mux.Handle("POST /admin/jobs/{id}/retry", Guard(session(h.retryJob)))
 	mux.Handle("POST /admin/redirects", Guard(session(h.addRedirect)))
+	mux.Handle("POST /admin/webmentions/{id}/approve", Guard(session(h.moderate(webmention.Approved))))
+	mux.Handle("POST /admin/webmentions/{id}/reject", Guard(session(h.moderate(webmention.Rejected))))
 }
 
 // cop rejects cross-site form posts (CSRF): browsers send Sec-Fetch-Site,

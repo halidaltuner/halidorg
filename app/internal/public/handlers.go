@@ -27,6 +27,7 @@ import (
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
 	"halid.org/engine/internal/ui"
+	"halid.org/engine/internal/webmention"
 )
 
 type alternate struct {
@@ -83,6 +84,7 @@ type Handlers struct {
 	projectRepo *project.Repo
 	logRepo     *buildlog.Repo
 	pageRepo    *pages.Repo
+	mentions    *webmention.Repo
 	searchDB    store.DB // nil: /search answers with the form only
 	origin      string
 	tmpl        map[string]*template.Template
@@ -92,7 +94,7 @@ type Handlers struct {
 func New(db store.DB) (*Handlers, error) {
 	h := &Handlers{db: db, posts: post.NewRepo(db), snippetRepo: snippet.NewRepo(db), noteRepo: note.NewRepo(db),
 		linkRepo: link.NewRepo(db), favRepo: fav.NewRepo(db), projectRepo: project.NewRepo(db), logRepo: buildlog.NewRepo(db),
-		pageRepo: pages.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
+		pageRepo: pages.NewRepo(db), mentions: webmention.NewRepo(db), origin: origin(), tmpl: map[string]*template.Template{}}
 	for name, file := range map[string]string{
 		"home":          "templates/public/home.html",
 		"post":          "templates/post/show.html",

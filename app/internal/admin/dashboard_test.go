@@ -111,8 +111,53 @@ func TestDashboard(t *testing.T) {
 	if strings.Contains(body, "/old/") {
 		t.Error("404 older than 7 days is listed")
 	}
-	if strings.Contains(strings.ToLower(body), "webmention") {
-		t.Error("webmentions panel shows before Phase 8")
+	if !strings.Contains(body, "webmentions to moderate") || !strings.Contains(body, "queue empty") {
+		t.Error("webmentions panel missing or not empty")
+	}
+}
+
+func TestModerateWebmention(t *testing.T) {
+	mux, s, c := signedIn(t)
+	id := entry(t, s.DB, "htmx", "Notes on htmx", content.Published, 100)
+	for i, st := range []string{"pending", "pending"} {
+		exec(t, s.DB, `INSERT INTO webmentions (id, target_entry_id, target_url, source_url, author, content, type, status, received_at, updated_at)
+VALUES (?, ?, 'https://halid.org/en/posts/htmx', ?, 'Ada', 'Nice post', 'reply', ?, ?, ?)`,
+			"01WM00000000000000000000"+string(rune('A'+i))+"0", id, "https://blog.example/p/"+string(rune('a'+i)), st, 10+i, 10+i)
+	}
+	body := do(mux, c, "GET", "/admin", nil, false).Body.String()
+	for _, want := range []string{`<span class="n muted" id="wm-n" hx-swap-oob="true">2</span>`, "blog.example</a> · reply", "→ Notes on htmx", "Ada: Nice post",
+		`hx-post="/admin/webmentions/01WM00000000000000000000A0/approve"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("panel missing %q", want)
+		}
+	}
+
+	// htmx approve: the row goes, the count comes back out of band, and the
+	// post's pages are re-rendered.
+	rec := do(mux, c, "POST", "/admin/webmentions/01WM00000000000000000000A0/approve", url.Values{}, true)
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `id="wm-n" hx-swap-oob="true">1</span>`) {
+		t.Fatalf("approve %d %s", rec.Code, rec.Body.String())
+	}
+	sent := s.Queue.(*storetest.Queue).Sent
+	if len(sent) != 1 || !strings.Contains(string(sent[0]), `/en/posts/htmx`) {
+		t.Fatalf("approve queued %+v", sent)
+	}
+	// Plain reject: back to the dashboard, nothing to re-render.
+	if rec := do(mux, c, "POST", "/admin/webmentions/01WM00000000000000000000B0/reject", url.Values{}, false); rec.Code != http.StatusSeeOther {
+		t.Fatalf("reject %d", rec.Code)
+	}
+	if n := len(s.Queue.(*storetest.Queue).Sent); n != 1 {
+		t.Errorf("reject queued a re-render (%d messages)", n)
+	}
+	res, _ := s.DB.Query(context.Background(), `SELECT status FROM webmentions ORDER BY id`)
+	rows, _ := store.Scan[struct {
+		Status string `json:"status"`
+	}](res)
+	if len(rows) != 2 || rows[0].Status != "approved" || rows[1].Status != "rejected" {
+		t.Errorf("statuses %+v", rows)
+	}
+	if rec := do(mux, c, "POST", "/admin/webmentions/nope/approve", url.Values{}, false); rec.Code != 404 {
+		t.Errorf("unknown webmention: %d", rec.Code)
 	}
 }
 

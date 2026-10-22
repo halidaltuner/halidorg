@@ -86,7 +86,7 @@ describe("enqueueScheduled", () => {
 		expect(id).toBe("01TESTID");
 		expect(sql).toHaveLength(1);
 		expect(sql[0]?.q).toContain("INSERT INTO job_runs");
-		expect(sql[0]?.args).toEqual(["01TESTID", "github.sync", 1_760_000_000]);
+		expect(sql[0]?.args).toEqual(["01TESTID", "github.sync", "{}", 1_760_000_000]);
 		expect(sent).toEqual([{ id: "01TESTID", type: "github.sync", payload: {} }]);
 	});
 

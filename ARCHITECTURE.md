@@ -120,7 +120,8 @@ flowchart LR
   /internal/media     media library: upload to R2, alt text, served by the Worker at /media/*
   /internal/diff      Myers line diff for the revisions view
   /internal/public    handlers + templates
-  /internal/jobs      render, purge, github, webmention, posse
+  /internal/jobs      render, purge, github, posse
+  /internal/webmention  receive job (verify source, h-entry), moderation repo; the endpoint is the Worker's POST /webmention
   /internal/importer  Ghost and others
   /web/templates      partials/ (header, footer, cover, palette), public/, admin/, <kind>/
   /web/static         css/tokens.css, css/app.css, fonts/ (self-hosted woff2), js/ islands, vendor/ (htmx, CodeMirror build)

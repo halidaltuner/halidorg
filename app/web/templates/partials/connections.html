@@ -1,6 +1,8 @@
 {{/* connections: the block under a detail page (DESIGN.md §33). Takes dict
      "c" (*connections) and "lang" (the page language). Backlinks show with
-     their empty message when c.Always (posts); related entries share tags. */}}
+     their empty message when c.Always (posts); approved webmentions follow
+     (replies and mentions as cards, likes and reposts counted); related
+     entries share tags. */}}
 {{define "connections"}}{{with .c}}{{$lang := $.lang}}
 {{- if or .Always .Backlinks}}
 <section class="backlinks" id="backlinks">
@@ -9,6 +11,20 @@
 <a href="{{.Href}}"{{if ne .Lang $lang}} hreflang="{{.Lang}}"{{end}}{{with .Context}} title="{{.}}"{{end}}>{{.Glyph}} {{.Title}}</a>
 {{- else}}
 <p>{{tr $lang "post.backlinks_empty"}}</p>
+{{- end}}
+</section>
+{{- end}}
+{{- with .Mentions}}
+<section class="mentions" id="mentions">
+<h3 class="mono">{{tr $lang "wm.title"}} · {{.Summary}}</h3>
+{{- range .Cards}}
+<div class="wm-card h-cite">
+{{- if .Avatar}}<img class="wm-av u-photo" src="{{.Avatar}}" alt="" width="32" height="32" loading="lazy">{{else}}<span class="wm-av mono" aria-hidden="true">{{.Initial}}</span>{{end}}
+<div class="wm-body">
+<span class="wm-meta mono">{{if .Author}}<span class="p-author">{{.Author}}</span> · {{end}}<a class="u-url" href="{{.Source}}" rel="nofollow ugc noopener">{{.Host}}</a> · <time>{{date .Day}}</time></span>
+{{- with .Content}}<p class="p-content">{{.}}</p>{{end}}
+</div>
+</div>
 {{- end}}
 </section>
 {{- end}}
