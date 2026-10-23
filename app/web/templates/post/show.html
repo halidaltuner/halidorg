@@ -37,6 +37,9 @@
 <div class="prose e-content">{{.Body}}</div>
 {{- /* The h-entry's permalink and author for IndieWeb readers (Phase 8.2); not shown. */}}
 <div class="mf-hidden"><a class="u-url" href="{{.Head.Canonical}}"></a>{{with .Post.Summary}}<span class="p-summary">{{.}}</span>{{end}}{{with .Author}}<a class="p-author h-card" href="{{.URL}}">{{with .Photo}}<img class="u-photo" src="{{.}}" alt="">{{end}}<span class="p-name">{{.Name}}</span></a>{{end}}</div>
+{{- with .Syndicated}}
+<p class="syndicated mono">{{tr $.Lang "post.also_on"}} {{range $i, $l := .}}{{if $i}} · {{end}}<a class="u-syndication" rel="syndication noopener" href="{{$l.URL}}">{{$l.Label}}</a>{{end}}</p>
+{{- end}}
 {{- with .Series}}{{if or .Prev .Next}}
 <nav class="series-nav" aria-label="{{tr $.Lang "post.series"}}">
 {{- with .Prev}}<a href="{{.Path}}"><span class="mono">← {{sub $.Series.Index 1}}/{{$.Series.Total}}</span><span>{{.Title}}</span></a>{{else}}<span></span>{{end}}

@@ -18,6 +18,7 @@ import (
 	"halid.org/engine/internal/render"
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/syndication"
 	"halid.org/engine/internal/ui"
 	"halid.org/engine/internal/webmention"
 )
@@ -304,7 +305,11 @@ type postPage struct {
 	Tone         string
 	Cover        *image
 	Author       author // the h-card in the h-entry (Phase 8.2)
+	Syndicated   []syndLink
 }
+
+// syndLink is a POSSE copy of the article (Phase 8.3), a u-syndication.
+type syndLink struct{ Label, URL string }
 
 type backlink struct {
 	Href, Title, Context, Lang, Glyph string
@@ -510,6 +515,14 @@ func (h *Handlers) article(w http.ResponseWriter, r *http.Request, lang, kind st
 		Tone:         articleTone(p),
 	}
 	pg.Conn = conn
+	links, err := syndication.NewRepo(h.db).List(r.Context(), p.ID)
+	if err != nil {
+		h.fail(w, r, err)
+		return
+	}
+	for _, l := range links {
+		pg.Syndicated = append(pg.Syndicated, syndLink{Label: syndication.Label(l.Network), URL: l.URL})
+	}
 	if pg.Author, err = h.author(r.Context(), p.Lang); err != nil {
 		h.fail(w, r, err)
 		return

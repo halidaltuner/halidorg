@@ -78,6 +78,19 @@
 <label class="ed-label" for="ed-seo">{{tr .Lang "admin.editor.seo"}} · <span id="ed-seo-n">{{.SEOLen}}</span>/160</label>
 <textarea id="ed-seo" name="summary" rows="3" maxlength="160">{{.Post.Summary}}</textarea>
 </div>
+<div class="ed-sec ed-synd">
+<span class="ed-label">{{tr .Lang "admin.synd.title"}}</span>
+{{- with .Share}}
+<label class="ed-small" for="ed-share-text">{{tr $.Lang "admin.synd.text"}}</label>
+<textarea id="ed-share-text" rows="3" data-share-text>{{.Text}}</textarea>
+<div class="ed-share" data-share-url="{{.URL}}"><a class="adm-btn" href="{{.X}}" target="_blank" rel="noopener" data-share-x>X ↗</a><a class="adm-btn" href="{{.LinkedIn}}" target="_blank" rel="noopener">LinkedIn ↗</a></div>
+{{- else}}
+<span class="ed-small">{{tr .Lang "admin.synd.publish_first"}}</span>
+{{- end}}
+<label class="ed-label" for="ed-synd">{{tr .Lang "admin.synd.urls"}}</label>
+<textarea id="ed-synd" name="syndication" rows="3" spellcheck="false" placeholder="https://x.com/…">{{.Syndication}}</textarea>
+<span class="ed-small">{{tr .Lang "admin.synd.hint"}}</span>
+</div>
 <div class="ed-sec">
 <span class="ed-label">{{tr .Lang "admin.editor.translation"}}</span>
 {{- range .Others}}
@@ -125,6 +138,7 @@
      those paths at the content-hashed URLs so a deploy is never hidden
      behind an hour of cached JS. */}}
 <script src="{{asset "/static/js/cover.js"}}" defer></script>
+<script src="{{asset "/static/js/share.js"}}" defer></script>
 <script src="{{asset "/static/js/loader.js"}}" defer></script>
 <script type="importmap">{"imports": {"/static/vendor/cm.js": "{{asset "/static/vendor/cm.js"}}", "/static/vendor/tt.js": "{{asset "/static/vendor/tt.js"}}"}}</script>
 <script type="module" src="{{asset "/static/js/editor.js"}}"></script>

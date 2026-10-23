@@ -935,6 +935,10 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
 .backlinks p { margin: 0; font-size: var(--fs-15); color: var(--text-muted); }
 .backlinks > a { font-size: var(--fs-16); text-decoration: none; }
 .backlinks + .backlinks { margin-top: var(--sp-32); }
+/* POSSE copies under an article (Phase 8.3). */
+.syndicated { max-width: var(--w-prose); margin: var(--sp-32) 0 0; font-size: var(--fs-13); color: var(--text-muted); }
+.syndicated a { color: var(--link); text-decoration: none; }
+.syndicated a:hover { text-decoration: underline; }
 /* Microformats that only machines read (h-entry permalink, author h-card). */
 .mf-hidden { display: none; }
 /* Webmentions under a detail page (design/Post.dc.html #mentions). */
@@ -1270,6 +1274,8 @@ a.fv-card:hover { box-shadow: var(--shadow-card-hover); }
   border-radius: var(--radius-1); background: var(--surface-2); color: var(--text); min-width: 0;
 }
 .ed-side textarea { font-family: var(--font-sans); font-size: var(--fs-13); line-height: 1.5; resize: vertical; }
+.ed-share { display: flex; gap: var(--sp-8); }
+#ed-synd { font-family: var(--font-mono); font-size: var(--fs-12); }
 .ed-kinds { display: flex; gap: 4px; flex-wrap: wrap; }
 .ed-kinds span { padding: 3px 8px; border-radius: var(--radius-1); border: 1px solid var(--border); font-size: var(--fs-12); color: var(--text-muted); }
 .ed-kinds span.on { background: var(--text); border-color: var(--text); color: var(--surface); }

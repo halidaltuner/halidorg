@@ -24,6 +24,7 @@ import (
 	"halid.org/engine/internal/render"
 	"halid.org/engine/internal/render/og"
 	"halid.org/engine/internal/store"
+	"halid.org/engine/internal/syndication"
 )
 
 // Admin serves the post list and the editor (design/Admin Editor.dc.html,
@@ -36,6 +37,7 @@ type Admin struct {
 	auth   *auth.Auth
 	jobs   *jobs.Jobs
 	media  *media.Repo
+	synd   *syndication.Repo
 	origin string
 	list   *template.Template
 	newT   *template.Template
@@ -62,7 +64,7 @@ func NewAdmin(db store.DB, u *admin.UI, a *auth.Auth, j *jobs.Jobs, m *media.Rep
 	if err != nil {
 		return nil, err
 	}
-	return &Admin{repo: NewRepo(db), db: db, ui: u, auth: a, jobs: j, media: m,
+	return &Admin{repo: NewRepo(db), db: db, ui: u, auth: a, jobs: j, media: m, synd: syndication.NewRepo(db),
 		origin: strings.TrimRight(os.Getenv("PUBLIC_ORIGIN"), "/"),
 		list:   list, newT: newT, editor: editor, revs: revs}, nil
 }
@@ -166,6 +168,9 @@ type editorPage struct {
 	Reauthed   bool // back from re-auth on the way to publishing
 	OpenDelete bool
 	DeleteErr  string
+	// POSSE (Phase 8.3): share links once published, and the copies' URLs.
+	Share       *syndication.Share
+	Syndication string
 }
 
 type seriesOpt struct {
@@ -260,6 +265,17 @@ func (h *Admin) page(r *http.Request, p Post, md string, tags []string, errs []s
 		return pg, err
 	}
 	pg.Backlinks = len(bl)
+	links, err := h.synd.List(ctx, p.ID)
+	if err != nil {
+		return pg, err
+	}
+	for _, l := range links {
+		pg.Syndication += l.URL + "\n"
+	}
+	if p.Status == content.Published && h.origin != "" {
+		sh := syndication.NewShare(h.origin+"/"+p.Lang+"/"+Section(p.Kind)+"/"+p.Slug, p.Title)
+		pg.Share = &sh
+	}
 	if p.Kind == Kind && p.Status == content.Published && p.PublishedAt != nil {
 		card := og.Post(p.Lang, p.Title, *p.PublishedAt, p.ReadingMinutes)
 		pg.CoverURL = og.URL(og.EntryKey(p.Lang, "posts", p.Slug), card)
@@ -456,7 +472,14 @@ func (h *Admin) save(w http.ResponseWriter, r *http.Request) {
 	}
 	d := formDraft(r, p)
 	prev, _ := jobs.RefOf(r.Context(), h.db, p.ID)
-	saved, err := h.write(r.Context(), d, origin)
+	_, _, err := syndField(r) // checked first: a bad URL saves nothing
+	var saved Post
+	if err == nil {
+		saved, err = h.write(r.Context(), d, origin)
+	}
+	if err == nil {
+		err = h.syndicate(r, p.ID)
+	}
 	var v content.ValidationError
 	if errors.As(err, &v) {
 		h.formError(w, r, p, d, errorList(i18n.FromRequest(r), v))
@@ -472,6 +495,31 @@ func (h *Admin) save(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.saved(w, r, saved, origin)
+}
+
+// syndicate stores the copies' URLs when the form has the field (Phase
+// 8.3). The post's entry.changed job, queued by the caller, re-renders the
+// page with them.
+func (h *Admin) syndicate(r *http.Request, id string) error {
+	urls, ok, err := syndField(r)
+	if err != nil || !ok {
+		return err
+	}
+	_, err = h.synd.Set(r.Context(), id, urls)
+	return err
+}
+
+// syndField reads the syndication field; ok is false when the form has none.
+func syndField(r *http.Request) ([]string, bool, error) {
+	field, ok := r.PostForm["syndication"]
+	if !ok {
+		return nil, false, nil
+	}
+	urls, err := syndication.Parse(strings.Join(field, "\n"))
+	if err != nil {
+		return nil, true, content.ValidationError{"syndication": err.Error()}
+	}
+	return urls, true, nil
 }
 
 // write saves d and returns the post as stored. A cover must be a media
@@ -553,7 +601,14 @@ func (h *Admin) publish(w http.ResponseWriter, r *http.Request) {
 			origin = content.OriginPublish
 		}
 		d := formDraft(r, p)
-		if _, err := h.write(r.Context(), d, origin); err != nil {
+		_, _, err := syndField(r)
+		if err == nil {
+			_, err = h.write(r.Context(), d, origin)
+		}
+		if err == nil {
+			err = h.syndicate(r, p.ID)
+		}
+		if err != nil {
 			var v content.ValidationError
 			if errors.As(err, &v) {
 				h.formError(w, r, p, d, errorList(i18n.FromRequest(r), v))
@@ -764,7 +819,7 @@ func title(lang string, p Post) string {
 func errorList(lang string, v content.ValidationError) []string {
 	var out []string
 	for _, f := range []string{"title", "slug", "lang", "summary", "body", "published_at", "series", "cover", "canonical_url",
-		"maturity", "platform", "prerequisites", "verified_on", "risk"} {
+		"maturity", "platform", "prerequisites", "verified_on", "risk", "syndication"} {
 		msg, ok := v[f]
 		if !ok {
 			continue
