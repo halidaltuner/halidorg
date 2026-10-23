@@ -9,6 +9,7 @@ import (
 	"willnorris.com/go/microformats"
 
 	"halid.org/engine/internal/content/post"
+	"halid.org/engine/internal/syndication"
 )
 
 // Approved webmentions show under the post: replies and mentions as cards,
@@ -81,4 +82,24 @@ func TestPostMicroformats(t *testing.T) {
 	if !ok || a.Type[0] != "h-card" || len(a.Properties["name"]) == 0 || !strings.HasSuffix(a.Properties["url"][0].(string), "/about") {
 		t.Errorf("author %+v", p["author"][0])
 	}
+}
+
+// POSSE copies show under the article as u-syndication (Phase 8.3).
+func TestSyndicatedLinks(t *testing.T) {
+	mux, db := newSite(t)
+	seed(t, db)
+	ctx := context.Background()
+	_, body := get(t, mux, "/en/posts/htmx-admin")
+	if strings.Contains(body, `class="syndicated`) {
+		t.Error("syndication line without copies")
+	}
+	p, err := post.NewRepo(db).GetPublished(ctx, "en", "htmx-admin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := syndication.NewRepo(db).Set(ctx, p.ID, []string{"https://x.com/halid/status/1", "https://news.ycombinator.com/item?id=9"}); err != nil {
+		t.Fatal(err)
+	}
+	_, body = get(t, mux, "/en/posts/htmx-admin")
+	must(t, body, `<p class="syndicated mono">also on: <a class="u-syndication" rel="syndication noopener" href="https://x.com/halid/status/1">X</a> · <a class="u-syndication" rel="syndication noopener" href="https://news.ycombinator.com/item?id=9">news.ycombinator.com</a></p>`)
 }

@@ -95,8 +95,8 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 ## Phase 8: IndieWeb and distribution (S/M)
 - [x] Webmention receive + moderation (dashboard panel **(designed)**) and display on detail pages (8.1)
 - [x] Webmention send on publish, h-entry and h-card microformats (8.2)
-- [ ] POSSE to X and LinkedIn (manual confirm), syndication URLs
-- [ ] Newsletter optional
+- [x] POSSE to X and LinkedIn as share links (manual post), syndication URLs (8.3)
+- [ ] Newsletter optional (not now)
 
 ## Phase 9: Ops hardening (S)
 - [ ] Nightly D1 export + Markdown/JSON export to R2

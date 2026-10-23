@@ -405,3 +405,34 @@ func TestRevisionsDiffAndRestore(t *testing.T) {
 		t.Errorf("foreign revision %d", rec.Code)
 	}
 }
+
+// The editor's POSSE section (Phase 8.3): share links once published, the
+// copies' URLs saved with the post, a bad URL saves nothing.
+func TestSyndication(t *testing.T) {
+	t.Setenv("PUBLIC_ORIGIN", "https://halid.org")
+	st := newAdminSite(t)
+	id := st.newPost(t, "Share me")
+	body := st.do(st.fresh, "GET", "/admin/posts/"+id, nil, false).Body.String()
+	must(t, body, "Share links appear once it is published.", `name="syndication"`, `/static/js/share.js`)
+
+	form := editorForm("Share me", "share-me", "Body.")
+	form.Set("syndication", "https://x.com/halid/status/1\nhttps://www.linkedin.com/posts/halid-1")
+	if rec := st.do(st.fresh, "POST", "/admin/posts/"+id+"/publish", form, false); rec.Code != http.StatusSeeOther {
+		t.Fatalf("publish %d %s", rec.Code, rec.Body.String())
+	}
+	body = st.do(st.fresh, "GET", "/admin/posts/"+id, nil, false).Body.String()
+	must(t, body, `href="https://x.com/intent/tweet?text=Share%20me&amp;url=https%3A%2F%2Fhalid.org%2Fen%2Fposts%2Fshare-me"`,
+		`href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fhalid.org%2Fen%2Fposts%2Fshare-me"`,
+		"https://x.com/halid/status/1\nhttps://www.linkedin.com/posts/halid-1\n</textarea>")
+
+	form.Set("syndication", "not a url")
+	form.Set("title", "Changed title")
+	rec := st.do(st.fresh, "POST", "/admin/posts/"+id, form, false)
+	if rec.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("bad url %d", rec.Code)
+	}
+	must(t, rec.Body.String(), "Syndication URLs must be http(s) links")
+	if p, _ := NewRepo(st.s.DB).Get(context.Background(), id); p.Title != "Share me" {
+		t.Errorf("saved with a bad syndication URL: %q", p.Title)
+	}
+}
