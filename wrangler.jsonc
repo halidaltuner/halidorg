@@ -54,10 +54,15 @@
       }
     ]
   },
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-local" }],
+  "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "halidorg-media-local" },
+        // Backups (Phase 9.1): never served; the weekly export writes here, the
+        // nightly D1 dump comes from .github/workflows/backup.yml.
+        { "binding": "BACKUPS", "bucket_name": "halidorg-backups-local" }
+      ],
 
   // Cron (Phase 4.4): enqueue jobs, never call the container (worker/src/jobs.ts SCHEDULES).
-  "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
+  "triggers": { "crons": ["17 */6 * * *", "7 0 * * *", "41 1 * * 0"] },
 
   // DECKS_ORIGIN (ADR-007): presentation decks are served only on this host.
   // Locally 127.0.0.1 is a different origin from localhost on the same Worker.
@@ -116,8 +121,13 @@
           }
         ]
       },
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-staging" }],
-      "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
+      "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "halidorg-media-staging" },
+        // Backups (Phase 9.1): never served; the weekly export writes here, the
+        // nightly D1 dump comes from .github/workflows/backup.yml.
+        { "binding": "BACKUPS", "bucket_name": "halidorg-backups-staging" }
+      ],
+      "triggers": { "crons": ["17 */6 * * *", "7 0 * * *", "41 1 * * 0"] },
       "vars": {
         "APP_ENV": "staging",
         "PUBLIC_ORIGIN": "https://staging.halid.org",
@@ -171,8 +181,13 @@
           }
         ]
       },
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "halidorg-media-prod" }],
-      "triggers": { "crons": ["17 */6 * * *", "7 0 * * *"] },
+      "r2_buckets": [
+        { "binding": "MEDIA", "bucket_name": "halidorg-media-prod" },
+        // Backups (Phase 9.1): never served; the weekly export writes here, the
+        // nightly D1 dump comes from .github/workflows/backup.yml.
+        { "binding": "BACKUPS", "bucket_name": "halidorg-backups-prod" }
+      ],
+      "triggers": { "crons": ["17 */6 * * *", "7 0 * * *", "41 1 * * 0"] },
       "vars": {
         "APP_ENV": "prod",
         // Admin login on prod needs this origin and its own OAuth client (Phase 3).

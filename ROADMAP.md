@@ -99,7 +99,7 @@ Goal: validate the accepted runtime (ADR-001: Go in Containers + edge Worker + K
 - [ ] Newsletter optional (not now)
 
 ## Phase 9: Ops hardening (S)
-- [ ] Nightly D1 export + Markdown/JSON export to R2
+- [x] Nightly D1 export + Markdown/JSON export to R2 (9.1, docs/runbook-restore.md)
 - [ ] Jobs page with retry (`retry n/3`), based on the dashboard failed-jobs panel **(derive)**; settings **(derive)**
 - [ ] Re-render-all job for renderer upgrades
 - [ ] Cloudflare Web Analytics

@@ -35,6 +35,7 @@ Phase 0 spike findings. Full list in `prompts/_constraints.md`, details in `docs
 - Presentation decks are served only on the decks host (`DECKS_ORIGIN`) by `worker/src/decks.ts`, which never falls through to KV or the container. The page and a deck talk via `postMessage` (`deck.js`, `presentation.Bridge`).
 - Public R2 objects (`/og/*`, `/media/*`) are served by the Worker (`worker/src/r2public.ts`), never by the container; the Content-Type comes from the key's extension, which the app picks after sniffing the bytes. Media is images and PDFs (the CV, served as a download), no SVG.
 - Webmentions are accepted by the Worker (`worker/src/webmention.ts`: checks, rate limit, queues `webmention.receive`), never by the container. The job (`internal/webmention`) is the only place that fetches a source; stored text is plain, never HTML.
+- Backups (docs/runbook-restore.md) live in `halidorg-backups-{env}` (binding `BACKUPS`, bridge `/backups/...`), which no Worker route serves. A new table is exported automatically; a new main-DB virtual table (FTS) would break `wrangler d1 export`, so FTS stays in the SEARCH database.
 - Admin JS vendors (htmx, CodeMirror 6, Tiptap 3) are built by `scripts/build-editor.sh` from pinned versions in `editor/package.json` and committed under `app/web/static/vendor`. The Tiptap editor stores Markdown: every node writes its syntax back unchanged (`editor/test/roundtrip.test.js`), and a document it cannot write back opens in the Markdown view.
 
 ## Conventions

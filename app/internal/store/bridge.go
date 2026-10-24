@@ -23,11 +23,12 @@ func NewBridge(base string, client *http.Client) Stores {
 	}
 	b := &bridge{base: base, client: client}
 	return Stores{
-		DB:     bridgeDB{b, "/d1"},
-		Search: bridgeDB{b, "/search"},
-		KV:     bridgeKV{b},
-		Blob:   bridgeBlob{b},
-		Queue:  bridgeQueue{b},
+		DB:      bridgeDB{b, "/d1"},
+		Search:  bridgeDB{b, "/search"},
+		KV:      bridgeKV{b},
+		Blob:    bridgeBlob{b, "r2"},
+		Backups: bridgeBlob{b, "backups"},
+		Queue:   bridgeQueue{b},
 	}
 }
 
@@ -142,10 +143,14 @@ func (k bridgeKV) Delete(ctx context.Context, key string) error {
 	return err
 }
 
-type bridgeBlob struct{ b *bridge }
+// bridgeBlob is an R2 bucket on the bridge: "r2" (MEDIA) or "backups".
+type bridgeBlob struct {
+	b     *bridge
+	store string
+}
 
 func (o bridgeBlob) Get(ctx context.Context, key string) (Object, error) {
-	resp, data, err := o.b.do(ctx, http.MethodGet, keyPath("r2", key), nil, nil)
+	resp, data, err := o.b.do(ctx, http.MethodGet, keyPath(o.store, key), nil, nil)
 	if err != nil {
 		return Object{}, err
 	}
@@ -157,12 +162,12 @@ func (o bridgeBlob) Put(ctx context.Context, key string, body []byte, contentTyp
 	if contentType != "" {
 		h.Set("Content-Type", contentType)
 	}
-	_, _, err := o.b.do(ctx, http.MethodPut, keyPath("r2", key), body, h)
+	_, _, err := o.b.do(ctx, http.MethodPut, keyPath(o.store, key), body, h)
 	return err
 }
 
 func (o bridgeBlob) Delete(ctx context.Context, key string) error {
-	_, _, err := o.b.do(ctx, http.MethodDelete, keyPath("r2", key), nil, nil)
+	_, _, err := o.b.do(ctx, http.MethodDelete, keyPath(o.store, key), nil, nil)
 	return err
 }
 

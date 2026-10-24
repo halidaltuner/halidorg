@@ -1,0 +1,40 @@
+name: restore-test
+
+# Restores a nightly dump into a scratch D1 database, compares row counts
+# with the live one and deletes the scratch database (docs/runbook-restore.md).
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: Environment whose backup to restore
+        type: choice
+        options: [staging, prod]
+        default: staging
+      day:
+        description: Backup day (YYYY-MM-DD, UTC); empty for today
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      DAY: ${{ inputs.day }}
+    defaults:
+      run:
+        working-directory: worker
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: worker/package-lock.json
+      - run: npm ci
+      - run: sh ../scripts/restore-d1.sh ${{ inputs.env }} "${DAY:-$(date -u +%F)}"

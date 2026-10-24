@@ -63,6 +63,7 @@ ON CONFLICT (path) DO UPDATE SET hits = hits + 1, last_seen_at = excluded.last_s
 export const SCHEDULES: Record<string, string> = {
 	"17 */6 * * *": "github.sync",
 	"7 0 * * *": "now.daily",
+	"41 1 * * 0": "export.weekly", // Sundays: Markdown/JSON export to BACKUPS (Phase 9.1)
 };
 
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";

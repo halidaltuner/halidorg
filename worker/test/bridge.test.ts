@@ -56,4 +56,15 @@ describe("handleBridge", () => {
 		expect(sent).toEqual([{ id: "j1", type: "entry.changed" }]);
 		expect((await handleBridge(post({}), "/queue/other", env)).status).toBe(404);
 	});
+
+	it("writes backups to their own bucket, never to media", async () => {
+		const { env } = fakeEnv();
+		const put: string[] = [];
+		const bucket = (name: string) => ({ put: async (k: string) => void put.push(name + ":" + k) });
+		Object.assign(env, { MEDIA: bucket("media"), BACKUPS: bucket("backups") });
+		const path = "/backups/" + encodeURIComponent("exports/2026-10-25.zip");
+		const res = await handleBridge(new Request("http://bridge.internal" + path, { method: "PUT", body: "zip" }), path, env);
+		expect(res.status).toBe(204);
+		expect(put).toEqual(["backups:exports/2026-10-25.zip"]);
+	});
 });

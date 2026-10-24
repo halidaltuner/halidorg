@@ -147,4 +147,4 @@ Dockerfile
 - **Search:** D1 FTS5 over title, summary, body text and tags, in a separate search database queried by the Worker (ADR-010).
 - **Feeds:** RSS + Atom + JSON Feed per kind, per tag, and a combined feed.
 - **Observability:** Workers Logs, structured JSON logs from Go, job outcomes in `job_runs` table, admin health page.
-- **Backups:** nightly D1 export + full Markdown/JSON export to R2.
+- **Backups:** nightly D1 SQL dump (GitHub Actions, 30 days) and a weekly Markdown/JSON export (`export.weekly`, 90 days) in a separate, never-served bucket `halidorg-backups-{env}`; the SEARCH database is rebuilt, not backed up (docs/runbook-restore.md).
