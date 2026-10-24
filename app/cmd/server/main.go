@@ -34,6 +34,7 @@ import (
 	"halid.org/engine/internal/content/snippet"
 	"halid.org/engine/internal/content/term"
 	"halid.org/engine/internal/devseed"
+	"halid.org/engine/internal/export"
 	"halid.org/engine/internal/feeds"
 	"halid.org/engine/internal/fetch"
 	"halid.org/engine/internal/github"
@@ -205,6 +206,7 @@ func routes(stores store.Stores) (*http.ServeMux, error) {
 		WithFavicons(fetch.New(5 * time.Second)).Register(runner)
 	webmention.NewReceiver(stores.DB, stores.Blob, fetch.New(8*time.Second)).Register(runner)
 	webmention.NewSender(stores.DB, fetch.New(8*time.Second)).Register(runner)
+	export.New(stores.DB, stores.Backups).Register(runner)
 	runner.Register(mux)
 
 	seed := authn.RequireSession(devseed.New(stores.DB, runner))

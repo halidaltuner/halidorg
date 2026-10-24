@@ -303,5 +303,5 @@ func (q *Queue) Send(_ context.Context, msg any) error {
 // Stores returns a full set of in-memory stores: the main and search
 // schemas applied, empty KV, Blob and Queue.
 func Stores(t testing.TB) store.Stores {
-	return store.Stores{DB: NewDB(t), Search: NewSearchDB(t), KV: NewKV(), Blob: NewBlob(), Queue: &Queue{}}
+	return store.Stores{DB: NewDB(t), Search: NewSearchDB(t), KV: NewKV(), Blob: NewBlob(), Queue: &Queue{}, Backups: NewBlob()}
 }

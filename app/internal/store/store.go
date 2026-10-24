@@ -77,6 +77,9 @@ type Stores struct {
 	KV     KV
 	Blob   Blob
 	Queue  Queue
+	// Backups is the backups bucket (Phase 9.1): written by the weekly
+	// export, never served.
+	Backups Blob
 }
 
 // FromEnv returns the bridge-backed stores. BRIDGE_INTERNAL_URL overrides the

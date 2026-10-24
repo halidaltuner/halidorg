@@ -7,6 +7,7 @@ export interface BridgeEnv {
 	SEARCH: D1Database;
 	PAGES: KVNamespace;
 	MEDIA: R2Bucket;
+	BACKUPS: R2Bucket;
 	JOBS: Queue;
 }
 
@@ -15,7 +16,7 @@ interface Statement {
 	params?: unknown[];
 }
 
-/** Serves a bridge request: `/d1/...` (DB), `/search/...` (SEARCH, ADR-010), `/kv/...`, `/r2/...`, `/queue/send`. */
+/** Serves a bridge request: `/d1/...` (DB), `/search/...` (SEARCH, ADR-010), `/kv/...`, `/r2/...` (MEDIA), `/backups/...` (BACKUPS), `/queue/send`. */
 export async function handleBridge(req: Request, path: string, env: BridgeEnv): Promise<Response> {
 	const [, store, ...rest] = path.split("/");
 	const key = decodeURIComponent(rest.join("/"));
@@ -24,9 +25,10 @@ export async function handleBridge(req: Request, path: string, env: BridgeEnv): 
 		if (store === "d1") return await d1(req, rest[0], env.DB);
 		if (store === "search") return await d1(req, rest[0], env.SEARCH);
 		if (store === "queue") return await enqueue(req, rest[0], env);
-		if (store !== "kv" && store !== "r2") return text(404, "unknown store");
+		if (store !== "kv" && store !== "r2" && store !== "backups") return text(404, "unknown store");
 		if (key === "") return text(400, "missing key");
-		return store === "kv" ? await kv(req, key, env) : await r2(req, key, env);
+		if (store === "kv") return await kv(req, key, env);
+		return await r2(req, key, store === "backups" ? env.BACKUPS : env.MEDIA);
 	} catch (err) {
 		// D1 reports constraint and syntax errors as exceptions; the Go side needs the message.
 		return text(500, err instanceof Error ? err.message : String(err));
@@ -89,10 +91,10 @@ async function kv(req: Request, key: string, env: BridgeEnv): Promise<Response> 
 	return text(405, "method not allowed");
 }
 
-async function r2(req: Request, key: string, env: BridgeEnv): Promise<Response> {
+async function r2(req: Request, key: string, bucket: R2Bucket): Promise<Response> {
 	switch (req.method) {
 		case "GET": {
-			const obj = await env.MEDIA.get(key);
+			const obj = await bucket.get(key);
 			if (obj === null) return text(404, "not found");
 			const headers = new Headers({ ETag: obj.httpEtag });
 			if (obj.httpMetadata?.contentType) headers.set("Content-Type", obj.httpMetadata.contentType);
@@ -100,11 +102,11 @@ async function r2(req: Request, key: string, env: BridgeEnv): Promise<Response> 
 		}
 		case "PUT": {
 			const contentType = req.headers.get("Content-Type") ?? undefined;
-			await env.MEDIA.put(key, await req.arrayBuffer(), { httpMetadata: { contentType } });
+			await bucket.put(key, await req.arrayBuffer(), { httpMetadata: { contentType } });
 			return new Response(null, { status: 204 });
 		}
 		case "DELETE":
-			await env.MEDIA.delete(key);
+			await bucket.delete(key);
 			return new Response(null, { status: 204 });
 	}
 	return text(405, "method not allowed");
